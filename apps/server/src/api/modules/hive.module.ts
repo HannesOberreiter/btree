@@ -461,12 +461,15 @@ export async function getHiveTasks(
     { date: { from: `${year}-01-01`, to: `${year}-12-31` } },
   ]);
   const query = { filters, deleted: false, limit: 100_000, offset: 0 };
+  // parseTaskFilters drops an empty hive_id_array, so skip the lists for an apiary without hives
+  const listForHives = <T>(list: () => Promise<{ results: T[] }>) =>
+    hiveIds.length > 0 ? list() : Promise.resolve({ results: [] as T[] });
   const [harvest, feed, treatment, checkup, movedateGroups, todos] =
     await Promise.all([
-      listHarvests(db, actor.companyId, query),
-      listFeeds(db, actor.companyId, query),
-      listTreatments(db, actor.companyId, query),
-      listCheckups(db, actor.companyId, query),
+      listForHives(() => listHarvests(db, actor.companyId, query)),
+      listForHives(() => listFeeds(db, actor.companyId, query)),
+      listForHives(() => listTreatments(db, actor.companyId, query)),
+      listForHives(() => listCheckups(db, actor.companyId, query)),
       Promise.all(
         hiveIds.map((hiveId) =>
           listMovedates(db, actor.companyId, {

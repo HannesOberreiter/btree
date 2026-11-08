@@ -356,6 +356,39 @@ describe('hive routes', () => {
       expect(res.body).toHaveProperty('checkup');
       expect(res.body).toHaveProperty('movedate');
     });
+    it('200 - empty apiary returns no hive tasks', async () => {
+      const feed = await doRequest(agent, 'post', '/api/v1/feed', null, null, {
+        hive_ids: [insertId],
+        date: testInsert.date,
+        amount: 1,
+        type_id: 1,
+      });
+      expect(feed.statusCode).toEqual(200);
+      const apiary = await doRequest(
+        agent,
+        'post',
+        '/api/v1/apiary',
+        null,
+        null,
+        { name: `EmptyApiary${Date.now()}` },
+      );
+      expect(apiary.statusCode).toEqual(200);
+
+      const res = await doQueryRequest(
+        agent,
+        `${route}/task`,
+        apiary.body.id,
+        accessToken,
+        { apiary: true, year: Number(testInsert.date.slice(0, 4)) },
+      );
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.harvest).toEqual([]);
+      expect(res.body.feed).toEqual([]);
+      expect(res.body.treatment).toEqual([]);
+      expect(res.body.checkup).toEqual([]);
+      expect(res.body.movedate).toEqual([]);
+      expect(res.body.todo).toBeInstanceOf(Array);
+    });
   });
 
   describe('/api/v1/hive/batchGet', () => {
