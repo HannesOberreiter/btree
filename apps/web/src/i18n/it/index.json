@@ -131,10 +131,10 @@
     "active": "La tua azienda attiva",
     "addUser": "Immettere l'e-mail dell'utente. Se il nuovo utente non è già registrato, riceverà un'e-mail per reimpostare la propria password per accedere con successo.",
     "changeName": "Inserisci un nuovo nome per la tua azienda (min: 5, max: 45)",
-    "delete": "Sei sicuro di voler eliminare l'azienda? Questo è possibile solo se non è la tua ultima azienda e nessun altro utente è registrato con questa azienda. Per sicurezza si prega di ripetere il nome dell'azienda:",
+    "delete": "Sei sicuro di voler eliminare l'azienda? Questo è possibile solo se non è la tua ultima azienda e nessun altro utente è registrato con questa azienda. Per sicurezza ripeti il nome dell'azienda:",
     "name": "Azienda | Aziende",
     "new": "Inserisci il nome per la tua nuova azienda (min: 5, max: 45). Nota: dovrai pagare separatamente per ogni nuovo accesso premium aziendale.",
-    "removeAccess": "Sei sicuro di voler rimuovere il tuo accesso a questa azienda? Questo è possibile solo se non sei l'unico utente in questa azienda e se non è la tua unica azienda. Per sicurezza si prega di ripetere il nome dell'azienda:",
+    "removeAccess": "Sei sicuro di voler rimuovere il tuo accesso a questa azienda? Questo è possibile solo se non sei l'unico utente in questa azienda e se non è la tua unica azienda. Per sicurezza ripeti il nome dell'azienda:",
     "removeUser": "Sei sicuro di voler rimuovere questo utente? \nSe l'utente non ha accesso a un'altra azienda, non sarà in grado di accedere nuovamente.",
     "title": "Qui puoi cambiare tra le tue aziende o crearne di nuove. Come amministratore puoi anche modificare il nome della tua azienda o eliminarne una.",
     "titleUser": "Qui puoi vedere un elenco di utenti che hanno accesso alla società attuale. Rimuovili, modifica i diritti di accesso o aggiungine di nuovi."
@@ -301,7 +301,7 @@
     "links": "Se hai delle buone aggiunte all'elenco, non esitare a contattarci, contattaci all'indirizzo {'office@btree.at'}",
     "map-apiary": "Puoi spostare il tuo apiario in una nuova posizione trascinando e rilasciando! \nFare doppio clic sulla mappa per creare un nuovo apiario. \nNon è possibile eliminare gli apiari con colonie attive, è necessario prima spostarli. \nIl limite di iscrizione di base è di 2 apiari e di 100 apiari premium.",
     "map-meteoblue": "Una semplice mappa meteorologica di Meteoblue. Usa la tua posizione attuale, se possibile.",
-    "map-velutina": "Mappa della diffusione della Vespa velutina. \nSe avete avvistamenti segnalateli alla vostra associazione di apicoltori locale. \nLe mappe di calore sono dati di tutti gli anni, i cluster di dettaglio sono solo osservazioni recenti (ultimi 2 mesi).",
+    "map-velutina": "Mappa della diffusione della Vespa velutina. \nSe hai avvistamenti segnalali alla tua associazione di apicoltori locale. \nLe mappe di calore sono dati di tutti gli anni, i cluster di dettaglio sono solo osservazioni recenti (ultimi 2 mesi).",
     "name": "Aiuto",
     "new-charge": "I movimenti di magazzino tengono traccia delle tue risorse, come zucchero o prodotti per i trattamenti. Ogni movimento è un'entrata o un'uscita di merce per un articolo di magazzino. Usa il campo numero di lotto per il lotto di un prodotto o dei tuoi vasetti di miele. Gli apicoltori biologici possono usare i movimenti per tenere traccia delle fatture dello zucchero biologico.\nNutrizioni, trattamenti, raccolti e controlli possono registrare le scorte automaticamente quando il loro tipo ha un uso dello stock.\nPer un conteggio delle scorte, scegli il tipo Inventario e inserisci il totale contato. b.tree registra la differenza.",
     "new-hive": "Se aggiungi un alveare, il nome deve essere univoco. \nData se la migrazione è importante se aggiungi attività prima della prima migrazione. \nPuoi creare più alveari facendo clic sul simbolo vicino al campo del nome. \nIl limite di iscrizione di base è di 5 alveari e quello premium di 1.000 alveari.",
@@ -648,7 +648,7 @@
   "reset": "Ripristina",
   "resetConfirm": "Ripristina i dati del modulo?",
   "resetUser": {
-    "keyNotFound": "La chiave di reimpostazione non è più valida. Si prega di richiedere una nuova reimpostazione della password.",
+    "keyNotFound": "La chiave di reimpostazione non è più valida. Richiedi una nuova reimpostazione della password.",
     "label": "Reimposta chiave",
     "success": "La tua password è stata modificata con successo, abbiamo inviato una mail di conferma a {msg}.",
     "title": "Crea nuova password"
@@ -720,7 +720,7 @@
   "shareButton": "Impostazioni QR e NFC",
   "show": "Spettacolo",
   "signup": {
-    "accept": "Si prega di accettare prima i termini!",
+    "accept": "Accetta prima i termini!",
     "agree": "Sei d'accordo con il",
     "alreadyRegistered": "Già registrato?",
     "hintPremium": "Suggerimento: quando ti registri, ricevi un mese di accesso premium gratuito per testare l'intera app. Successivamente puoi ancora usarlo ma con funzionalità limitate.",
