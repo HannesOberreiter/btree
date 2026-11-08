@@ -3,7 +3,7 @@ Caro apicoltore!
 
 La tua iscrizione Premium scadrà presto! Saremo lieti di mantenerti come Membro Premium.
 
-Organization: %key%
+Organizzazione: %key%
 
 Rinnova ora: %base_url%premium%params%
       
