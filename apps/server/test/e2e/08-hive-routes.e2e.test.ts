@@ -128,6 +128,76 @@ describe('hive routes', () => {
       });
     });
 
+    it('404 - type or source of another company', async () => {
+      const db = KyselyServer.getInstance().db;
+      const company = await db
+        .insertInto('companies')
+        .values({ name: `Hive option owner ${Date.now()}` })
+        .executeTakeFirstOrThrow();
+      const companyId = Number(company.insertId);
+      const hiveType = await db
+        .insertInto('hive_types')
+        .values({ name: 'Foreign hive type', user_id: companyId })
+        .executeTakeFirstOrThrow();
+      const hiveSource = await db
+        .insertInto('hive_sources')
+        .values({ name: 'Foreign hive source', user_id: companyId })
+        .executeTakeFirstOrThrow();
+      const foreignTypeId = Number(hiveType.insertId);
+      const foreignSourceId = Number(hiveSource.insertId);
+      try {
+        for (const data of [
+          { type_id: foreignTypeId },
+          { source_id: foreignSourceId },
+        ]) {
+          const created = await doRequest(
+            agent,
+            'post',
+            route,
+            null,
+            accessToken,
+            { ...testInsert, ...data, name: 'Foreign option hive', repeat: 1 },
+          );
+          expect(created.statusCode).toBe(404);
+
+          const patched = await doRequest(
+            agent,
+            'patch',
+            route,
+            null,
+            accessToken,
+            { ids: [insertId], data },
+          );
+          expect(patched.statusCode).toBe(404);
+        }
+        const hive = await db
+          .selectFrom('hives')
+          .select(['type_id', 'source_id'])
+          .where('id', '=', insertId)
+          .executeTakeFirstOrThrow();
+        expect(hive).toEqual({
+          type_id: testInsert.type_id,
+          source_id: testInsert.source_id,
+        });
+        const foreignHives = await db
+          .selectFrom('hives')
+          .select('id')
+          .where('name', '=', 'Foreign option hive')
+          .execute();
+        expect(foreignHives).toEqual([]);
+      } finally {
+        await db
+          .deleteFrom('hive_types')
+          .where('id', '=', foreignTypeId)
+          .execute();
+        await db
+          .deleteFrom('hive_sources')
+          .where('id', '=', foreignSourceId)
+          .execute();
+        await db.deleteFrom('companies').where('id', '=', companyId).execute();
+      }
+    });
+
     it('get 200 - accepts numeric search text', async () => {
       const hive = await doRequest(agent, 'post', route, null, accessToken, {
         ...testInsert,

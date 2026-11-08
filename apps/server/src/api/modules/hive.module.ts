@@ -16,6 +16,10 @@ import { listCheckups } from './checkup.module.js';
 import { listFeeds } from './feed.module.js';
 import { listHarvests } from './harvest.module.js';
 import { listMovedates } from './movedate.module.js';
+import {
+  requireHiveSourceOwnership,
+  requireHiveTypeOwnership,
+} from './ownership.module.js';
 import { limitHive } from './premium.module.js';
 import { listTodos } from './todo.module.js';
 import { listTreatments } from './treatment.module.js';
@@ -536,6 +540,19 @@ async function duplicateName(
   return Boolean(await query.executeTakeFirst());
 }
 
+async function requireHiveOptionOwnership(
+  db: Database,
+  companyId: number,
+  input: HivePatchBody['data'],
+) {
+  if (input.source_id !== undefined) {
+    await requireHiveSourceOwnership(db, input.source_id, companyId);
+  }
+  if (input.type_id !== undefined) {
+    await requireHiveTypeOwnership(db, input.type_id, companyId);
+  }
+}
+
 function hiveValues(input: HivePatchBody['data']) {
   return {
     ...(input.name !== undefined && { name: input.name }),
@@ -575,6 +592,7 @@ export async function createHives(
       .where('user_id', '=', companyId)
       .executeTakeFirst();
     if (!apiary) throw httpErrors.NotFound();
+    await requireHiveOptionOwnership(transaction, companyId, body);
     const ids: number[] = [];
     for (let index = 0; index < repeat; index++) {
       const name = repeat > 1 ? `${body.name}${body.start + index}` : body.name;
@@ -621,6 +639,7 @@ export function updateHives(
         throw httpErrors.Conflict('name');
       }
     }
+    await requireHiveOptionOwnership(transaction, companyId, body.data);
     const result = await transaction
       .updateTable('hives')
       .set({ ...hiveValues(body.data), edit_id: beeId })
