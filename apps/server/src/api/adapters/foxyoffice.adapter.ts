@@ -196,7 +196,7 @@ export async function createInvoice(
       },
       InvoicePosition: [
         {
-          text: 'b.tree PREMIUM Mitglied, Abo Time: + 1 Jahr Abo',
+          text: 'b.tree PREMIUM-Mitgliedschaft: 1 Jahr, einmalige Zahlung (kein Abo)',
           amount,
           unit: 'x',
           price: price / amount / 1.2,
