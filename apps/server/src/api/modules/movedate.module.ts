@@ -365,8 +365,8 @@ export function deleteMovedates(
       .orderBy('movedates.date', 'asc')
       .orderBy('movedates.id', 'asc')
       .execute();
-    // Keep at least one movement per hive. Rows are oldest first, so the
-    // newest movement (the current location) stays.
+    // Keep at least one movement per hive. Rows are oldest first, so when the
+    // request selects all movements of a hive, the newest one stays.
     const selected = new Map<number | null, number>();
     const eligible: number[] = [];
     for (const row of rows) {
