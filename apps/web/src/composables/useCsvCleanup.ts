@@ -35,8 +35,6 @@ function getField(field: any, state: any) {
   } else {
     if (field.type === 'int') {
       value = 1;
-    } else if (field.type === 'number') {
-      value = 0;
     } else if (field.type === 'date') {
       value = dayjs().format('YYYY-MM-DD');
     } else if (field.type === 'boolean') {
