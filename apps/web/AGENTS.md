@@ -1,6 +1,3 @@
-<!-- bmad:context -->
-<!-- Verified 2026-09-14 against 44299599e3f7249556cf9edf9049ee41619f2164. Managed by bmad-project-context; refreshes reconcile existing instructions before replacing this block. -->
-
 ## b.tree
 
 b.tree is a beekeeping management application built with Vue and Quasar.
@@ -40,8 +37,6 @@ Deployment and Android packaging documentation lives in `README.md`.
 - Prefer `@/` imports for `src/` and `~@/assets/...` for Vue template asset URLs.
 - Use `#q-app` wrappers such as `defineBoot` and `defineRouter`. Use `import.meta.env.QUASAR_*` for Quasar constants rather than `process.env`.
 - When adding external requests, images, scripts, or frames, check the matching CSP directive in `quasar.config.ts`; CSP enforcement is disabled during development.
-
-<!-- /bmad:context -->
 
 ## Quasar MCP
 
