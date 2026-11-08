@@ -182,9 +182,9 @@
   "drone": "Drone",
   "dropbox": {
     "connectAccount": "Connectez votre compte Dropbox",
-    "connectText": "Sur cette page, vous pouvez connecter votre compte Dropbox https://wwww.dropbox.com. Par entreprise, un compte peut être connecté. Après la connexion, un nouveau dossier '/Apps/btree - Beekeeping' dans Dropbox sera créé et accessible à tous les utilisateurs de votre entreprise.",
+    "connectText": "Sur cette page, vous pouvez connecter votre compte Dropbox https://www.dropbox.com. Par entreprise, un compte peut être connecté. Après la connexion, un nouveau dossier '/Apps/btree - Beekeeping' dans Dropbox sera créé et accessible à tous les utilisateurs de votre entreprise.",
     "deleteAccess": "Supprimer l'accès",
-    "deleteFileOrFolder": "Êtes-vous sûr de vouloir le fichier ou le dossier sélectionné et son contenu?",
+    "deleteFileOrFolder": "Êtes-vous sûr de vouloir supprimer le fichier ou le dossier sélectionné et son contenu?",
     "refreshToken": "Actualiser le jeton"
   },
   "dropdownNotAvailable": "L'option sélectionnée à l'origine est inactive et ne peut pas être sélectionnée!",
@@ -306,7 +306,7 @@
     "new-charge": "Les mouvements de stock suivent vos ressources, comme le sucre ou les produits de traitement. Chaque mouvement est une réception ou une sortie de marchandises pour un article de stock. Utilisez le champ numéro de lot pour le lot d'un produit ou de vos pots de miel. Les apiculteurs biologiques peuvent utiliser les mouvements pour suivre les factures de sucre biologique.\nLes nourrissements, traitements, récoltes et contrôles peuvent comptabiliser le stock automatiquement quand leur type a une utilisation du stock.\nPour un comptage du stock, choisissez le genre Inventaire et saisissez le total compté. b.tree comptabilise la différence.",
     "new-hive": "Si vous ajoutez une ruche, le nom doit être unique. \nDate si la migration est importante si vous ajoutez une tâche avant la première migration. \nVous pouvez créer plusieurs ruches en cliquant sur le symbole près du champ de nom. \nLa limite d'adhésion de base est de 5 ruches et la prime de 1 000 ruches.",
     "new-movement": "Les migrations de vos ruches ont une influence sur les statistiques, car les tâches principales utilisent la date de migration pour vérifier sur quel rucher la tâche a été effectuée. \nCela permet des statistiques correctes pour les apiculteurs en migration.",
-    "new-queen": "Il n'est pas obligatoire de créer des reines pour vos colonies. \nVous pouvez créer plusieurs reines à la fois si vous cliquez sur le symbole près du champ du nom. \nLes noms doivent être uniques. \nLe champ de marquage de la reine est destiné à la couleur (cliquez sur le symbole à droite) mais vous ne pouvez pas également ajouter un nombre ou toute autre valeur ici. \nSi vous ne sélectionnez pas de ruche pour votre reine, la reine sera visible dans le tableau des vierges. \nQuant à la mère, vous pouvez sélectionner l'une de vos propres reines ou écrire dans le champ de texte mère, qui est destiné aux reines mères externes.",
+    "new-queen": "Il n'est pas obligatoire de créer des reines pour vos colonies. \nVous pouvez créer plusieurs reines à la fois si vous cliquez sur le symbole près du champ du nom. \nLes noms doivent être uniques. \nLe champ de marquage de la reine est destiné à la couleur (cliquez sur le symbole à droite) mais vous pouvez aussi ajouter un nombre ou toute autre valeur ici. \nSi vous ne sélectionnez pas de ruche pour votre reine, la reine sera visible dans le tableau des vierges. \nQuant à la mère, vous pouvez sélectionner l'une de vos propres reines ou écrire dans le champ de texte mère, qui est destiné aux reines mères externes.",
     "new-quicktool": "Le Quicktool vous permet d'ajouter rapidement les principales tâches (alimentation, traitement, récolte et contrôle). \nVous pouvez facilement ajouter des tâches pour une ruche ou un rucher entier. \nLes listes déroulantes de type peuvent être éditées dans les options, en plus il est possible d'ajouter ou de supprimer quelques champs dans les paramètres des champs.",
     "new-rearing": "Ici, vous pouvez créer votre série d'élevage de reines. \nEn option, vous pouvez définir un nom et modifier le symbole (cliquez sur le symbole avant le champ de saisie du nom), pour mieux différencier si vous exécutez plusieurs séries. \nLa date et calculer à partir de la liste déroulante de l'étape est connectée car elle commence à calculer votre série à partir de cette date et de cette étape (en arrière et/ou en avant). \nLes méthodes que vous pouvez définir selon vos besoins sur la page des méthodes d'élevage des reines. \nLes élevages de reines seront visibles sur le calendrier.",
     "new-todo": "Les tâches sont destinées à être utilisées s'il ne s'agit pas d'une tâche directe pour une colonie. \nSinon, utilisez un bilan de santé. \nComme exemple de ToDo's sont les tâches concernant le rucher, par ex. \napporter de nouvelles planches inférieures, réparer la clôture. \nVous pouvez créer des tâches répétitives si vous cliquez sur le symbole près du champ de date. \nLes tâches sont normalement dans le futur et ne sont pas encore terminées. Par conséquent, la valeur standard pour est définie sur \"Ouvert\".",
@@ -635,7 +635,7 @@
     "search": "Recherche Internet",
     "socialMedia": "Des médias sociaux"
   },
-  "rejectedFiles": "{count} Le(s) fichier(s) ne sont pas autorisés.",
+  "rejectedFiles": "{count} fichier(s) non autorisé(s).",
   "reload": "Recharger",
   "reloadRequired": "Un rechargement est nécessaire.",
   "remove": "Retirer",
