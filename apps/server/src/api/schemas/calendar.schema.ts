@@ -32,7 +32,7 @@ export const calendarEventResponseSchema = z.looseObject({
   editors: z.string().optional(),
   task_ids: z.union([z.string(), z.number()]).optional(),
   name: z.string().nullable().optional(),
-  symbol: z.string().optional(),
+  symbol: z.string().nullable().optional(),
 });
 
 export const calendarResponseSchema = z.array(calendarEventResponseSchema);

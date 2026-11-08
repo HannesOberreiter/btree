@@ -320,6 +320,42 @@ describe('remote MCP routes', () => {
     expect(callback.searchParams.get('state')).toBe('wrong-resource-state');
   });
 
+  it('keeps an all-digit OAuth state as a string', async () => {
+    const authorizeQuery = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'mcp',
+      state: '0123456',
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    });
+    const authorization = await agent.request(
+      'GET',
+      `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+      undefined,
+      undefined,
+      'manual',
+    );
+    expect(authorization.statusCode).toBe(200);
+    const consentToken = String(authorization.body).match(
+      /name="consent_token" value="([A-Za-z0-9_-]+)"/,
+    )?.[1];
+    expect(consentToken).toBeTruthy();
+
+    const consent = await agent.request(
+      'POST',
+      '/api/v1/mcp/oauth/authorize',
+      { consent_token: consentToken, decision: 'approve' },
+      undefined,
+      'manual',
+    );
+    expect(consent.statusCode).toBe(302);
+    const callback = new URL(consent.headers.location);
+    expect(callback.searchParams.get('state')).toBe('0123456');
+    expect(callback.searchParams.get('code')).toBeTruthy();
+  });
+
   it('lists active MCP connections only for the signed-in user', async () => {
     const unauthorized = await jsonRequest('GET', '/api/v1/mcp/connections');
     expect(unauthorized.status).toBe(401);

@@ -246,6 +246,61 @@ describe('statistic routes', () => {
     );
   });
 
+  it('returns the Varroa average of decimal readings', async () => {
+    const db = KyselyServer.getInstance().db;
+    const hive = await db
+      .insertInto('hives')
+      .values({ name: 'stat-varroa-avg', user_id: 1, deleted: false })
+      .executeTakeFirstOrThrow();
+    const hiveId = Number(hive.insertId);
+    await db
+      .insertInto('checkups')
+      .values(
+        [
+          { varroa: '2.50', date: new Date('2025-07-01') },
+          { varroa: '3.00', date: new Date('2025-07-02') },
+        ].map(({ varroa, date }) => ({
+          brood: 1,
+          calm_comb: 1,
+          comb: 1,
+          pollen: 1,
+          strong: 1,
+          swarm: 1,
+          temper: 1,
+          varroa,
+          date,
+          deleted: false,
+          hive_id: hiveId,
+          user_id: 1,
+        })),
+      )
+      .execute();
+
+    try {
+      const varroa = await doQueryRequest(
+        agent,
+        `${route}/varroa`,
+        null,
+        null,
+        {
+          start_date: '2025-01-01',
+          end_date: '2025-12-31',
+          hive_ids: [hiveId],
+        },
+      );
+      expect(varroa.statusCode).toBe(200);
+      expect(varroa.body.stats).toEqual([
+        {
+          hive_name: 'stat-varroa-avg',
+          varroa: { min: 2.5, max: 3, avg: 2.75 },
+        },
+      ]);
+    } finally {
+      await db.deleteFrom('checkups').where('hive_id', '=', hiveId).execute();
+      await db.deleteFrom('hives').where('id', '=', hiveId).execute();
+    }
+  });
+
   it('queries only tables for the requested task statistics', async () => {
     const db = KyselyServer.getInstance().db;
     const tableNames = {

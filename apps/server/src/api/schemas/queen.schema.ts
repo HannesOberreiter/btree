@@ -62,7 +62,7 @@ const queenDataSchema = z.object({
   note: z.string().max(2000).nullable().optional(),
   modus: z.boolean().optional(),
   modus_date: z.string().nullable().optional(),
-  hive_id: z.union([numberSchema, z.literal('empty'), z.null()]).optional(),
+  hive_id: z.union([z.null(), z.literal('empty'), numberSchema]).optional(),
   race_id: numberSchema.nullable().optional(),
   mating_id: numberSchema.nullable().optional(),
   mother_id: numberSchema.nullable().optional(),
@@ -70,7 +70,7 @@ const queenDataSchema = z.object({
 
 export const postBodySchema = queenDataSchema.extend({
   name: z.string().min(1).max(36),
-  hive_id: z.union([numberSchema, z.array(numberSchema)]).optional(),
+  hive_id: z.union([z.null(), numberSchema, z.array(numberSchema)]).optional(),
   start: z.number().int().min(0).max(10000).optional(),
   repeat: z.number().int().min(0).max(100).optional(),
 });

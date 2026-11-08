@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   getQueensByIds,
@@ -161,6 +161,112 @@ describe('queen routes', () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
+    });
+
+    describe('patch 404 - foreign references', () => {
+      const db = KyselyServer.getInstance().db;
+      let foreignCompanyId: number;
+      const foreignIds = { race_id: 0, mating_id: 0, mother_id: 0 };
+
+      beforeAll(async () => {
+        const company = await db
+          .insertInto('companies')
+          .values({ name: `Queen foreign ${Date.now()}` })
+          .executeTakeFirstOrThrow();
+        foreignCompanyId = Number(company.insertId);
+        const race = await db
+          .insertInto('queen_races')
+          .values({ name: 'Foreign race', user_id: foreignCompanyId })
+          .executeTakeFirstOrThrow();
+        foreignIds.race_id = Number(race.insertId);
+        const mating = await db
+          .insertInto('queen_matings')
+          .values({ name: 'Foreign mating', user_id: foreignCompanyId })
+          .executeTakeFirstOrThrow();
+        foreignIds.mating_id = Number(mating.insertId);
+        const mother = await db
+          .insertInto('queens')
+          .values({ name: 'Foreign mother', user_id: foreignCompanyId })
+          .executeTakeFirstOrThrow();
+        foreignIds.mother_id = Number(mother.insertId);
+      });
+
+      afterAll(async () => {
+        await db
+          .deleteFrom('queens')
+          .where('id', '=', foreignIds.mother_id)
+          .execute();
+        await db
+          .deleteFrom('queen_matings')
+          .where('id', '=', foreignIds.mating_id)
+          .execute();
+        await db
+          .deleteFrom('queen_races')
+          .where('id', '=', foreignIds.race_id)
+          .execute();
+        await db
+          .deleteFrom('companies')
+          .where('id', '=', foreignCompanyId)
+          .execute();
+      });
+
+      it.each(['race_id', 'mating_id', 'mother_id'] as const)(
+        'rejects a foreign %s',
+        async (field) => {
+          const res = await doRequest(
+            agent,
+            'patch',
+            route,
+            null,
+            accessToken,
+            { ids: [insertId], data: { [field]: foreignIds[field] } },
+          );
+          expect(res.statusCode).toEqual(404);
+          const queen = await db
+            .selectFrom('queens')
+            .select(field)
+            .where('id', '=', insertId)
+            .executeTakeFirstOrThrow();
+          expect(queen[field]).not.toBe(foreignIds[field]);
+        },
+      );
+    });
+
+    it('post 200 - hive_id null creates a queen without hive', async () => {
+      const res = await doRequest(agent, 'post', route, null, accessToken, {
+        name: 'testQueenNoHive',
+        hive_id: null,
+      });
+      expect(res.statusCode).toEqual(200);
+      const get = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: res.body },
+      );
+      expect(get.statusCode).toEqual(200);
+      expect(get.body[0].hive_id).toBeNull();
+    });
+
+    it('patch 200 - hive_id null removes the hive', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { hive_id: null },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+      const get = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(get.statusCode).toEqual(200);
+      expect(get.body[0].hive_id).toBeNull();
     });
   });
 

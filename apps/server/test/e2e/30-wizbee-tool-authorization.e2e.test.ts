@@ -22,6 +22,8 @@ describe('WizBee tool authorization', () => {
       },
     ],
     ['patchHive', { hiveId: 1, name: 'Restricted hive' }],
+    ['deleteMovement', { id: 1 }],
+    ['batchDeleteTodo', { ids: [1] }],
   ])('denies admin-only tool %s to normal users', async (toolName, input) => {
     const result = await executeWizBeeTool(unusedDb, toolName, input, {
       userId: 1,

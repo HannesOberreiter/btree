@@ -351,7 +351,7 @@ export function deleteMovedates(
   ids: number[],
 ) {
   return db.transaction().execute(async (transaction) => {
-    const eligible = await transaction
+    const rows = await transaction
       .selectFrom('movedates')
       .innerJoin('apiaries', 'apiaries.id', 'movedates.apiary_id')
       .innerJoin(
@@ -359,19 +359,26 @@ export function deleteMovedates(
         'movedates_counts.hive_id',
         'movedates.hive_id',
       )
-      .select('movedates.id')
+      .select(['movedates.id', 'movedates.hive_id', 'movedates_counts.count'])
       .where('movedates.id', 'in', ids)
       .where('apiaries.user_id', '=', companyId)
-      .where('movedates_counts.count', '>', 1)
+      .orderBy('movedates.date', 'asc')
+      .orderBy('movedates.id', 'asc')
       .execute();
+    // Keep at least one movement per hive. Rows are oldest first, so when the
+    // request selects all movements of a hive, the newest one stays.
+    const selected = new Map<number | null, number>();
+    const eligible: number[] = [];
+    for (const row of rows) {
+      const taken = selected.get(row.hive_id) ?? 0;
+      if (taken >= row.count - 1) continue;
+      selected.set(row.hive_id, taken + 1);
+      eligible.push(row.id);
+    }
     if (eligible.length === 0) throw httpErrors.Forbidden('lastMovement');
     const result = await transaction
       .deleteFrom('movedates')
-      .where(
-        'id',
-        'in',
-        eligible.map((row) => row.id),
-      )
+      .where('id', 'in', eligible)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   });

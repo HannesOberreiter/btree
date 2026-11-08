@@ -128,6 +128,76 @@ describe('hive routes', () => {
       });
     });
 
+    it('404 - type or source of another company', async () => {
+      const db = KyselyServer.getInstance().db;
+      const company = await db
+        .insertInto('companies')
+        .values({ name: `Hive option owner ${Date.now()}` })
+        .executeTakeFirstOrThrow();
+      const companyId = Number(company.insertId);
+      const hiveType = await db
+        .insertInto('hive_types')
+        .values({ name: 'Foreign hive type', user_id: companyId })
+        .executeTakeFirstOrThrow();
+      const hiveSource = await db
+        .insertInto('hive_sources')
+        .values({ name: 'Foreign hive source', user_id: companyId })
+        .executeTakeFirstOrThrow();
+      const foreignTypeId = Number(hiveType.insertId);
+      const foreignSourceId = Number(hiveSource.insertId);
+      try {
+        for (const data of [
+          { type_id: foreignTypeId },
+          { source_id: foreignSourceId },
+        ]) {
+          const created = await doRequest(
+            agent,
+            'post',
+            route,
+            null,
+            accessToken,
+            { ...testInsert, ...data, name: 'Foreign option hive', repeat: 1 },
+          );
+          expect(created.statusCode).toBe(404);
+
+          const patched = await doRequest(
+            agent,
+            'patch',
+            route,
+            null,
+            accessToken,
+            { ids: [insertId], data },
+          );
+          expect(patched.statusCode).toBe(404);
+        }
+        const hive = await db
+          .selectFrom('hives')
+          .select(['type_id', 'source_id'])
+          .where('id', '=', insertId)
+          .executeTakeFirstOrThrow();
+        expect(hive).toEqual({
+          type_id: testInsert.type_id,
+          source_id: testInsert.source_id,
+        });
+        const foreignHives = await db
+          .selectFrom('hives')
+          .select('id')
+          .where('name', '=', 'Foreign option hive')
+          .execute();
+        expect(foreignHives).toEqual([]);
+      } finally {
+        await db
+          .deleteFrom('hive_types')
+          .where('id', '=', foreignTypeId)
+          .execute();
+        await db
+          .deleteFrom('hive_sources')
+          .where('id', '=', foreignSourceId)
+          .execute();
+        await db.deleteFrom('companies').where('id', '=', companyId).execute();
+      }
+    });
+
     it('get 200 - accepts numeric search text', async () => {
       const hive = await doRequest(agent, 'post', route, null, accessToken, {
         ...testInsert,
@@ -251,6 +321,36 @@ describe('hive routes', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
     });
+
+    it('patch 200 - keeps position and grouphive when not sent', async () => {
+      const setup = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { position: 7, grouphive: 3 },
+      });
+      expect(setup.statusCode).toEqual(200);
+
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: {
+          modus: true,
+          modus_date: new Date().toISOString().slice(0, 10),
+        },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+
+      const hive = await doQueryRequest(
+        agent,
+        route,
+        insertId,
+        accessToken,
+        null,
+      );
+      expect(hive.statusCode).toEqual(200);
+      expect(hive.body).toEqual(
+        expect.objectContaining({ position: 7, grouphive: 3 }),
+      );
+    });
   });
 
   describe('/api/v1/hive/:id', () => {
@@ -325,6 +425,39 @@ describe('hive routes', () => {
       expect(res.body).toHaveProperty('treatment');
       expect(res.body).toHaveProperty('checkup');
       expect(res.body).toHaveProperty('movedate');
+    });
+    it('200 - empty apiary returns no hive tasks', async () => {
+      const feed = await doRequest(agent, 'post', '/api/v1/feed', null, null, {
+        hive_ids: [insertId],
+        date: testInsert.date,
+        amount: 1,
+        type_id: 1,
+      });
+      expect(feed.statusCode).toEqual(200);
+      const apiary = await doRequest(
+        agent,
+        'post',
+        '/api/v1/apiary',
+        null,
+        null,
+        { name: `EmptyApiary${Date.now()}` },
+      );
+      expect(apiary.statusCode).toEqual(200);
+
+      const res = await doQueryRequest(
+        agent,
+        `${route}/task`,
+        apiary.body.id,
+        accessToken,
+        { apiary: true, year: Number(testInsert.date.slice(0, 4)) },
+      );
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.harvest).toEqual([]);
+      expect(res.body.feed).toEqual([]);
+      expect(res.body.treatment).toEqual([]);
+      expect(res.body.checkup).toEqual([]);
+      expect(res.body.movedate).toEqual([]);
+      expect(res.body.todo).toBeInstanceOf(Array);
     });
   });
 

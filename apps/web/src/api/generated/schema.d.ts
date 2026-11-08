@@ -1293,7 +1293,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1353,7 +1353,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1413,7 +1413,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1473,7 +1473,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1534,7 +1534,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1594,7 +1594,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1654,7 +1654,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -1714,7 +1714,7 @@ export interface paths {
               id?: string | number;
               name?: string | null;
               start: string;
-              symbol?: string;
+              symbol?: string | null;
               table?: string;
               task_ids?: string | number;
               textColor?: string;
@@ -5694,13 +5694,11 @@ export interface paths {
           'application/json': {
             data: {
               deleted?: boolean;
-              /** @default 0 */
               grouphive?: number;
               modus?: boolean;
               modus_date?: string;
               name?: string;
               note?: string;
-              /** @default 0 */
               position?: number;
               source_id?: number;
               type_id?: number;
@@ -7730,7 +7728,7 @@ export interface paths {
         content: {
           'application/json': {
             date?: string | null;
-            hive_id?: number | number[];
+            hive_id?: null | number | number[];
             mark_colour?: string | null;
             mating_id?: number | null;
             modus?: boolean;
@@ -7774,7 +7772,7 @@ export interface paths {
           'application/json': {
             data: {
               date?: string | null;
-              hive_id?: 'empty' | null;
+              hive_id?: null | 'empty';
               mark_colour?: string | null;
               mating_id?: number | null;
               modus?: boolean;

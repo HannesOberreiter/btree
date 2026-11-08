@@ -50,7 +50,7 @@ export class Application {
             arrayFormat: 'bracket',
             parseBooleans: true,
             parseNumbers: true,
-            types: { q: 'string' },
+            types: { q: 'string', state: 'string', note: 'string' },
           }),
       },
       ajv: {
