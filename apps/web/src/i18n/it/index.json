@@ -182,9 +182,9 @@
   "drone": "Drone",
   "dropbox": {
     "connectAccount": "Collega il tuo account Dropbox",
-    "connectText": "In questa pagina puoi collegare il tuo account Dropbox https://wwww.dropbox.com. Per azienda è possibile collegare un account. Dopo la connessione, verrà creata una nuova cartella \"/Apps/btree - Beekeeping\" in Dropbox, accessibile a tutti gli utenti della tua azienda.",
+    "connectText": "In questa pagina puoi collegare il tuo account Dropbox https://www.dropbox.com. Per azienda è possibile collegare un account. Dopo la connessione, verrà creata una nuova cartella \"/Apps/btree - Beekeeping\" in Dropbox, accessibile a tutti gli utenti della tua azienda.",
     "deleteAccess": "Elimina l'accesso",
-    "deleteFileOrFolder": "Sei sicuro di volere il file o la cartella selezionati e il suo contenuto?",
+    "deleteFileOrFolder": "Sei sicuro di voler eliminare il file o la cartella selezionati e il suo contenuto?",
     "refreshToken": "Aggiorna token"
   },
   "dropdownNotAvailable": "L'opzione originale selezionata è inattiva e non può essere selezionata!",
@@ -306,7 +306,7 @@
     "new-charge": "I movimenti di magazzino tengono traccia delle tue risorse, come zucchero o prodotti per i trattamenti. Ogni movimento è un'entrata o un'uscita di merce per un articolo di magazzino. Usa il campo numero di lotto per il lotto di un prodotto o dei tuoi vasetti di miele. Gli apicoltori biologici possono usare i movimenti per tenere traccia delle fatture dello zucchero biologico.\nNutrizioni, trattamenti, raccolti e controlli possono registrare le scorte automaticamente quando il loro tipo ha un uso dello stock.\nPer un conteggio delle scorte, scegli il tipo Inventario e inserisci il totale contato. b.tree registra la differenza.",
     "new-hive": "Se aggiungi un alveare, il nome deve essere univoco. \nData se la migrazione è importante se aggiungi attività prima della prima migrazione. \nPuoi creare più alveari facendo clic sul simbolo vicino al campo del nome. \nIl limite di iscrizione di base è di 5 alveari e quello premium di 1.000 alveari.",
     "new-movement": "Le migrazioni dei tuoi alveari hanno influenza sulle statistiche, poiché le attività principali utilizzano la data di migrazione per verificare su quale apiario è stata eseguita l'attività. \nCiò consente statistiche corrette per gli apicoltori migratori.",
-    "new-queen": "Non è obbligatorio creare regine per le tue colonie. \nPuoi creare più regine contemporaneamente se fai clic sul simbolo vicino al campo del nome. \nI nomi devono essere univoci. \nIl campo di marcatura della regina è pensato per il colore (clicca sul simbolo a destra) ma non puoi aggiungere anche un numero o qualsiasi altro valore qui. \nSe non selezioni un alveare per la tua regina, la regina sarà visibile nella tabella delle vergini. \nPer quanto riguarda la madre, puoi selezionare una delle tue regine o scrivere nel campo di testo madre, che è pensato per le regine madri esterne.",
+    "new-queen": "Non è obbligatorio creare regine per le tue colonie. \nPuoi creare più regine contemporaneamente se fai clic sul simbolo vicino al campo del nome. \nI nomi devono essere univoci. \nIl campo di marcatura della regina è pensato per il colore (clicca sul simbolo a destra) ma puoi anche aggiungere un numero o qualsiasi altro valore qui. \nSe non selezioni un alveare per la tua regina, la regina sarà visibile nella tabella delle vergini. \nPer quanto riguarda la madre, puoi selezionare una delle tue regine o scrivere nel campo di testo madre, che è pensato per le regine madri esterne.",
     "new-quicktool": "Il Quicktool consente di aggiungere rapidamente le attività principali (alimentazione, trattamento, raccolta e controllo). \nPuoi facilmente aggiungere attività per un alveare o un intero apiario. \nGli elenchi a discesa del tipo possono essere modificati nelle opzioni, inoltre è possibile aggiungere o rimuovere alcuni campi nelle impostazioni del campo.",
     "new-rearing": "Qui puoi creare la tua serie di regine. \nFacoltativamente è possibile impostare un nome e modificare il simbolo (fare clic sul simbolo prima del campo di immissione del nome), per differenziare meglio se si eseguono più serie. \nL'elenco a discesa della data e del calcolo dal passaggio è collegato poiché inizia a calcolare le serie da questa data e da questo passaggio (indietro e/o avanti). \nI metodi che puoi definire in base alle tue esigenze nella pagina del metodo di allevamento della regina. \nGli allevamenti di regine saranno visibili sul calendario.",
     "new-todo": "Le cose da fare sono pensate per essere utilizzate se non è un compito diretto per una colonia. \nAltrimenti usa un controllo. \nCome esempio di ToDo's ci sono compiti riguardanti l'apiario, ad es. \nportare nuove tavole inferiori, riparare la recinzione. \nPuoi creare cose da fare ripetute se fai clic sul simbolo vicino al campo della data. \nLe cose da fare sono normalmente future e non ancora completate, quindi il valore standard per è impostato su 'Aperto'.",
@@ -635,7 +635,7 @@
     "search": "Ricerca Internet",
     "socialMedia": "Social media"
   },
-  "rejectedFiles": "{count} I file non sono ammessi.",
+  "rejectedFiles": "{count} file non sono ammessi.",
   "reload": "Ricaricare",
   "reloadRequired": "È necessaria una ricarica.",
   "remove": "Rimuovere",
