@@ -708,7 +708,7 @@
     "hintHiveClearAfterSaving": "Cancella il campo a discesa hive dopo aver salvato una nuova attività.",
     "hintShowQrScanner": "Mostra lo scanner QR nella barra superiore.",
     "hintShowVoiceRecognition": "Mostra il riconoscimento vocale nella barra superiore.",
-    "hintTreatmentTemperature": "@:setting.hintCheckupTemperatura",
+    "hintTreatmentTemperature": "@:setting.hintCheckupTemperature",
     "hintTreatmentVet": "Vet: Dropdown, nelle Opzioni puoi definire i valori per questo menu a tendina",
     "hintTreatmentWait": "Attendere: campo di immissione, per il tempo di attesa dopo il trattamento",
     "localTitle": "Le impostazioni del dispositivo locale vengono salvate nella memoria locale.",
