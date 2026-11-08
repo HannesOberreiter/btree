@@ -176,8 +176,8 @@ export async function createInvoice(
 
     const info =
       mode === 'invoice'
-        ? `Lieferdatum: wie Rechnungsdatum\n\nBitte überweisen Sie den Betrag bis spätestens <b>${toISODate(paymentTargetDate)}</b> auf folgendes Konto:\n\n<b>Unsere Bankverbindung:</b>\nSteiermärkische Sparkasse\nIBAN: AT05 2081 5000 4507 3715\nBIC: STSPAT2GXXX\n\nVerwendungszweck: <b>Rechnung ${buildFullNumber(latestInvoice.number)}</b>\n\nVielen Dank für Ihre Unterstützung und ein erfolgreiches Imkerjahr!\n\nMit freundlichen Grüßen\nHannes Oberreiter\n<b>btree.at</b>`
-        : `Lieferdatum:  wie Rechnungsdatum\n\nBetrag wurde bereits mit <b>${type}</b> bezahlt!\n\nVielen Dank für Ihre Unterstützung und ein erfolgreiches Imkerjahr!\n\nMit freundlichen Grüßen\nHannes Oberreiter\n<b>btree.at</b>`;
+        ? `Lieferdatum: wie Rechnungsdatum\n\nZahlbar bis spätestens <b>${toISODate(paymentTargetDate)}</b> auf folgendes Konto:\n\n<b>Unsere Bankverbindung:</b>\nSteiermärkische Sparkasse\nIBAN: AT05 2081 5000 4507 3715\nBIC: STSPAT2GXXX\n\nVerwendungszweck: <b>Rechnung ${buildFullNumber(latestInvoice.number)}</b>\n\nVielen Dank für die Unterstützung und ein erfolgreiches Imkerjahr!\n\nMit freundlichen Grüßen\nHannes Oberreiter\n<b>btree.at</b>`
+        : `Lieferdatum: wie Rechnungsdatum\n\nDer Betrag wurde bereits mit <b>${type}</b> bezahlt!\n\nVielen Dank für die Unterstützung und ein erfolgreiches Imkerjahr!\n\nMit freundlichen Grüßen\nHannes Oberreiter\n<b>btree.at</b>`;
 
     const data = {
       Invoice: {
@@ -192,7 +192,7 @@ export async function createInvoice(
         canceled: 0,
         paymentTarget: toISODate(paymentTargetDate),
         leading_text:
-          'Sehr geehrte Damen und Herren,\n\nwir erlauben uns folgende Rechnung auszustellen:',
+          'Folgende Leistung stellen wir in Rechnung:',
         info,
       },
       InvoicePosition: [
