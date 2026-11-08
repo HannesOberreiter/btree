@@ -231,6 +231,43 @@ describe('queen routes', () => {
         },
       );
     });
+
+    it('post 200 - hive_id null creates a queen without hive', async () => {
+      const res = await doRequest(agent, 'post', route, null, accessToken, {
+        name: 'testQueenNoHive',
+        hive_id: null,
+      });
+      expect(res.statusCode).toEqual(200);
+      const get = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: res.body },
+      );
+      expect(get.statusCode).toEqual(200);
+      expect(get.body[0].hive_id).toBeNull();
+    });
+
+    it('patch 200 - hive_id null removes the hive', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { hive_id: null },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+      const get = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(get.statusCode).toEqual(200);
+      expect(get.body[0].hive_id).toBeNull();
+    });
   });
 
   describe('/api/v1/queen/stats', () => {
