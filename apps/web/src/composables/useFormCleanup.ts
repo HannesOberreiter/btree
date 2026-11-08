@@ -144,12 +144,13 @@ function cleanupMovement(originalState: any, isEdit: boolean) {
   /* We need a copy as we modify the state */
   const state = { ...originalState };
   if (state.date) {
-    const date = new Date(state.date);
-    const now = new Date();
-    date.setHours(now.getHours());
-    date.setMinutes(now.getMinutes());
-    date.setSeconds(now.getSeconds());
-    state.date = date.toISOString();
+    /* Parse in local time, new Date('YYYY-MM-DD') parses as UTC midnight */
+    const now = dayjs();
+    state.date = dayjs(state.date, 'YYYY-MM-DD')
+      .hour(now.hour())
+      .minute(now.minute())
+      .second(now.second())
+      .toISOString();
   }
   const result = {
     date: state.date,
@@ -161,19 +162,8 @@ function cleanupMovement(originalState: any, isEdit: boolean) {
   return omitBy(result, isNil);
 }
 
-function cleanupQueen(originalState: FormQueen, isEdit: boolean) {
-  /* We need a copy as we modify the state */
-  const state = { ...originalState };
-
-  if (state.move_date) {
-    const date = new Date(state.move_date);
-    const now = new Date();
-    date.setHours(now.getHours());
-    date.setMinutes(now.getMinutes());
-    date.setSeconds(now.getSeconds());
-    state.move_date = date.toISOString();
-  }
-
+function cleanupQueen(state: FormQueen, isEdit: boolean) {
+  /* move_date is a DATE column, send it as plain YYYY-MM-DD */
   const result = {
     name: state.name,
     mark_colour: state.mark_colour,
