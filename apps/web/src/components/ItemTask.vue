@@ -54,7 +54,7 @@ const api = useApiFetch();
 const notification = useNotification();
 const { t } = useI18n();
 const element = ref(null);
-const model = ref(false);
+const model = ref(props.opened);
 const status = ref(props.task.done);
 
 watch(
