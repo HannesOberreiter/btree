@@ -49,6 +49,16 @@ function getField(field: any, state: any) {
   return value;
 }
 
+// Keep false and 0, but skip missing, empty and unparsable values.
+function hasValue(value: unknown) {
+  return (
+    value !== null &&
+    value !== undefined &&
+    value !== '' &&
+    !Number.isNaN(value)
+  );
+}
+
 function hiveIds(state: any) {
   if ('hive_id' in state) {
     return [Number.parseInt(state.hive_id)];
@@ -166,7 +176,7 @@ function cleanupCheckup(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -223,7 +233,7 @@ function cleanupTreatment(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -280,7 +290,7 @@ function cleanupHarvest(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -325,7 +335,7 @@ function cleanupFeed(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
