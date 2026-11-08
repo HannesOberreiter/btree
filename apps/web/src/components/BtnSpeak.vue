@@ -176,7 +176,7 @@ function handleResult(result: any, command: string) {
 
       case 'dashboard':
         name = 'calendar';
-        text = t(result.item.command);
+        text = t('calendar');
         break;
     }
   }
