@@ -448,7 +448,7 @@
     "minimumAmount": "Un minimum de {value} euros est nécessaire.",
     "noSubscription": "Paiement unique, pas d'abonnement automatique !",
     "otherOptions": "Autres options de paiement",
-    "paymentAmount": "Montant total {comte}.",
+    "paymentAmount": "Montant total {count}.",
     "paymentCount": "Paiements",
     "paymentCurrentYear": "Paiements totaux l'année en cours",
     "paymentHistory": "Historique des paiements",

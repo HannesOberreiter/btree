@@ -448,7 +448,7 @@
     "minimumAmount": "È necessario un minimo di {value} Euro.",
     "noSubscription": "Solo pagamento unico, nessun abbonamento automatico!",
     "otherOptions": "Altre opzioni di pagamento",
-    "paymentAmount": "Importo totale {conteggio}.",
+    "paymentAmount": "Importo totale {count}.",
     "paymentCount": "Pagamenti",
     "paymentCurrentYear": "Pagamenti totali in corso",
     "paymentHistory": "Cronologia dei pagamenti",
@@ -610,7 +610,7 @@
   "ready": "Pronto",
   "rear": {
     "detailHourText": "Numero di ore di attesa prima di questo passaggio.",
-    "startHint": "A partire dal passaggio {passaggio} in data {data}",
+    "startHint": "A partire dal passaggio {step} in data {date}",
     "startLabel": "Calcola dal passaggio"
   },
   "rearing": "Allevamento della regina | Allevamenti di regine",
