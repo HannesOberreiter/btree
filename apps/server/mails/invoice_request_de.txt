@@ -1,7 +1,7 @@
 <title>Deine Rechnung %invoice_number%</title>
 Liebe/r Imker/in,
 
-vielen Dank für deine Unterstützung unserer Imker Applikation. Die Premium Zeit wurde bereits automatisch gutgeschrieben.
+vielen Dank für deine Unterstützung unserer Imker-Applikation. Die Premium-Zeit wurde bereits automatisch gutgeschrieben.
 
 Anbei deine Rechnung als PDF. Wir bitten dich, den Betrag bis spätestens %payment_due% auf unser Konto zu überweisen.
 
