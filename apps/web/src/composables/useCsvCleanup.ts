@@ -26,7 +26,7 @@ function getField(field: any, state: any) {
     if (field.type === 'int') {
       value = Number.parseInt(value);
     } else if (field.type === 'number') {
-      value = Number.parseFloat(value);
+      value = Number.parseFloat(String(value).replace(',', '.'));
     } else if (field.type === 'date') {
       value = dayjs(value).format('YYYY-MM-DD');
     } else if (field.type === 'boolean') {
@@ -35,8 +35,6 @@ function getField(field: any, state: any) {
   } else {
     if (field.type === 'int') {
       value = 1;
-    } else if (field.type === 'number') {
-      value = 0;
     } else if (field.type === 'date') {
       value = dayjs().format('YYYY-MM-DD');
     } else if (field.type === 'boolean') {
@@ -47,6 +45,16 @@ function getField(field: any, state: any) {
     value = value ? `${value} ` + `[import csv]` : '[import csv]';
   }
   return value;
+}
+
+// Keep false and 0, but skip missing, empty and unparsable values.
+function hasValue(value: unknown) {
+  return (
+    value !== null &&
+    value !== undefined &&
+    value !== '' &&
+    !Number.isNaN(value)
+  );
 }
 
 function hiveIds(state: any) {
@@ -136,7 +144,7 @@ function cleanupCheckup(state: any) {
       type: 'int'
     },
     {
-      name: 'temp',
+      name: 'temperature',
       type: 'number'
     },
     {
@@ -166,7 +174,7 @@ function cleanupCheckup(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -223,7 +231,7 @@ function cleanupTreatment(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -280,7 +288,7 @@ function cleanupHarvest(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
@@ -325,7 +333,7 @@ function cleanupFeed(state: any) {
   ];
   fields.forEach(field => {
     const res = getField(field, state);
-    if (res) {
+    if (hasValue(res)) {
       return (result[field.name] = res);
     }
   });
