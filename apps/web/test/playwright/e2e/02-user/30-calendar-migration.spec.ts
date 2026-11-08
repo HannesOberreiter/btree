@@ -341,7 +341,7 @@ test('calendar source filters and date-click form still work', async ({
   ).toBeVisible();
   await calendar.getByRole('button', { name: 'Abos', exact: true }).click();
   const settings = page.locator('[data-cy="dialog-calendar-setting"]');
-  const todos = settings.locator('.q-toggle').filter({ hasText: 'ToDos' });
+  const todos = settings.locator('[data-cy="calendar-source-todo"]');
   await todos.click();
   await expect(
     calendar.getByText('Migration todo', { exact: false })
