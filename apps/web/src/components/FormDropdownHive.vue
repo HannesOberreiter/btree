@@ -253,8 +253,12 @@ watch(scannedId, () => {
       scannedId.value,
       state.hive
     );
-    if (found && double.length === 0) {
-      notification.open('positive', t('addedHive', { name: found.name }), true);
+    if (found.length > 0 && double.length === 0) {
+      notification.open(
+        'positive',
+        t('addedHive', { name: found[0].name }),
+        true
+      );
       scannedId.value = null;
       state.hive = union(state.hive, found);
     }
@@ -272,13 +276,13 @@ watch(formEvent, val => {
 
 function findHives(hives: any, id: string, selected_hives: any) {
   const found = filter(hives, obj => id === String(obj.id)) as any;
-  const double = filter(selected_hives, obj => id === obj.id);
+  const double = filter(selected_hives, obj => id === String(obj.id));
   return { found, double };
 }
 
 function findApiaries(apiaries: any, id: string, selected_apiaries: any) {
   const found = filter(apiaries, obj => id === String(obj.id)) as any;
-  const double = filter(selected_apiaries, obj => id === obj.id);
+  const double = filter(selected_apiaries, obj => id === String(obj.id));
   return { found, double };
 }
 </script>

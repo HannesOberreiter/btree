@@ -183,7 +183,7 @@ function onDelete() {
 
     api.patch(url, { ids }).then(
       (_response: any) => {
-        emit('change');
+        onEmit();
         notification.open('positive', '');
       },
       error => {

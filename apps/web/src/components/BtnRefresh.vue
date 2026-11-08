@@ -19,7 +19,7 @@ defineExpose({ $q });
   <q-item
     v-ripple
     clickable
-    :class="storeRefresh.indicatorColor"
+    :class="storeRefresh.indicatorColor()"
     @click="onRefresh"
   >
     <q-item-section avatar>
