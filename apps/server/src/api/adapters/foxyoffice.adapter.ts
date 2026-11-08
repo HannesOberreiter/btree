@@ -191,8 +191,7 @@ export async function createInvoice(
         paid: mode === 'invoice' ? 0 : 1,
         canceled: 0,
         paymentTarget: toISODate(paymentTargetDate),
-        leading_text:
-          'Folgende Leistung stellen wir in Rechnung:',
+        leading_text: 'Folgende Leistung stellen wir in Rechnung:',
         info,
       },
       InvoicePosition: [
