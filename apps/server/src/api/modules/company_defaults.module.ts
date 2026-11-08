@@ -32,7 +32,7 @@ const standardValues = {
     waxOrigins: ['Deckelwachs', 'Altwaben', 'Brutwaben', 'Mischung'],
     disease: [
       'amerikanische Faulbrut',
-      'Schimmel-Pilze',
+      'Schimmelpilze',
       'Ruhr',
       'Kalkbrut',
       'Varroa',
@@ -49,7 +49,7 @@ const standardValues = {
     mating: ['Belegstelle', 'Standbegattung', 'Künstliche Besamung'],
     reartype: {
       name: 'Starter Finisher',
-      note: 'Weiselloses Volk, ohne offene Brut zum aufziehen der Weiselzellen.',
+      note: 'Weiselloses Volk, ohne offene Brut zum Aufziehen der Weiselzellen.',
     },
     reardetail: {
       job: [
@@ -61,9 +61,9 @@ const standardValues = {
         'Schlupf',
       ],
       note: [
-        'Erstellen des Sammelablegers mit verdeckelte Brutwaben, aufsitzenden Bienen von offener Brut und Pollen und Futterwaben.',
+        'Erstellen des Sammelablegers mit verdeckelten Brutwaben, aufsitzenden Bienen von offener Brut und Pollen und Futterwaben.',
         'Weiselzellen suchen und wenn vorhanden brechen.',
-        'Maximal einen Tag alte verwenden! (Anm. 3 Tage Ei Stadium).',
+        'Maximal einen Tag alte Larven verwenden! (Anm.: 3 Tage Ei-Stadium).',
         'Angeblasene Zellen einem weiselrichtigen Wirtschaftsvolk über einem Absperrgitter einhängen.',
         'Schlupfkäfig über Weiselzellen anbringen.',
         'Königinnen schlüpfen (12 Tage nach dem Umlarven).',
