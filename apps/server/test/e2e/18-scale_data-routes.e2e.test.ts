@@ -120,11 +120,12 @@ describe('scale Data routes', () => {
         `/api/v1/external/scale/${encodeURIComponent(scale.name ?? '')}/${apiKey}`,
         null,
         null,
-        { action: 'CREATE_DEMO', weight: 1 },
+        { action: 'CREATE_DEMO', weight: 1, note: '0042' },
       );
       expect(res.statusCode).toBe(200);
       expect(res.body).toMatchObject({
         weight: 1,
+        note: '0042',
         scale_id: testInsert.scale_id,
       });
       expect(res.body).not.toHaveProperty('id');
