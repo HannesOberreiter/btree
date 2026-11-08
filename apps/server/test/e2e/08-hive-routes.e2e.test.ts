@@ -251,6 +251,36 @@ describe('hive routes', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
     });
+
+    it('patch 200 - keeps position and grouphive when not sent', async () => {
+      const setup = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { position: 7, grouphive: 3 },
+      });
+      expect(setup.statusCode).toEqual(200);
+
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: {
+          modus: true,
+          modus_date: new Date().toISOString().slice(0, 10),
+        },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+
+      const hive = await doQueryRequest(
+        agent,
+        route,
+        insertId,
+        accessToken,
+        null,
+      );
+      expect(hive.statusCode).toEqual(200);
+      expect(hive.body).toEqual(
+        expect.objectContaining({ position: 7, grouphive: 3 }),
+      );
+    });
   });
 
   describe('/api/v1/hive/:id', () => {
