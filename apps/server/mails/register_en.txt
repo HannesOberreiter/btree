@@ -1,13 +1,13 @@
 <title>Welcome to b.tree</title>
-Dear Beekeeper!
+Dear Beekeeper,
 
-Welcome to b.tree, as small welcome present, your account received one month of premium membership for free.
+Welcome to b.tree! As a small welcome present, your account received one month of premium membership for free.
 
-Please open following link to activate your account before you login the first time:
+Please open the following link to activate your account before you log in for the first time:
 
 %base_url%visitor/activate/%key%%params%
 
-## Your Login Credentials
+## Your login credentials
 
 - Username: %mail%
 - Login: %base_url%%params%
