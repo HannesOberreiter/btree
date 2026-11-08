@@ -62,7 +62,7 @@ export default defineRouter(({ store }) => {
 
     if (
       to.matched.some(record => record.meta.auth) &&
-      (refreshStore.lastHour < -1 || Number.isNaN(refreshStore.lastHour))
+      refreshStore.isOutdated()
     ) {
       console.info('Updating local storage values');
       refreshStore.refresh().catch(e => {
