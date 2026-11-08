@@ -26,7 +26,7 @@ function getField(field: any, state: any) {
     if (field.type === 'int') {
       value = Number.parseInt(value);
     } else if (field.type === 'number') {
-      value = Number.parseFloat(value);
+      value = Number.parseFloat(String(value).replace(',', '.'));
     } else if (field.type === 'date') {
       value = dayjs(value).format('YYYY-MM-DD');
     } else if (field.type === 'boolean') {
@@ -146,7 +146,7 @@ function cleanupCheckup(state: any) {
       type: 'int'
     },
     {
-      name: 'temp',
+      name: 'temperature',
       type: 'number'
     },
     {
