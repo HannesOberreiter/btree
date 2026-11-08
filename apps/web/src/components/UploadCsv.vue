@@ -35,7 +35,7 @@ function streamToString(file: File) {
     parseCSV(reader.result);
   };
   reader.onerror = () => {
-    notification.open('negative', 'error.CsvReading');
+    notification.open('negative', 'error.csvReading');
   };
   reader.readAsBinaryString(file);
 }
@@ -58,7 +58,7 @@ function parseCSV(input: string | ArrayBuffer | null) {
       errorMessage.value = t('error.csvTooMuch');
     }
   } catch (e) {
-    notification.open('negative', 'error.CsvReading');
+    notification.open('negative', 'error.csvReading');
     errorMessage.value = e;
     console.error(e);
   }
