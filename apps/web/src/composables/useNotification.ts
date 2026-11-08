@@ -26,6 +26,8 @@ const state = reactive({
   error: false
 });
 
+let notificationId = 0;
+
 function useNotification(t?: ComposerTranslation) {
   const $t = t || useI18n().t;
 
@@ -122,12 +124,14 @@ function useNotification(t?: ComposerTranslation) {
       }
     }
 
+    const id = String(++notificationId);
     const dismiss = Notify.create({
       message: m,
       type,
       position: 'top',
       attrs: {
-        'data-cy': 'notification'
+        'data-cy': 'notification',
+        'data-notification-id': id
       },
       actions: [
         {
@@ -139,20 +143,17 @@ function useNotification(t?: ComposerTranslation) {
         }
       ]
     });
-    const elements = document.getElementsByClassName('q-notification');
     void sleep(100).then(() => {
-      for (let i = 0; i < elements.length; i++) {
-        if (!elements[i]) {
-          continue;
-        }
-        elements[i]!.addEventListener(
+      // Only the element of this notification must close it.
+      document
+        .querySelector(`[data-notification-id="${id}"]`)
+        ?.addEventListener(
           'click',
           () => {
             dismiss();
           },
           true
         );
-      }
     });
     return dismiss;
   }
