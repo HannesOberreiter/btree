@@ -1,8 +1,8 @@
 <title>Il tuo account è temporaneamente sospeso!</title>
 Caro apicoltore,
 
-il suo account b.tree ha avuto troppi accessi non riusciti. Come misura di sicurezza abbiamo bloccato il suo account per due ore.
+il tuo account b.tree ha avuto troppi accessi non riusciti. Come misura di sicurezza abbiamo bloccato il tuo account per due ore.
 
 Se hai dimenticato la password, utilizza il seguente link: %base_url%recover/%params%
 
-Se ha ancora problemi con il login o altre domande, non esiti a contattarci office@btree.at.
+Se hai ancora problemi con il login o altre domande, non esitare a contattarci: office@btree.at.
