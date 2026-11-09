@@ -241,5 +241,70 @@ describe('movedate routes', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
     });
+    it('keeps the newest movement when all movements of a hive are selected', async () => {
+      const hive = await doRequest(
+        agent,
+        'post',
+        '/api/v1/hive',
+        null,
+        accessToken,
+        {
+          name: `MoveHive${Date.now()}`,
+          apiary_id: 1,
+          date: '2020-01-01',
+          source_id: 1,
+          type_id: 1,
+          start: 0,
+          repeat: 1,
+        },
+      );
+      expect(hive.statusCode).toEqual(200);
+      const hiveId = hive.body[0];
+      const move = await doRequest(agent, 'post', route, null, accessToken, {
+        hive_ids: [hiveId],
+        apiary_id: 1,
+        date: '2020-06-01',
+      });
+      expect(move.statusCode).toEqual(200);
+      const newestId = move.body[0];
+      const listHiveMovedates = () =>
+        doQueryRequest(agent, route, null, accessToken, {
+          filters: JSON.stringify([{ hive_id: hiveId }]),
+          limit: 1000,
+        });
+      const before = await listHiveMovedates();
+      expect(before.statusCode).toEqual(200);
+      const ids = before.body.results.map(
+        (movedate: { id: number }) => movedate.id,
+      );
+      expect(ids.length).toBeGreaterThanOrEqual(2);
+      expect(ids).toContain(newestId);
+
+      const res = await doRequest(
+        agent,
+        'patch',
+        `${route}/batchDelete`,
+        null,
+        accessToken,
+        { ids },
+      );
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(ids.length - 1);
+
+      const after = await listHiveMovedates();
+      expect(
+        after.body.results.map((movedate: { id: number }) => movedate.id),
+      ).toEqual([newestId]);
+
+      const last = await doRequest(
+        agent,
+        'patch',
+        `${route}/batchDelete`,
+        null,
+        accessToken,
+        { ids: [newestId] },
+      );
+      expect(last.statusCode).toEqual(403);
+    });
   });
 });

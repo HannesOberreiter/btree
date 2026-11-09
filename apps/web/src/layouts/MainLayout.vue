@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { MatomoTracker } from '@certible/use-matomo';
 import { useMeta, useQuasar } from 'quasar';
-import { computed, inject, onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   onBeforeRouteLeave,
@@ -15,6 +14,7 @@ import MainFooter from '../components/MainFooter.vue';
 import MainNavbar from '../components/MainNavbar.vue';
 import { usePreventNavigation } from '../composables/usePreventNavgiation';
 import { useQuasarLang } from '../composables/useQuasarLang';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { useAuthUserStore } from '../stores/auth';
 
 const usePrevent = usePreventNavigation();
@@ -23,7 +23,7 @@ const storeUser = useAuthUserStore();
 const $q = useQuasar();
 const router = useRouter();
 const { t } = useI18n();
-const matomo = inject<MatomoTracker>('matomo');
+const { trackSessionState } = useTrackEvent();
 
 storeUser.updateLang();
 useQuasarLang($q);
@@ -68,30 +68,8 @@ function refresh(done: () => void) {
   done();
 }
 
-const uniqueIdentifier = computed(() => {
-  let identifier = '';
-  if (storeUser?.user?.id) {
-    identifier += `bee_id:${storeUser.user.id}`;
-  }
-  if (storeUser?.company?.id) {
-    identifier += `.user_id:${storeUser.company.id}`;
-  }
-  return identifier;
-});
-
-watch(
-  uniqueIdentifier,
-  () => {
-    if (uniqueIdentifier.value) {
-      matomo?.setUserId(uniqueIdentifier.value);
-      matomo?.trackPageView();
-    } else {
-      matomo?.setUserId(null);
-      matomo?.trackPageView();
-    }
-  },
-  { immediate: true }
-);
+// All routes of this layout need a login, so the router hook has set the user ID.
+trackSessionState();
 </script>
 
 <template>

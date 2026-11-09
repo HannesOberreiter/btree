@@ -1,13 +1,13 @@
 <title>Willkommen bei b.tree</title>
 Liebe/r Imker/in,
 
-willkommen bei b.tree, als kleines Dankeschön, für dein Interesse an unserer App, hat dein Account automatisch einen Monat Premium Mitgliedschaft gutgeschrieben bekommen!
+willkommen bei b.tree! Als kleines Dankeschön für dein Interesse an unserer App hat dein Konto automatisch einen Monat Premium-Mitgliedschaft gutgeschrieben bekommen!
 
-Öffne bitte folgenden Link um deine Registrierung zu vervollständigen:
+Öffne bitte folgenden Link, um deine Registrierung zu vervollständigen:
 
 %base_url%visitor/activate/%key%%params%
 
-## Deine Login Daten
+## Deine Login-Daten
 
 - Username: %mail%
 - Login: %base_url%%params%

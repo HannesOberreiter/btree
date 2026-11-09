@@ -459,7 +459,7 @@ const routes: RouteRecordRaw[] = [
         path: 'aethina_tumida',
         name: 'map-aethina-tumida',
         meta: {
-          title: 'Aethina tunida'
+          title: 'Aethina tumida'
         },
         component: () => import('../pages/MapPest.vue')
       }

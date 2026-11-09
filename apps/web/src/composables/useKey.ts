@@ -1,6 +1,7 @@
 import type { Ref } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { computed } from 'vue';
+import { useTrackEvent } from './useTrackEvent';
 
 declare interface Pagination {
   sortBy: string;
@@ -24,11 +25,13 @@ function preventKey(e: KeyboardEvent) {
 }
 
 export function useKeyCalendar(cal: Ref) {
+  const { trackOnce } = useTrackEvent();
   onKeyStroke('ArrowLeft', e => {
     if (preventKey(e)) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'calendar');
     if (cal.value.getApi()) {
       cal.value.getApi().prev();
     }
@@ -38,6 +41,7 @@ export function useKeyCalendar(cal: Ref) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'calendar');
     if (cal.value.getApi()) {
       cal.value.getApi().next();
     }
@@ -45,26 +49,31 @@ export function useKeyCalendar(cal: Ref) {
 }
 
 export function useKeyHelp(showInfo: Ref) {
+  const { trackOnce } = useTrackEvent();
   onKeyStroke(['h', 'H'], e => {
     if (preventKey(e)) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'help');
     showInfo.value = !showInfo.value;
   });
 }
 
 export function useKeySpeak(btn: Ref) {
+  const { trackOnce } = useTrackEvent();
   onKeyStroke(['s', 'S'], e => {
     if (preventKey(e)) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'speak');
     btn.value.$el.click();
   });
 }
 
 export function useKeyTable(page: Ref<Pagination>) {
+  const { trackOnce } = useTrackEvent();
   const pages = computed(() =>
     Math.ceil(page.value.rowsNumber / page.value.rowsPerPage)
   );
@@ -76,6 +85,7 @@ export function useKeyTable(page: Ref<Pagination>) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'table');
     page.value.page = 1;
   });
   onKeyStroke(['ArrowLeft'], e => {
@@ -89,6 +99,7 @@ export function useKeyTable(page: Ref<Pagination>) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'table');
     page.value.page = page.value.page - 1;
   });
   onKeyStroke(['ArrowRight'], e => {
@@ -102,6 +113,7 @@ export function useKeyTable(page: Ref<Pagination>) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'table');
     page.value.page = page.value.page + 1;
   });
   onKeyStroke(['ArrowDown'], e => {
@@ -112,16 +124,19 @@ export function useKeyTable(page: Ref<Pagination>) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'table');
     page.value.page = pages.value;
   });
 }
 
 export function useKeyNavDetail(fn: (direction: 'prev' | 'next') => void) {
+  const { trackOnce } = useTrackEvent();
   onKeyStroke('ArrowLeft', e => {
     if (preventKey(e)) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'detail');
     fn('prev');
   });
 
@@ -130,11 +145,13 @@ export function useKeyNavDetail(fn: (direction: 'prev' | 'next') => void) {
       return;
     }
     e.preventDefault();
+    trackOnce('Key', 'detail');
     fn('next');
   });
 }
 
 export function useKeyNews(page: Ref<number>) {
+  const { trackOnce } = useTrackEvent();
   onKeyStroke('ArrowLeft', e => {
     if (preventKey(e)) {
       return;
@@ -142,6 +159,7 @@ export function useKeyNews(page: Ref<number>) {
     if (page.value <= 1) {
       return;
     }
+    trackOnce('Key', 'news');
     page.value = page.value - 1;
   });
 
@@ -149,6 +167,7 @@ export function useKeyNews(page: Ref<number>) {
     if (preventKey(e)) {
       return;
     }
+    trackOnce('Key', 'news');
     page.value = page.value + 1;
   });
 }

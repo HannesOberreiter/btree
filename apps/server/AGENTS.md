@@ -1,6 +1,3 @@
-<!-- bmad:context -->
-<!-- Verified 2026-09-14 against ddebf465e1e06c3cc9c0873334bbe304c2057580. Managed by bmad-project-context; refreshes reconcile existing instructions before replacing this block. -->
-
 ## b.tree server
 
 Beekeeping SaaS backend using Fastify 5, TypeScript ES2022 modules, and MariaDB/mysql2.
@@ -40,5 +37,3 @@ This repository owns application schema migrations and the HTTP and agent-facing
 - Put thin HTTP adapters in typed route modules. Keep static controller methods for substantial transport-specific behavior; derive authenticated scope from the session.
 - Authorize protected routes with `Guard.authorize` and explicit permitted `ROLES`; follow the route family's hook phase rather than forcing every guard into `onRequest`.
 - Define applicable HTTP body, params, query, and response schemas with Zod in `src/api/schemas/`, using `fastify-type-provider-zod` for validation and response typing.
-
-<!-- /bmad:context -->

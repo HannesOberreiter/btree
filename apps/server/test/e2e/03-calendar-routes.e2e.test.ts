@@ -13,6 +13,7 @@ import {
   createAgent,
   createAuthenticatedAgent,
   doQueryRequest,
+  doRequest,
 } from '../utils.js';
 
 describe('calendar routes', () => {
@@ -73,6 +74,50 @@ describe('calendar routes', () => {
           );
         }
       });
+    });
+
+    it('/rearing 200 - rearing with null symbol', async () => {
+      const insert = await doRequest(
+        agent,
+        'post',
+        '/api/v1/rearing',
+        null,
+        null,
+        {
+          date: '2020-06-01 10:00:00',
+          detail_id: 1,
+          type_id: 1,
+        },
+      );
+      expect(insert.statusCode).toEqual(200);
+      const insertId = insert.body[0];
+
+      const patch = await doRequest(
+        agent,
+        'patch',
+        '/api/v1/rearing',
+        null,
+        null,
+        {
+          ids: [insertId],
+          data: { symbol: null },
+        },
+      );
+      expect(patch.statusCode).toEqual(200);
+
+      const res = await doQueryRequest(agent, route + '/rearing', null, null, {
+        start: new Date('2020-06-01').toISOString(),
+        end: new Date('2020-06-30').toISOString(),
+      });
+      expect(res.statusCode).toEqual(200);
+      const events = res.body.filter(
+        (event: { id: number }) => event.id === insertId,
+      );
+      expect(events.length).toBeGreaterThan(0);
+      for (const event of events) {
+        expect(event.symbol).toBeNull();
+        expect(event.icon).toEqual('fas fa-venus');
+      }
     });
 
     it('operations enforce company isolation', async () => {

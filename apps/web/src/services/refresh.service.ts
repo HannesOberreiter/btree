@@ -33,10 +33,14 @@ class RefreshService {
     }
     this.isFetching = true;
     console.log('Refreshing Field Settings from DB...');
-    return api.get('/v1/fieldsetting/', '').then((response: any) => {
-      this.isFetching = false;
-      useFieldsettingStore().refresh(response);
-    });
+    return api
+      .get('/v1/fieldsetting/', '')
+      .then((response: any) => {
+        useFieldsettingStore().refresh(response);
+      })
+      .finally(() => {
+        this.isFetching = false;
+      });
   }
 }
 

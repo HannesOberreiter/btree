@@ -9,6 +9,8 @@ const ownedReferenceTables = {
   feedType: 'feed_types',
   harvestType: 'harvest_types',
   hive: 'hives',
+  hiveSource: 'hive_sources',
+  hiveType: 'hive_types',
   scale: 'scales',
   treatmentDisease: 'treatment_diseases',
   treatmentType: 'treatment_types',
@@ -80,6 +82,22 @@ export function requireHiveOwnership(
   companyId: number,
 ) {
   return requireOwnership(db, 'hive', id, companyId);
+}
+
+export function requireHiveSourceOwnership(
+  db: Database,
+  id: number,
+  companyId: number,
+) {
+  return requireOwnership(db, 'hiveSource', id, companyId);
+}
+
+export function requireHiveTypeOwnership(
+  db: Database,
+  id: number,
+  companyId: number,
+) {
+  return requireOwnership(db, 'hiveType', id, companyId);
 }
 
 export function requireScaleOwnership(

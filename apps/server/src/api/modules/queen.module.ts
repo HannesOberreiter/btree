@@ -493,6 +493,12 @@ export async function updateQueens(
   body: PatchBody,
 ) {
   return db.transaction().execute(async (trx) => {
+    if (body.data.race_id)
+      await requireOwned(trx, 'queen_races', body.data.race_id, companyId);
+    if (body.data.mating_id)
+      await requireOwned(trx, 'queen_matings', body.data.mating_id, companyId);
+    if (body.data.mother_id)
+      await requireOwned(trx, 'queens', body.data.mother_id, companyId);
     const hiveId = body.data.hive_id === 'empty' ? null : body.data.hive_id;
     if (hiveId) await requireOwned(trx, 'hives', hiveId, companyId);
     const result = await trx

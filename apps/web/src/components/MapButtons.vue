@@ -2,6 +2,7 @@
 import { LControl } from '@vue-leaflet/vue-leaflet';
 import { useVModels } from '@vueuse/core';
 import { ref, toRef } from 'vue';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import BtnBase from './BtnBase.vue';
 
 // AFB is enabled by default
@@ -33,15 +34,28 @@ const showInactive = ref(false);
 const showAfb = ref(true);
 const { modelRadius } = useVModels(props, emit);
 const userLocationLoading = toRef(props, 'userLocationLoading');
+const { track } = useTrackEvent();
+const mapName = props.isApiaryMap
+  ? 'apiary'
+  : props.isPublic
+    ? 'public'
+    : 'pest';
+function onLocate() {
+  track('Map', 'locate', mapName);
+  emit('locate');
+}
 function toggleInactive() {
+  track('Map', 'inactive', mapName);
   showInactive.value = !showInactive.value;
   emit('toggle', showInactive.value);
 }
 function toggleAfb() {
+  track('Map', 'afb', mapName);
   showAfb.value = !showAfb.value;
   emit('toggleAfb', showAfb.value);
 }
 function onPrint() {
+  track('Print', 'map', mapName);
   window.print();
 }
 </script>
@@ -56,7 +70,7 @@ function onPrint() {
       flat
       :loading="userLocationLoading"
       icon="fas fa-map-marker-alt"
-      @click="emit('locate')"
+      @click="onLocate"
     >
       <q-tooltip>{{ $t('map.locateMe') }}</q-tooltip>
     </BtnBase>

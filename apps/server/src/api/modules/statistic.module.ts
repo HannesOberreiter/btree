@@ -782,7 +782,7 @@ export async function getVarroaStatistics(
       varroa: { min: 0, max: 0, avg: 0 },
     };
     let averageLength = 0;
-    let average: number | string = 0;
+    let average = 0;
     datasetCheckup[String(hiveId)] = rows.flatMap((row) => {
       if (row.date === null) return [];
       if (row.varroa !== null && Number(row.varroa) > 0) {
@@ -793,10 +793,7 @@ export async function getVarroaStatistics(
           value,
         );
         statistic.varroa.max = Math.max(statistic.varroa.max, value);
-        average =
-          typeof row.varroa === 'string'
-            ? `${average}${row.varroa}`
-            : Number(average) + row.varroa;
+        average += value;
       }
       return [
         [hiveId, row.varroa, dateOnly(row.date), row.type_name, row.hive_name],
@@ -804,10 +801,7 @@ export async function getVarroaStatistics(
     });
     if (averageLength > 0) {
       statistic.varroa.avg =
-        Math.round(
-          (Number.parseFloat(`${average}`) / averageLength + Number.EPSILON) *
-            100,
-        ) / 100;
+        Math.round((average / averageLength + Number.EPSILON) * 100) / 100;
     }
     stats.push(statistic);
   }

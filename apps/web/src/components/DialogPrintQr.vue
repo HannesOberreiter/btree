@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import QRCode from 'qrcode';
 import { ref, toRef, watch } from 'vue';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { deepUnref } from '../helpers/deep-unref';
 import BtnBase from './BtnBase.vue';
 import BtnCloseDialog from './BtnCloseDialog.vue';
@@ -13,6 +14,7 @@ const props = defineProps({
   }
 });
 
+const { track } = useTrackEvent();
 const selected = toRef(props, 'selected');
 const loading = ref(true);
 const items = ref<any>(null);
@@ -46,6 +48,7 @@ async function generateQR(url: string) {
 }
 
 function onPrint() {
+  track('Print', 'qr');
   setTimeout(() => {
     const printWindow = window.open('', '_blank', 'height=200,width=400')!;
     printWindow.document.write('<html>');

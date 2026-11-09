@@ -90,8 +90,6 @@ async function sendForm(value: any) {
     <q-form v-else class="q-gutter-md" @submit="onSubmit">
       <p class="text-center">
         {{ t('activateUser.message') }}
-        Vielen Dank für deine Registrierung, bitte aktiviere noch deinen
-        Account.
       </p>
       <q-input
         v-model="v.resetKey.$model"

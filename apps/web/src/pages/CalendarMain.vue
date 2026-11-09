@@ -35,6 +35,7 @@ import { useKeyCalendar } from '../composables/useKey';
 import { useNotification } from '../composables/useNotification';
 import { useCalendarQuery } from '../composables/useQuery';
 import { useSwipeCalendar } from '../composables/useSwipe';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { CALENDAR } from '../constants';
 import { toCalendarDialogEvent, toCalendarEvent } from '../helpers/calendar';
 import { useAuthUserStore } from '../stores/auth';
@@ -45,6 +46,7 @@ const { t } = useI18n();
 const $q = useQuasar();
 const api = useApiFetch();
 const notification = useNotification();
+const { track } = useTrackEvent();
 const vis = useCalendarVis();
 const storeUser = useAuthUserStore();
 const { getPaidStatus, getUser } = storeToRefs(storeUser);
@@ -369,6 +371,9 @@ const calendarOptions = reactive({
   eventResizeStart: () => (eventDrag.value = true),
   eventResizeStop: () => (eventDrag.value = false),
   datesSet(dateInfo) {
+    if (localLastView.value.view !== dateInfo.view.type) {
+      track('Calendar', 'view', dateInfo.view.type);
+    }
     localLastView.value.view = dateInfo.view.type as (typeof VIEWS)[number];
     localLastView.value.date = dateInfo.startStr;
     if (dateInfo.endStr) {

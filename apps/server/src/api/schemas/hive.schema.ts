@@ -150,8 +150,8 @@ export const hiveTaskQuerySchema = z.object({
 
 export const hiveSchema = z.object({
   name: z.string().min(1).max(36).trim(),
-  grouphive: z.number().int().optional().default(0),
-  position: z.number().int().optional().default(0),
+  grouphive: z.number().int().optional(),
+  position: z.number().int().optional(),
   note: z.string().max(2000).optional(),
   modus: z.boolean().optional(),
   modus_date: z.string().optional(),
@@ -172,7 +172,11 @@ export const hiveCreateBodySchema = z
     repeat: z.number().min(0).max(100),
     date: z.string(),
   })
-  .merge(hiveSchema);
+  .merge(hiveSchema)
+  .extend({
+    grouphive: z.number().int().optional().default(0),
+    position: z.number().int().optional().default(0),
+  });
 
 export const hiveIdsBodySchema = z.object({ ids: z.array(numberSchema) });
 

@@ -1,10 +1,10 @@
-<title>Your Premium Membership expire soon</title>
-Dear Beekeeper!
+<title>Your premium membership expires soon</title>
+Dear Beekeeper,
 
-Your Premium Membership will expire soon! We would be happy to keep you as Premium Member around.
+Your premium membership will expire soon! We would be happy to keep you around as a premium member.
 
 Organization: %key%
 
 Renew now: %base_url%premium%params%
       
-If your Premium Membership runs out, you wont loose any data! You also can still work with all your hives and apiaries for free but basic membership limitations are again in place!
+If your premium membership runs out, you won't lose any data! You can still work with all your hives and apiaries for free, but the basic membership limitations are in place again!

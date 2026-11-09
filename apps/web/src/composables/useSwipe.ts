@@ -5,6 +5,7 @@ import type { Ref } from 'vue';
 import { useSwipe } from '@vueuse/core';
 import { computed } from 'vue';
 import { useNotification } from './useNotification';
+import { useTrackEvent } from './useTrackEvent';
 
 interface CalendarSwipeTarget {
   getApi: () => CalendarApi;
@@ -17,6 +18,7 @@ export function useSwipeCalendar(
   eventDrag: Ref<boolean>
 ) {
   const notification = useNotification();
+  const { trackOnce } = useTrackEvent();
   let notificationDismiss: null | ((props?: QNotifyUpdateOptions) => void) =
     null;
   const containerWidth = computed(() => container.value?.offsetWidth || 0);
@@ -62,6 +64,7 @@ export function useSwipeCalendar(
       const calendar = cal.value;
       const calendarApi = calendar?.getApi();
       if (calendarApi && calendar) {
+        trackOnce('Calendar', 'swipe');
         if (typeof notificationDismiss === 'function') {
           notificationDismiss();
         }

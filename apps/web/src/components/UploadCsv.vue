@@ -35,7 +35,7 @@ function streamToString(file: File) {
     parseCSV(reader.result);
   };
   reader.onerror = () => {
-    notification.open('negative', 'error.CsvReading');
+    notification.open('negative', 'error.csvReading');
   };
   reader.readAsBinaryString(file);
 }
@@ -48,17 +48,22 @@ function parseCSV(input: string | ArrayBuffer | null) {
     if (input instanceof ArrayBuffer) {
       input = new TextDecoder().decode(input);
     }
+    // Export dialog offers ';' and ','; detect it from the header line
+    const header = input.split(/\r?\n/, 1)[0] ?? '';
+    const delimiter =
+      header.split(';').length > header.split(',').length ? ';' : ',';
     records.value = parse(input, {
       columns: true,
+      delimiter,
       skip_empty_lines: true,
       relax_quotes: true
     });
     lines.value = records.value.length;
-    if (lines.value >= 100) {
+    if (lines.value > maxUpload) {
       errorMessage.value = t('error.csvTooMuch');
     }
   } catch (e) {
-    notification.open('negative', 'error.CsvReading');
+    notification.open('negative', 'error.csvReading');
     errorMessage.value = e;
     console.error(e);
   }
@@ -128,7 +133,7 @@ function onRejected(rejectedEntries: QRejectedEntry[]) {
       <div v-if="errorMessage" class="row q-pt-sm">
         {{ errorMessage }}
       </div>
-      <div v-if="records && lines <= 100" class="row q-pt-sm">
+      <div v-if="records && lines <= maxUpload" class="row q-pt-sm">
         <div class="col-12">
           <BtnBase
             v-if="lines > 0"

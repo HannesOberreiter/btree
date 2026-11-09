@@ -3,7 +3,7 @@ Cher apiculteur !
 
 Votre adhésion Premium va bientôt expirer! Nous serions heureux de vous garder comme membre Premium.
 
-Organization: %key%
+Organisation : %key%
 
 Prolonger maintenant: %base_url%premium%params%
       

@@ -1,4 +1,5 @@
 import Chance from 'chance';
+import { calendarViewTab, t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 const chance = new Chance(12_345);
@@ -57,15 +58,15 @@ test.describe('user - Calendar', () => {
     await expect(dataCy('form-todo')).not.toBeAttached();
 
     const weekTab = calendar.getByRole('tab', {
-      name: 'Week view',
+      name: calendarViewTab(t('week')),
       exact: true
     });
     const listTab = calendar.getByRole('tab', {
-      name: 'events view',
+      name: calendarViewTab(t('event', 2)),
       exact: true
     });
     const monthTab = calendar.getByRole('tab', {
-      name: 'month view',
+      name: calendarViewTab(t('month')),
       exact: true
     });
     await weekTab.click();

@@ -3,6 +3,7 @@ import { findIndex } from 'lodash-es';
 import { computed, toRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { useKeyNavDetail } from '../composables/useKey';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import BtnBase from './BtnBase.vue';
 import TooltipBase from './TooltipBase.vue';
 
@@ -17,6 +18,7 @@ const props = defineProps({
   }
 });
 const router = useRouter();
+const { track } = useTrackEvent();
 const data = toRef(props, 'data');
 
 const sameLocationIndex = computed(() => {
@@ -52,6 +54,11 @@ function onNav(direction: 'prev' | 'next') {
   }
 }
 
+function onClick(id: number) {
+  track('Navigation', 'prev-next');
+  redirect(id);
+}
+
 function redirect(id: number) {
   router.push({ name: `detail-${props.link}`, params: { id } });
 }
@@ -64,7 +71,7 @@ function redirect(id: number) {
       size="md"
       class="absolute-top-left"
       icon="fas fa-arrow-left"
-      @click="redirect(data.sameLocation[sameLocationIndex.previous].id)"
+      @click="onClick(data.sameLocation[sameLocationIndex.previous].id)"
     >
       <TooltipBase>
         {{ data.sameLocation[sameLocationIndex.previous].name }}
@@ -75,7 +82,7 @@ function redirect(id: number) {
       size="md"
       class="absolute-top-right"
       icon="fas fa-arrow-right"
-      @click="redirect(data.sameLocation[sameLocationIndex.next].id)"
+      @click="onClick(data.sameLocation[sameLocationIndex.next].id)"
     >
       <TooltipBase>
         {{ data.sameLocation[sameLocationIndex.next].name }}

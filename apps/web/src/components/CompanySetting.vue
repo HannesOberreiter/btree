@@ -53,13 +53,14 @@ function changeCompany(value: any) {
       invalidateQueries.invalidate();
       storeUser.refresh(response.data);
       notification.open('positive', '');
+      isSubmitting.value = false;
       router.go(0);
     },
     error => {
       notification.open('negative', error);
+      isSubmitting.value = false;
     }
   );
-  isSubmitting.value = false;
 }
 
 function removeAccess() {
@@ -213,7 +214,7 @@ async function importData() {
 
 <template>
   <q-select
-    v-model="model"
+    :model-value="company"
     :options="options"
     :option-value="item => item.id"
     :option-label="

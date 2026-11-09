@@ -146,7 +146,7 @@ function onAdd() {
           notification.open('positive', '');
           emit('change');
         },
-        () => notification.open('negative', 'error')
+        () => notification.open('negative', 'error.unknown')
       );
   });
 }
@@ -176,7 +176,7 @@ function onSave(force = false) {
         resetActiveStep();
         emit('change');
       },
-      () => notification.open('negative', 'error')
+      () => notification.open('negative', 'error.unknown')
     );
   }
 }

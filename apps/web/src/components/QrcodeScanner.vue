@@ -4,6 +4,7 @@ import { onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '../composables/useNotification';
 import { useScanner } from '../composables/useScanner';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { useScanningStore } from '../stores/scanning';
 import BtnBase from './BtnBase.vue';
 import BtnBaseGroup from './BtnBaseGroup.vue';
@@ -12,6 +13,7 @@ const router = useRouter();
 const notification = useNotification();
 const storeScanning = useScanningStore();
 const { hiveDropdownActive } = storeToRefs(storeScanning);
+const { track } = useTrackEvent();
 
 const {
   init,
@@ -29,12 +31,20 @@ onUnmounted(() => {
   destroy();
 });
 onMounted(async () => {
+  track('QR', 'scan');
   init();
 });
 
 watch(textResult, cur => {
   if (cur && cur !== '') {
+    track('QR', 'result');
     handleResult(cur);
+  }
+});
+
+watch(textError, cur => {
+  if (cur) {
+    track('QR', 'error');
   }
 });
 

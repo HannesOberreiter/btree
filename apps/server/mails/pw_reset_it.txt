@@ -1,8 +1,8 @@
 <title>Richiesta di una nuova password</title>
 Caro apicoltore,
 
-qualcuno ha richiesto una nuova password per il suo b.tree Login. Se non hai richiesto una nuova password o se si è trattato di un semplice errore, ignora questa e-mail.
+qualcuno ha richiesto una nuova password per il tuo b.tree Login. Se non hai richiesto una nuova password o se si è trattato di un semplice errore, ignora questa e-mail.
 
-Per impostare una nuova password, utilizzare il seguente link:
+Per impostare una nuova password, utilizza il seguente link:
 
 %base_url%visitor/reset/%key%%params%

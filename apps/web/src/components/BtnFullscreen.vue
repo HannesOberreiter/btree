@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useFullscreen } from '@vueuse/core';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import BtnBase from './BtnBase.vue';
 import TooltipBase from './TooltipBase.vue';
 
 const { isSupported, isFullscreen, toggle } = useFullscreen();
+const { track } = useTrackEvent();
+
+function onToggle() {
+  track('App', 'fullscreen');
+  toggle();
+}
 </script>
 
 <template>
@@ -16,7 +23,7 @@ const { isSupported, isFullscreen, toggle } = useFullscreen();
     data-cy="btn-fullscreen"
     :icon="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"
     :aria-label="$t('fullscreen')"
-    @click="toggle()"
+    @click="onToggle"
   >
     <TooltipBase anchor="bottom middle" self="top middle">
       {{ $t('fullscreen') }}

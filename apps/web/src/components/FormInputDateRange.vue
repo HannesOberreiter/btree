@@ -41,7 +41,7 @@ watch(
     if (cur) {
       displayValue.value = `${t('from')} ${useDate.displayFormat(
         cur.from
-      )} to ${useDate.displayFormat(cur.to)}`;
+      )} ${t('to')} ${useDate.displayFormat(cur.to)}`;
     } else {
       displayValue.value = t('filterNoDate');
     }

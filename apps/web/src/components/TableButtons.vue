@@ -9,6 +9,7 @@ import { useApiFetch } from '../composables/useApi';
 import { useDateFormat } from '../composables/useDate';
 import { useNotification } from '../composables/useNotification';
 import { clearCache } from '../composables/useQuery';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { useAuthUserStore } from '../stores/auth';
 import { useTableFilterStore } from '../stores/tableFilter';
 import BtnBase from './BtnBase.vue';
@@ -56,6 +57,7 @@ const { t } = useI18n();
 const $q = useQuasar();
 const notification = useNotification();
 const storeUser = useAuthUserStore();
+const { track } = useTrackEvent();
 
 const { deleted, modus } = useVModels(props, emit);
 const selected = toRef(props, 'selected');
@@ -84,6 +86,7 @@ function dialogForm(
 }
 
 function openFilter() {
+  track('Table', 'filter', props.table);
   $q.dialog({
     component: DialogFilter,
     componentProps: {
@@ -183,7 +186,7 @@ function onDelete() {
 
     api.patch(url, { ids }).then(
       (_response: any) => {
-        emit('change');
+        onEmit();
         notification.open('positive', '');
       },
       error => {
@@ -224,6 +227,7 @@ function flattenObject(ob: any) {
 }
 
 function onExport() {
+  track('Table', 'export', props.table);
   $q.dialog({
     title: t('export'),
     message: t('exportCsvSeparator'),
@@ -266,6 +270,7 @@ function onExport() {
 }
 
 function onImport() {
+  track('Table', 'import', props.table);
   $q.dialog({
     component: DialogUpload,
     componentProps: {
@@ -308,7 +313,19 @@ function onPrintQR() {
   });
 }
 
+function toggleModus() {
+  track('Table', 'modus', props.table);
+  modus.value =
+    modus.value === true ? false : modus.value === false ? null : true;
+}
+
+function toggleDeleted() {
+  track('Table', 'deleted', props.table);
+  deleted.value = !deleted.value;
+}
+
 function onPrint() {
+  track('Print', 'table', props.table);
   setTimeout(() => {
     const printWindow = window.open('', '_blank', 'height=200,width=400')!;
     printWindow.document.write('<html>');
@@ -450,7 +467,7 @@ function onPrint() {
             : $t('both')
       "
       data-cy="btn-table-modus"
-      @click="modus = modus === true ? false : modus === false ? null : true"
+      @click="toggleModus"
     />
 
     <BtnBase
@@ -658,7 +675,7 @@ function onPrint() {
               <q-item-label>{{ $t('restore') }}</q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-close-popup clickable @click="deleted = !deleted">
+          <q-item v-close-popup clickable @click="toggleDeleted">
             <q-item-section avatar>
               <q-avatar>
                 <q-icon :name="deleted ? 'fas fa-eye' : 'fas fa-eye-slash'" />
