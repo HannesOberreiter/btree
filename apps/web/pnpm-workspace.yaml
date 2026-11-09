@@ -9,3 +9,4 @@ allowBuilds:
   vue-demi: true
 minimumReleaseAgeExclude:
   - '@quasar/app-vite@3.0.0-rc.1'
+  - '@certible/use-matomo@1.3.0'
