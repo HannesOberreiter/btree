@@ -1,5 +1,6 @@
 import { initMatomo } from '@certible/use-matomo';
 import { defineBoot } from '#q-app';
+import { setBootTracker } from '../composables/useTrackEvent';
 import { useAuthUserStore } from '../stores/auth';
 
 export default defineBoot(({ app, router, store }) => {
@@ -35,6 +36,7 @@ export default defineBoot(({ app, router, store }) => {
   });
 
   app.provide('matomo', matomo);
+  setBootTracker(matomo);
 });
 
 function getUserId(userId?: number, companyId?: number) {

@@ -89,7 +89,7 @@ function onDelete() {
       api.patch('/v1/user/delete', { password: value }).then(
         async (_response: any) => {
           notification.open('positive', '');
-          await storeUser.logout();
+          await storeUser.logout('account-deleted');
         },
         error => {
           notification.open('negative', error);
