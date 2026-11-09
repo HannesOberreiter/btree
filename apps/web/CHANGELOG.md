@@ -1,5 +1,27 @@
 # Changelog
 
+## [7.11.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.10.4...btree-client-v7.11.0) (2026-11-09)
+
+
+### Features
+
+* **web:** track client-only feature usage with Matomo events ([#307](https://github.com/HannesOberreiter/btree/issues/307)) ([6b58a60](https://github.com/HannesOberreiter/btree/commit/6b58a601985485b30e04047ecfcb229bb9cd50a5))
+
+
+### Bug Fixes
+
+* address German users with du and fix German spelling in app and mails ([#300](https://github.com/HannesOberreiter/btree/issues/300)) ([ee8cb04](https://github.com/HannesOberreiter/btree/commit/ee8cb0490cca24396d5a7d88fb6263a0079ef07f))
+* address Italian users with tu and fix wrong Italian texts ([#303](https://github.com/HannesOberreiter/btree/issues/303)) ([13453cf](https://github.com/HannesOberreiter/btree/commit/13453cf9e66dd7183c1857a7bf60ea7954a617d1))
+* **deps:** apply security patch updates ([#308](https://github.com/HannesOberreiter/btree/issues/308)) ([1f8f31f](https://github.com/HannesOberreiter/btree/commit/1f8f31f2418ee223109461ebcccba15e688366e6))
+* fix English spelling in app and mails ([#301](https://github.com/HannesOberreiter/btree/issues/301)) ([b8e8a4f](https://github.com/HannesOberreiter/btree/commit/b8e8a4fa9d524704f2ad15ae7c78785f1362f7d9))
+* fix wrong French texts in app and mails ([#302](https://github.com/HannesOberreiter/btree/issues/302)) ([75a7895](https://github.com/HannesOberreiter/btree/commit/75a7895668a4da66806a52fca5d23944e3c55511))
+* **map:** limit recent pest observations to one month ([#304](https://github.com/HannesOberreiter/btree/issues/304)) ([4b80c49](https://github.com/HannesOberreiter/btree/commit/4b80c499ac6bf5c69a2684113f30dd360bd56149))
+* **server:** correct ownership checks, hive defaults, varroa average and movement delete ([#298](https://github.com/HannesOberreiter/btree/issues/298)) ([7218619](https://github.com/HannesOberreiter/btree/commit/7218619844354391d918bc427c9f6806089f7411))
+* **web:** correct missing and wrong translation keys ([#297](https://github.com/HannesOberreiter/btree/issues/297)) ([ed12acc](https://github.com/HannesOberreiter/btree/commit/ed12acceeba6e91d7732a2596f11a1c576e5a017))
+* **web:** correct refresh, QR scan, notifications, caches and dates ([#296](https://github.com/HannesOberreiter/btree/issues/296)) ([289f36e](https://github.com/HannesOberreiter/btree/commit/289f36e52660cdc798aad3bcb90f23cee0886803))
+* **web:** keep 0 values, temperature and ';' files in CSV import ([#295](https://github.com/HannesOberreiter/btree/issues/295)) ([05dc005](https://github.com/HannesOberreiter/btree/commit/05dc00584651ac7aed09add75bdce922bfce98b6))
+* **web:** set Matomo user ID before the first page view ([#305](https://github.com/HannesOberreiter/btree/issues/305)) ([310ad55](https://github.com/HannesOberreiter/btree/commit/310ad55edaf065b08008af31f438ca2861ac83a5))
+
 ## [7.10.4](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.10.3...btree-client-v7.10.4) (2026-11-06)
 
 

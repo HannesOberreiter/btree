@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.12.3](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.12.2...btree-server-v7.12.3) (2026-11-09)
+
+
+### Bug Fixes
+
+* address German users with du and fix German spelling in app and mails ([#300](https://github.com/HannesOberreiter/btree/issues/300)) ([ee8cb04](https://github.com/HannesOberreiter/btree/commit/ee8cb0490cca24396d5a7d88fb6263a0079ef07f))
+* address Italian users with tu and fix wrong Italian texts ([#303](https://github.com/HannesOberreiter/btree/issues/303)) ([13453cf](https://github.com/HannesOberreiter/btree/commit/13453cf9e66dd7183c1857a7bf60ea7954a617d1))
+* **deps:** apply security patch updates ([#308](https://github.com/HannesOberreiter/btree/issues/308)) ([1f8f31f](https://github.com/HannesOberreiter/btree/commit/1f8f31f2418ee223109461ebcccba15e688366e6))
+* fix English spelling in app and mails ([#301](https://github.com/HannesOberreiter/btree/issues/301)) ([b8e8a4f](https://github.com/HannesOberreiter/btree/commit/b8e8a4fa9d524704f2ad15ae7c78785f1362f7d9))
+* fix wrong French texts in app and mails ([#302](https://github.com/HannesOberreiter/btree/issues/302)) ([75a7895](https://github.com/HannesOberreiter/btree/commit/75a7895668a4da66806a52fca5d23944e3c55511))
+* **map:** limit recent pest observations to one month ([#304](https://github.com/HannesOberreiter/btree/issues/304)) ([4b80c49](https://github.com/HannesOberreiter/btree/commit/4b80c499ac6bf5c69a2684113f30dd360bd56149))
+* **server:** correct ownership checks, hive defaults, varroa average and movement delete ([#298](https://github.com/HannesOberreiter/btree/issues/298)) ([7218619](https://github.com/HannesOberreiter/btree/commit/7218619844354391d918bc427c9f6806089f7411))
+
 ## [7.12.2](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.12.1...btree-server-v7.12.2) (2026-11-06)
 
 
