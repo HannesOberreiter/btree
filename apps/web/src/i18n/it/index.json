@@ -429,7 +429,7 @@
   "maxHivesStatsVarroa": "Avvertenza: vengono mostrate solo le prime {max} colonie. \nPoiché è il limite per il calcolo!",
   "maxUpload": "Il caricamento massimo è di {msg} righe.",
   "membership": {
-    "afterPayment": "Dopo il pagamento il tuo accesso premium viene esteso a",
+    "afterPayment": "Dopo il pagamento il tuo accesso premium viene esteso fino al",
     "afterPremium": "Dopo che il tuo premio si esaurisce, puoi ancora lavorare con tutti gli alveari e le colonie che hai creato, ma i limiti si applicano di nuovo",
     "amountPerYear": "Importo per anno",
     "appleStoreInvoice": "Usa il pulsante qui sotto per ricevere una fattura via e-mail.",
