@@ -14,6 +14,7 @@ import MainFooter from '../components/MainFooter.vue';
 import MainNavbar from '../components/MainNavbar.vue';
 import { usePreventNavigation } from '../composables/usePreventNavgiation';
 import { useQuasarLang } from '../composables/useQuasarLang';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { useAuthUserStore } from '../stores/auth';
 
 const usePrevent = usePreventNavigation();
@@ -22,6 +23,7 @@ const storeUser = useAuthUserStore();
 const $q = useQuasar();
 const router = useRouter();
 const { t } = useI18n();
+const { trackSessionState } = useTrackEvent();
 
 storeUser.updateLang();
 useQuasarLang($q);
@@ -65,6 +67,9 @@ function refresh(done: () => void) {
   window.location.reload();
   done();
 }
+
+// All routes of this layout need a login, so the router hook has set the user ID.
+trackSessionState();
 </script>
 
 <template>

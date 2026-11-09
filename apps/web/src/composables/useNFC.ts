@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useScanningStore } from '../stores/scanning';
 import { useNotification } from './useNotification';
+import { useTrackEvent } from './useTrackEvent';
 
 // Type definitions for Web NFC
 // Project: https://github.com/w3c/web-nfc
@@ -94,6 +95,7 @@ function useNFC() {
   const notification = useNotification();
   const router = useRouter();
   const storeScanning = useScanningStore();
+  const { track } = useTrackEvent();
 
   // Functional logic adapted from
   // Project: https://github.com/maevsi/maevsi
@@ -128,6 +130,7 @@ function useNFC() {
       return true;
     } catch (e) {
       console.error(e);
+      track('NFC', 'error', 'scan');
       return false;
     }
   }
@@ -172,6 +175,7 @@ function useNFC() {
     if (anyStateTrue()) {
       abort(false);
     }
+    track('NFC', 'content');
     const result = await initScan();
     if (result) {
       try {
@@ -209,6 +213,7 @@ function useNFC() {
         );
       } catch (error) {
         console.error(error);
+        track('NFC', 'error', 'content');
         state.getContent = false;
         notification.open('negative', '');
         return false;
@@ -224,6 +229,7 @@ function useNFC() {
     if (anyStateTrue()) {
       abort(false);
     }
+    track('NFC', 'read');
     if (!(await check())) {
       return false;
     }
@@ -295,6 +301,7 @@ function useNFC() {
         );
       } catch (error) {
         console.error(error);
+        track('NFC', 'error', 'read');
         state.reading = false;
         notification.open('negative', '');
         return false;
@@ -308,6 +315,7 @@ function useNFC() {
 
   async function write(url: string | null, shortUrl = ''): Promise<void> {
     abort(false);
+    track('NFC', url ? 'write' : 'clear');
     const result = await initScan();
     if (result) {
       try {
@@ -373,6 +381,7 @@ function useNFC() {
               // do nothing
             } else {
               console.error(e);
+              track('NFC', 'error', 'write');
               notification.open('negative', '');
             }
             state.writingDone = false;
@@ -394,6 +403,7 @@ function useNFC() {
   async function check(): Promise<boolean> {
     try {
       if (!('NDEFReader' in window)) {
+        track('NFC', 'unsupported');
         notification.open('negative', 'error.nfcNotSupported');
         return Promise.resolve(false);
       }
@@ -407,6 +417,7 @@ function useNFC() {
         if (permission.state === 'granted' || permission.state === 'prompt') {
           return Promise.resolve(true);
         }
+        track('NFC', 'error', 'permission');
         notification.open('negative', permission.state, true);
         return Promise.resolve(false);
       }

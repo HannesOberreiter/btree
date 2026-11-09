@@ -22,6 +22,7 @@ import HiveInfoQueens from '../components/HiveInfoQueens.vue';
 import HiveInfoTask from '../components/HiveInfoTask.vue';
 import ListTasks from '../components/ListTasks.vue';
 import { useHiveQuery } from '../composables/useQuery';
+import { useTrackEvent } from '../composables/useTrackEvent';
 
 const props = defineProps({
   id: {
@@ -31,6 +32,7 @@ const props = defineProps({
 });
 const { t } = useI18n();
 const $q = useQuasar();
+const { track } = useTrackEvent();
 
 const tab = ref('task');
 const year = ref(dayjs().year());
@@ -61,6 +63,7 @@ useMeta(() => {
 });
 
 function onPrint() {
+  track('Print', 'detail');
   window.print();
 }
 
