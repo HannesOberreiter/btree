@@ -1,5 +1,6 @@
 import type { Locator } from '@playwright/test';
 import type { CalendarResponse } from '../../../../src/api/types';
+import { calendarViewTab, t } from '../../support/i18n';
 import { expect, test as base } from '../../support/user-helpers';
 
 const rearingSteps = {
@@ -255,7 +256,9 @@ test('calendar rearing dialog retains its public ID and domain fields', async ({
   const markers = page.locator('.calendar-rearing-marker');
   await expect(markers).toHaveCount(2);
   await expect(markers.first()).toBeHidden();
-  await page.getByRole('tab', { name: 'events view', exact: true }).click();
+  await page
+    .getByRole('tab', { name: calendarViewTab(t('event', 2)), exact: true })
+    .click();
   await expect(markers).toHaveCount(2);
   await expect(markers.first()).toBeHidden();
   await page.getByText('Queen step', { exact: false }).first().click();
@@ -290,16 +293,17 @@ test('calendar navigates views, resizes, and follows dark mode', async ({
   await expect(title).toHaveText('Oct 26');
   await page.keyboard.press('ArrowLeft');
   await expect(title).toHaveText('Sep 26');
+  const monthsView = calendarViewTab(t('month', 2));
   for (const name of [
-    'Week view',
-    'events view',
-    'months view',
-    'month view'
+    calendarViewTab(t('week')),
+    calendarViewTab(t('event', 2)),
+    monthsView,
+    calendarViewTab(t('month'))
   ]) {
     const tab = calendar.getByRole('tab', { name, exact: true });
     await tab.click();
     await expect(tab).toHaveAttribute('aria-selected', 'true');
-    if (name === 'months view') {
+    if (name === monthsView) {
       await expect(calendar.getByRole('grid')).toHaveCount(4);
       await expect(
         calendar.locator('.calendar-daygrid-header').first()
@@ -341,7 +345,7 @@ test('calendar source filters and date-click form still work', async ({
   ).toBeVisible();
   await calendar.getByRole('button', { name: 'Abos', exact: true }).click();
   const settings = page.locator('[data-cy="dialog-calendar-setting"]');
-  const todos = settings.locator('.q-toggle').filter({ hasText: "ToDo's" });
+  const todos = settings.locator('[data-cy="calendar-source-todo"]');
   await todos.click();
   await expect(
     calendar.getByText('Migration todo', { exact: false })

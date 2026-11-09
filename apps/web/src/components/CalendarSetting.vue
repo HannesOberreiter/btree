@@ -28,6 +28,7 @@ const localPerf = useLocalStorage(
         <div v-for="value in CALENDAR" :key="value">
           <q-toggle
             v-model="storeCalendar.calendar"
+            :data-cy="`calendar-source-${value}`"
             size="md"
             :val="value"
             :label="
