@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { isEmpty } from 'lodash-es';
 import { defineStore } from 'pinia';
 import { i18n } from '../boot/i18n';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { Router } from '../router';
 import AuthService from '../services/auth.service';
 
@@ -107,7 +108,9 @@ export const useAuthUserStore = defineStore('auth/user', {
         }
       );
     },
-    async logout() {
+    async logout(reason: 'manual' | 'session-expired' | 'account-deleted') {
+      // Send the event before the router hook resets the user ID.
+      useTrackEvent().track('Auth', 'logout', reason);
       await AuthService.logout();
       this.user = {};
       this.company = {};
