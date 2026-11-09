@@ -429,7 +429,7 @@
   "maxHivesStatsVarroa": "Warnung: Es werden nur die ersten {max} Völker angezeigt. \nDas ist die Grenze für die Berechnung!",
   "maxUpload": "Der maximale Upload beträgt {msg} Zeilen.",
   "membership": {
-    "afterPayment": "Nach der Zahlung verlängert sich dein Premium-Zugang um",
+    "afterPayment": "Nach der Zahlung verlängert sich dein Premium-Zugang bis",
     "afterPremium": "Nachdem dein Premium-Zugang abgelaufen ist, kannst du immer noch mit all deinen erstellten Bienenstöcken und Ständen arbeiten, aber es gelten wieder Einschränkungen.",
     "amountPerYear": "Betrag pro Jahr",
     "appleStoreInvoice": "Bitte verwende die Schaltfläche unten, um eine Rechnung per E-Mail anzufordern.",
