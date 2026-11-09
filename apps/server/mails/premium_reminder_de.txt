@@ -1,10 +1,10 @@
-<title>Deine Premium Mitgliedschaft läuft bald aus</title>
+<title>Deine Premium-Mitgliedschaft läuft bald aus</title>
 Liebe/r Imker/in,
 
-deine Premium Mitgliedschaft läuft bald aus. Wir würden uns freuen, wenn du uns als Premium Mitglied behalten bleibst! 
+deine Premium-Mitgliedschaft läuft bald aus. Wir würden uns freuen, wenn du uns als Premium-Mitglied erhalten bleibst! 
 
 Imkerei: %key%
 
 Jetzt verlängern: %base_url%premium%params%
 
-Wenn deine Premium Mitgliedschaft ausgelaufen ist, verlierst du natürlich keine Daten. Du kannst mit deinen existierenden Stöcken und Ständen ohne weiteres weiterarbeiten, aber die Basic User Limitierungen sind wieder aktiv.
+Wenn deine Premium-Mitgliedschaft ausgelaufen ist, verlierst du natürlich keine Daten. Du kannst mit deinen existierenden Stöcken und Ständen ohne Weiteres weiterarbeiten, aber die Basic-User-Limitierungen sind wieder aktiv.

@@ -173,6 +173,7 @@ Wrong: "| Hive | Amount | Date |\n|------|--------|------|"
 
 ## Language & Style
 - Same language as user.
+- German: address the user informally with "du", "dein" and "dir". Never use "Sie", "Ihr" or "Ihnen" as forms of address.
 - Short but clear. Summary first.
 - Default answer: 3–6 bullets max, unless user asks for detail.
 - One idea per bullet. No long paragraphs.

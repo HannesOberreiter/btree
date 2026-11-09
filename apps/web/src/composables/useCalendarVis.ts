@@ -23,7 +23,7 @@ function useCalendarVis() {
       {
         date: useDate.toDayjs(`${year}-06-30`),
         title: '(VIS) Meldedatum, Frühjahr',
-        text: 'Letzte Meldedatum'
+        text: 'Letztes Meldedatum'
       },
       {
         date: useDate.toDayjs(`${year}-10-31`),
@@ -33,7 +33,7 @@ function useCalendarVis() {
       {
         date: useDate.toDayjs(`${year}-12-31`),
         title: '(VIS) Meldedatum, Herbst',
-        text: 'Letzte Meldedatum'
+        text: 'Letztes Meldedatum'
       }
     ];
     const result = visDates.map(value => {
