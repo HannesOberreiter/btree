@@ -429,7 +429,7 @@
   "maxHivesStatsVarroa": "Warning: Only the first {max} colonies are shown, as this is the limit for the calculation!",
   "maxUpload": "Maximum upload is {msg} lines.",
   "membership": {
-    "afterPayment": "After payment, your premium access is extended by",
+    "afterPayment": "After payment, your premium access is extended to",
     "afterPremium": "After your premium access runs out, you can still work with all your created hives and apiaries, but the limits apply again.",
     "amountPerYear": "Amount per year",
     "appleStoreInvoice": "Please use the invoice request button below to receive an invoice via email.",
