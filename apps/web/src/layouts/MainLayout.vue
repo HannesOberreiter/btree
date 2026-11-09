@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { MatomoTracker } from '@certible/use-matomo';
 import { useMeta, useQuasar } from 'quasar';
-import { computed, inject, onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   onBeforeRouteLeave,
@@ -23,7 +22,6 @@ const storeUser = useAuthUserStore();
 const $q = useQuasar();
 const router = useRouter();
 const { t } = useI18n();
-const matomo = inject<MatomoTracker>('matomo');
 
 storeUser.updateLang();
 useQuasarLang($q);
@@ -67,31 +65,6 @@ function refresh(done: () => void) {
   window.location.reload();
   done();
 }
-
-const uniqueIdentifier = computed(() => {
-  let identifier = '';
-  if (storeUser?.user?.id) {
-    identifier += `bee_id:${storeUser.user.id}`;
-  }
-  if (storeUser?.company?.id) {
-    identifier += `.user_id:${storeUser.company.id}`;
-  }
-  return identifier;
-});
-
-watch(
-  uniqueIdentifier,
-  () => {
-    if (uniqueIdentifier.value) {
-      matomo?.setUserId(uniqueIdentifier.value);
-      matomo?.trackPageView();
-    } else {
-      matomo?.setUserId(null);
-      matomo?.trackPageView();
-    }
-  },
-  { immediate: true }
-);
 </script>
 
 <template>
