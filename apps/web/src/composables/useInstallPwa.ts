@@ -1,6 +1,7 @@
 import type { PWAInstallElement } from '@khmyznikov/pwa-install';
 import { ref } from 'vue';
 import { useNotification } from './useNotification';
+import { useTrackEvent } from './useTrackEvent';
 
 /**
  * Composables for handling PWA installation.
@@ -8,6 +9,7 @@ import { useNotification } from './useNotification';
  */
 export function useInstallPWA() {
   const notification = useNotification();
+  const { track } = useTrackEvent();
   const isAvailable = ref(false);
 
   let element: PWAInstallElement | null;
@@ -26,6 +28,7 @@ export function useInstallPWA() {
   }
 
   function showDialog() {
+    track('App', 'pwa-install');
     if (!element) {
       console.warn(
         'PWA Install element is not initialized. Please ensure it is included in your template.'

@@ -3,12 +3,14 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useApiariesQuery, useHivesQuery } from '../composables/useQuery';
+import { useTrackEvent } from '../composables/useTrackEvent';
 
 const { t } = useI18n();
 const search = ref(null);
 const searchRef = ref<any>(null);
 const options = ref([] as any);
 const router = useRouter();
+const { track } = useTrackEvent();
 
 const { isLoading: isLoadingHive, data: hives } = useHivesQuery({
   modus: true,
@@ -74,6 +76,7 @@ function filterFn(val: any, update: any, _abort: any) {
 
 function redirectFn(val: any) {
   if (val) {
+    track('Navigation', 'search');
     router.push({ name: `detail-${val.type}`, params: { id: val.id } });
   }
   search.value = null;

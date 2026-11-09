@@ -8,6 +8,7 @@ import { useRouter } from 'vue-router';
 import { useKeySpeak } from '../composables/useKey';
 import { useNotification } from '../composables/useNotification';
 import { useApiariesQuery, useHivesQuery } from '../composables/useQuery';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import BtnBase from './BtnBase.vue';
 
 import TooltipBase from './TooltipBase.vue';
@@ -23,6 +24,7 @@ const btn = ref(null);
 const $q = useQuasar();
 const { t } = useI18n();
 const notification = useNotification();
+const { track, trackOnce } = useTrackEvent();
 
 const { locale } = useI18n();
 
@@ -37,8 +39,18 @@ const haystack = ref<any[]>([]);
 
 useKeySpeak(btn);
 
+if (!speech.isSupported.value) {
+  trackOnce('Voice', 'unsupported');
+}
+watch(speech.error, error => {
+  if (error) {
+    track('Voice', 'error', 'error' in error ? error.error : error.name);
+  }
+});
+
 function onStart() {
   if (!speech.isListening.value) {
+    track('Voice', 'start');
     notification.open('info', t('speech.start'), true);
   }
   speech.toggle();
@@ -181,6 +193,7 @@ function handleResult(result: any, command: string) {
     }
   }
   if (name) {
+    track('Voice', 'command', result.item.command);
     notification.open(
       'positive',
       t('speech.commandRedirect', { text, msg: command }),
@@ -188,6 +201,7 @@ function handleResult(result: any, command: string) {
     );
     router.push({ name, params });
   } else {
+    track('Voice', 'no-command');
     notification.open(
       'warning',
       t('speech.noCommand', { msg: command.toUpperCase() }),

@@ -8,6 +8,7 @@ import { useRouter } from 'vue-router';
 import { useDateFormat } from '../composables/useDate';
 import { useNFC } from '../composables/useNFC';
 import { useNotification } from '../composables/useNotification';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import BtnBase from './BtnBase.vue';
 import BtnBaseGroup from './BtnBaseGroup.vue';
 import BtnCloseDialog from './BtnCloseDialog.vue';
@@ -26,6 +27,9 @@ const router = useRouter();
 const useDate = useDateFormat();
 const nfc = useNFC();
 const { t } = useI18n();
+const { track } = useTrackEvent();
+
+track('Share', 'open');
 
 const urlRef = ref(props.url);
 const qrcode = useQRCode(props.url);
@@ -42,6 +46,7 @@ function onHide() {
 }
 
 function printQR() {
+  track('Print', 'share-qr');
   setTimeout(() => {
     const printWindow = window.open('', '_blank', 'height=200,width=400')!;
 
@@ -124,9 +129,10 @@ function printQR() {
                   icon="fas fa-copy"
                   data-cy="btn-copy"
                   @click="
+                    track('Share', 'copy');
                     copy(url).then(() =>
                       notification.open('info', 'copiedToClipboard')
-                    )
+                    );
                   "
                 />
               </template>

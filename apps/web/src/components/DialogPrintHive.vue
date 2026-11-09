@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, toRef, watch } from 'vue';
 import { useHivesQuery } from '../composables/useQuery';
+import { useTrackEvent } from '../composables/useTrackEvent';
 import { deepUnref } from '../helpers/deep-unref';
 import PrintHive from '../pages/PrintHive.vue';
 import BtnBase from './BtnBase.vue';
@@ -20,6 +21,7 @@ const props = defineProps({
   }
 });
 
+const { track } = useTrackEvent();
 const selected = toRef(props, 'selected');
 const apiary_selected_filter = ref<any>(null);
 const { data: hives } = useHivesQuery({
@@ -75,6 +77,7 @@ function nextItem() {
 }
 
 function onPrint() {
+  track('Print', 'hive');
   setTimeout(() => {
     const printWindow = window.open('', '_blank', 'height=200,width=400')!;
     printWindow.document.write('<html>');
