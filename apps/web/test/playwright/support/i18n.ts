@@ -1,4 +1,4 @@
-import en from '../../../src/i18n/en/index.json';
+import en from '../../../src/i18n/en/index.json' with { type: 'json' };
 
 type Message = keyof typeof en;
 
