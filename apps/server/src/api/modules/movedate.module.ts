@@ -7,6 +7,8 @@ import type { DB } from '../../types/db.types.js';
 import type { CompatibilityQuery } from '../schemas/common.schema.js';
 import type { PatchBody, PostBody } from '../schemas/movedate.schema.js';
 import { actorProjection } from './actor_projection.module.js';
+import type { TaskKeyset } from './task.module.js';
+import { taskKeysetCondition } from './task.module.js';
 
 const orderColumns = {
   id: 'movedates.id',
@@ -124,10 +126,22 @@ function parseFilters(value?: string | null) {
   return filters;
 }
 
+export interface MovedatePageOptions {
+  /** First movement day, YYYY-MM-DD. */
+  dateFrom?: string;
+  /** Last movement day, YYYY-MM-DD; includes all times of that day. */
+  dateTo?: string;
+  /** Order by date, then id, instead of the query order. */
+  sort?: TaskKeyset['sort'];
+  /** Return only the movements after this position. Requires sort. */
+  keyset?: TaskKeyset;
+}
+
 export async function listMovedates(
   db: Database,
   companyId: number,
   input: CompatibilityQuery,
+  options: MovedatePageOptions = {},
 ) {
   let base = db
     .selectFrom('movedates')
@@ -151,6 +165,15 @@ export async function listMovedates(
         .where('movedates.date', '>=', filter.from)
         .where('movedates.date', '<=', filter.to);
     }
+  }
+  // movedates.date is a DATETIME, so compare with the day after dateTo.
+  if (options.dateFrom) {
+    base = base.where(sql<boolean>`movedates.date >= ${options.dateFrom}`);
+  }
+  if (options.dateTo) {
+    base = base.where(
+      sql<boolean>`movedates.date < ${options.dateTo} + INTERVAL 1 DAY`,
+    );
   }
   const search = input.q?.trim() ?? '';
   if (search) {
@@ -179,7 +202,18 @@ export async function listMovedates(
     actorProjection('editor'),
     previousApiaryProjection(),
   ]);
-  if (input.order) {
+  if (options.sort) {
+    const direction = options.sort === 'newest' ? 'desc' : 'asc';
+    query = query
+      .orderBy('movedates.date', direction)
+      .orderBy('movedates.id', direction);
+    // After the count, so the total still counts all matches.
+    if (options.keyset) {
+      query = query.where(
+        taskKeysetCondition('movedates.date', 'movedates.id', options.keyset),
+      );
+    }
+  } else if (input.order) {
     const fields = Array.isArray(input.order) ? input.order : [input.order];
     fields.forEach((field, index) => {
       if (!(field in orderColumns)) return;

@@ -7,8 +7,8 @@ import { Logger } from '../../services/logger.service.js';
 import type { Database } from '../../types/database.types.js';
 import {
   createApiary,
-  getApiaryDetail,
   listApiaries,
+  listApiaryHives,
   updateApiaries,
 } from '../modules/apiary.module.js';
 import {
@@ -44,7 +44,7 @@ import {
   updateMovedates,
 } from '../modules/movedate.module.js';
 import { listOptions, optionTables } from '../modules/option.module.js';
-import { listQueens } from '../modules/queen.module.js';
+import { listQueens, QUEEN_MISSING_DATE } from '../modules/queen.module.js';
 import {
   listHiveCountByApiary,
   listHiveCountTotal,
@@ -135,41 +135,6 @@ const TOOL_MAX_RANK = {
   btreeDocumentation: ROLES.read,
   calculateSugarWater: ROLES.read,
 } as const;
-
-/** Rows returned by listQueens; keeps the result below MAX_TOOL_RESULT_CHARS. */
-const QUEEN_RESULT_LIMIT = 250;
-
-const listQueensInputSchema = z.object({
-  location: z
-    .enum(['inHive', 'notInHive', 'noHive', 'all'])
-    .optional()
-    .default('inHive')
-    .describe(
-      'inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.',
-    ),
-  bornFrom: z.iso
-    .date()
-    .optional()
-    .describe('Earliest queen birth date (YYYY-MM-DD), inclusive'),
-  bornTo: z.iso
-    .date()
-    .optional()
-    .describe('Latest queen birth date (YYYY-MM-DD), inclusive'),
-  apiaryId: z
-    .number()
-    .optional()
-    .describe('Only queens in colonies / hives of this apiary'),
-  hiveId: z
-    .number()
-    .optional()
-    .describe('Only queens assigned to this colony / hive'),
-  raceId: z.number().optional().describe('Queen race ID from fetchOptions'),
-  matingId: z.number().optional().describe('Queen mating ID from fetchOptions'),
-  q: z
-    .string()
-    .optional()
-    .describe('Search text for queen name or colony / hive name'),
-});
 
 /** Read race and mating names from a listQueens detail row. */
 function optionNames(row: Record<string, unknown>) {
@@ -812,7 +777,7 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
     getHiveTasks:
       'Tasks for this apiary are too many to return in one result. Call getHiveTasks once per hive, or use fetchTasks with apiaryId, which returns the records in pages.',
     listApiariesHives:
-      'Apiary/hive list is unexpectedly large. Consider setting includeInactive: false or filtering with q.',
+      'One apiary has too many colonies / hives for one result. Use findHives with the apiary name to list its colonies / hives.',
     btreeDocumentation:
       "Documentation payload is too large. Summarize only the section relevant to the user's question instead of returning the whole document.",
   };
@@ -1167,8 +1132,12 @@ function invalidCursor() {
   );
 }
 
+/** A DATE value, or a DATETIME value as the pool returns it. */
 function isDate(value: unknown): value is string {
-  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(value)
+  );
 }
 
 function encodeDateCursor(keyset: TaskKeyset) {
@@ -1260,6 +1229,32 @@ function decodeWaxCursor(cursor: string): WaxCursor {
   throw invalidCursor();
 }
 
+/** Nested movement objects and the flat fields that replace them in compact rows. */
+const COMPACT_MOVEMENT_FIELDS: Record<string, Record<string, string>> = {
+  hive: { hive_name: 'name' },
+  apiary: { apiary_name: 'name' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  movedate_previous_apiary: {
+    previous_apiary_id: 'previous_apiary_id',
+    previous_apiary_name: 'previous_apiary_name',
+  },
+};
+
+function decodeQueenCursor(cursor: string) {
+  const [list, date, id] = readCursor(cursor);
+  if (list === 'queens' && isDate(date) && Number.isInteger(id)) {
+    return { date, id: id as number };
+  }
+  throw invalidCursor();
+}
+
+function decodeApiaryCursor(cursor: string) {
+  const [list, id] = readCursor(cursor);
+  if (list === 'apiaries' && Number.isInteger(id)) return id as number;
+  throw invalidCursor();
+}
+
 /** Task row with the nested objects replaced by flat id and name fields. */
 function compactTaskRow(row: Record<string, unknown>) {
   return compactRow(row, COMPACT_TASK_FIELDS);
@@ -1286,8 +1281,7 @@ function serializedLength(text: string) {
  */
 function fillPage(
   records: Record<string, unknown>[],
-  csv: boolean,
-  budget = PAGE_BUDGET,
+  { csv, budget }: { csv: boolean; budget: number },
 ): {
   count: number;
   data: { items: Record<string, unknown>[] } | { csv: string };
@@ -1315,6 +1309,37 @@ function fillPage(
     used += size;
   }
   return { count: lines.length - 1, data: { csv: lines.join('\n') } };
+}
+
+/**
+ * One page of `rows`. The caller reads one row more than `batch`, so the
+ * extra row tells whether more rows follow.
+ */
+function pageResult<Row extends Record<string, unknown>>(
+  rows: Row[],
+  options: {
+    batch: number;
+    /** Record of a row on the page; default is the row. */
+    record?: (row: Row) => Record<string, unknown>;
+    csv?: boolean;
+    budget?: number;
+    /** Cursor that starts the next page after this row. */
+    cursor: (row: Row) => string;
+  },
+) {
+  const pageRows = rows.slice(0, options.batch);
+  const page = fillPage(
+    options.record ? pageRows.map(options.record) : pageRows,
+    { csv: options.csv ?? false, budget: options.budget ?? PAGE_BUDGET },
+  );
+  const hasMore = page.count < rows.length;
+  const last = rows[page.count - 1];
+  return {
+    count: page.count,
+    hasMore,
+    nextCursor: hasMore && last ? options.cursor(last) : null,
+    ...page.data,
+  };
 }
 
 const RANK_NAMES: Record<number, string> = Object.fromEntries(
@@ -1436,6 +1461,122 @@ const fetchWaxLedgerToolSchema = z.object({
       'nextCursor of lots or operations from the previous page. Returns the next page of that list only. Send the same filters.',
     ),
 });
+const listQueensInputSchema = z.object({
+  location: z
+    .enum(['inHive', 'notInHive', 'noHive', 'all'])
+    .optional()
+    .default('inHive')
+    .describe(
+      'inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.',
+    ),
+  bornFrom: z.iso
+    .date()
+    .optional()
+    .describe('Earliest queen birth date (YYYY-MM-DD), inclusive'),
+  bornTo: z.iso
+    .date()
+    .optional()
+    .describe('Latest queen birth date (YYYY-MM-DD), inclusive'),
+  apiaryId: z
+    .number()
+    .optional()
+    .describe('Only queens in colonies / hives of this apiary'),
+  hiveId: z
+    .number()
+    .optional()
+    .describe('Only queens assigned to this colony / hive'),
+  raceId: z.number().optional().describe('Queen race ID from fetchOptions'),
+  matingId: z.number().optional().describe('Queen mating ID from fetchOptions'),
+  q: z
+    .string()
+    .optional()
+    .describe('Search text for queen name or colony / hive name'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of queens. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe('nextCursor of the previous page. Send the same filters.'),
+});
+
+const listMovementsInputSchema = z.object({
+  hiveId: z
+    .number()
+    .optional()
+    .describe('Only movements of this colony / hive'),
+  apiaryId: z.number().optional().describe('Only movements to this apiary'),
+  dateStart: z.iso
+    .date()
+    .optional()
+    .describe('First movement date in YYYY-MM-DD format (default: no limit)'),
+  dateEnd: z.iso
+    .date()
+    .optional()
+    .describe(
+      'Last movement date in YYYY-MM-DD format, inclusive (default: no limit)',
+    ),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by movement date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with hive_name, apiary_name, previous_apiary_id, previous_apiary_name, creator_name and editor_name. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, apiary, previous apiary, creator and editor objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of movements. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
+});
+const listApiariesHivesInputSchema = z.object({
+  includeInactive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Include inactive apiaries'),
+  q: z
+    .string()
+    .optional()
+    .describe(
+      'Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of apiaries. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe('nextCursor of the previous page. Send the same filters.'),
+});
 const fetchChargesInputSchema = z.object({
   q: z
     .string()
@@ -1553,41 +1694,54 @@ export function createWizBeeTools(
      */
     listApiariesHives: tool({
       description:
-        'List all apiaries and their colonies / hives for the current user. Returns a structured JSON with apiary details and associated colonies / hives. Use this to enumerate apiaries or to resolve apiaryIds. To look up a specific colony / hive by its number/name (e.g. "Volk 2402"), use findHives instead — the q parameter here does NOT search colony / hive names.',
-      inputSchema: z.object({
-        includeInactive: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include inactive apiaries'),
-        q: z
-          .string()
-          .optional()
-          .describe(
-            'Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that.',
-          ),
-      }),
+        'List the apiaries and their active colonies / hives for the current user, in pages ordered by apiary id. Use this to enumerate apiaries or to resolve apiaryIds. When hasMore is true, call again with cursor set to nextCursor and the same filters. To look up a specific colony / hive by its number/name (e.g. "Volk 2402"), use findHives instead — the q parameter here does NOT search colony / hive names.',
+      inputSchema: listApiariesHivesInputSchema,
       execute: async (input) => {
-        const apiariesResult = await listApiaries(db, context.userId, {
-          deleted: false,
-          modus: input.includeInactive ? undefined : true,
-          q: input.q,
-          limit: 1000,
-          offset: 0,
-          details: false,
-        });
-
-        const result = await Promise.all(
-          apiariesResult.results.map(async (apiary) => {
-            try {
-              return await getApiaryDetail(db, context.userId, apiary.id);
-            } catch {
-              return {};
-            }
-          }),
+        const batch = Math.min(input.limit ?? PAGE_MAX_LIMIT, PAGE_BATCH.full);
+        // One more row than the page can hold tells whether more rows follow.
+        const list = await listApiaries(
+          db,
+          context.userId,
+          {
+            deleted: false,
+            modus: input.includeInactive ? undefined : true,
+            q: input.q,
+            limit: batch + 1,
+            offset: 0,
+            details: false,
+          },
+          {
+            afterId: input.cursor
+              ? decodeApiaryCursor(input.cursor)
+              : undefined,
+          },
         );
-
-        return result;
+        const { hives, movedates } = await listApiaryHives(
+          db,
+          context.userId,
+          list.results.map((apiary) => apiary.id),
+        );
+        const hivesByApiary = new Map<number, Record<string, unknown>[]>();
+        for (const { apiary_id: apiaryId, ...hive } of hives) {
+          if (apiaryId === null) continue;
+          const apiaryHives = hivesByApiary.get(apiaryId) ?? [];
+          apiaryHives.push(hive);
+          hivesByApiary.set(apiaryId, apiaryHives);
+        }
+        const apiaries = list.results.map((apiary) => ({
+          ...apiary,
+          firstMovedate: movedates.find(
+            (movedate) => movedate.apiary_id === apiary.id,
+          ),
+          hives: hivesByApiary.get(apiary.id) ?? [],
+        }));
+        return {
+          total: list.total,
+          ...pageResult(apiaries, {
+            batch,
+            cursor: (apiary) => encodeCursor(['apiaries', apiary.id]),
+          }),
+        };
       },
     }),
 
@@ -1780,32 +1934,54 @@ export function createWizBeeTools(
 
     listMovements: tool({
       description:
-        'List hive movements. Optionally filter by hive, apiary, or date range. Returns movement IDs needed for updates or deletion.',
-      inputSchema: z.object({
-        hiveId: z.number().optional(),
-        apiaryId: z.number().optional(),
-        dateStart: z.string().optional(),
-        dateEnd: z.string().optional(),
-        limit: z.number().int().min(1).max(500).optional().default(100),
-      }),
+        'List hive movements in pages. Optionally filter by hive, apiary, or date range. Returns movement IDs needed for updates or deletion. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+      inputSchema: listMovementsInputSchema,
       execute: async (input) => {
         const filters: Record<string, unknown>[] = [];
         if (input.hiveId !== undefined)
           filters.push({ 'movedates.hive_id': input.hiveId });
         if (input.apiaryId !== undefined)
           filters.push({ 'movedates.apiary_id': input.apiaryId });
-        if (input.dateStart !== undefined && input.dateEnd !== undefined) {
-          filters.push({
-            date: { from: input.dateStart, to: input.dateEnd },
-          });
-        }
-        return listMovedates(db, context.userId, {
-          filters: JSON.stringify(filters),
-          limit: input.limit,
-          offset: 0,
-          order: 'date',
-          direction: 'desc',
-        });
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeDateCursor(input.cursor, input.sort)
+          : undefined;
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
+        );
+        // One more row than the page can hold tells whether more rows follow.
+        const list = await listMovedates(
+          db,
+          context.userId,
+          { filters: JSON.stringify(filters), limit: batch + 1, offset: 0 },
+          {
+            dateFrom: input.dateStart,
+            dateTo: input.dateEnd,
+            sort: input.sort,
+            keyset,
+          },
+        );
+        return {
+          format,
+          sort: input.sort,
+          total: list.total,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record:
+              format === 'full'
+                ? undefined
+                : (row) => compactRow(row, COMPACT_MOVEMENT_FIELDS),
+            csv: format === 'csv',
+            // A DATETIME, so the cursor keeps the time.
+            cursor: (row) =>
+              encodeDateCursor({
+                date: String(row.date),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
+        };
       },
     }),
 
@@ -1980,7 +2156,7 @@ export function createWizBeeTools(
      */
     listQueens: tool({
       description:
-        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`.',
+        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`. Returns pages in birth date order, queens without a birth date first; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
       inputSchema: listQueensInputSchema,
       execute: async (input) => {
         const filters: Record<string, unknown>[] = [];
@@ -2008,22 +2184,33 @@ export function createWizBeeTools(
           filters.push({ 'queens.mating_id': input.matingId });
         }
         const location = input.location ?? 'inHive';
-        const raw = await listQueens(db, context.userId, {
-          deleted: false,
-          details: true,
-          latest:
-            location === 'inHive'
-              ? true
-              : location === 'notInHive'
-                ? false
-                : undefined,
-          q: input.q,
-          filters: JSON.stringify(filters),
-          order: ['queens.date'],
-          direction: ['asc'],
-          limit: QUEEN_RESULT_LIMIT,
-          offset: 0,
-        });
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH.compact,
+        );
+        // One more row than the page can hold tells whether more rows follow.
+        const raw = await listQueens(
+          db,
+          context.userId,
+          {
+            deleted: false,
+            details: true,
+            latest:
+              location === 'inHive'
+                ? true
+                : location === 'notInHive'
+                  ? false
+                  : undefined,
+            q: input.q,
+            filters: JSON.stringify(filters),
+            limit: batch + 1,
+            offset: 0,
+          },
+          {
+            birthOrder: true,
+            keyset: input.cursor ? decodeQueenCursor(input.cursor) : undefined,
+          },
+        );
         const queens = raw.results.map((q) => {
           // The module return type omits the detail projections.
           const { race, mating } = optionNames(q);
@@ -2043,15 +2230,17 @@ export function createWizBeeTools(
             apiaryName: q.hive_location?.apiary_name ?? null,
           };
         });
-        const truncated = raw.total > queens.length;
         return {
           total: raw.total,
-          returned: queens.length,
-          truncated,
-          ...(truncated && {
-            hint: 'Narrow the request with bornFrom/bornTo, apiaryId, hiveId, raceId, matingId or q to get all matching queens.',
+          ...pageResult(queens, {
+            batch,
+            cursor: (queen) =>
+              encodeCursor([
+                'queens',
+                String(queen.date ?? QUEEN_MISSING_DATE).slice(0, 10),
+                queen.queenId,
+              ]),
           }),
-          queens,
         };
       },
     }),
@@ -2208,31 +2397,23 @@ export function createWizBeeTools(
           list = await listCheckups(db, context.userId, query, keyset);
         }
 
-        const rows = list.results as Record<string, unknown>[];
-        const pageRows = rows.slice(0, batch);
-        const page = fillPage(
-          format === 'full' ? pageRows : pageRows.map(compactTaskRow),
-          format === 'csv',
-        );
-        const hasMore = page.count < rows.length;
-        const last = rows[page.count - 1];
         return {
           task: input.task,
           format,
           sort: input.sort,
           dateRange: { start: startDate, end: endDate },
           total: list.total,
-          count: page.count,
-          hasMore,
-          nextCursor:
-            hasMore && last
-              ? encodeDateCursor({
-                  date: String(last.date).slice(0, 10),
-                  id: Number(last.id),
-                  sort: input.sort,
-                })
-              : null,
-          ...page.data,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record: format === 'full' ? undefined : compactTaskRow,
+            csv: format === 'csv',
+            cursor: (row) =>
+              encodeDateCursor({
+                date: String(row.date).slice(0, 10),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
         };
       },
     }),
@@ -3010,32 +3191,25 @@ export function createWizBeeTools(
           items: stock.results,
         };
 
-        const rows = list.results as Record<string, unknown>[];
-        const pageRows = rows.slice(0, batch);
-        const page = fillPage(
-          format === 'full'
-            ? pageRows
-            : pageRows.map((row) => compactRow(row, COMPACT_CHARGE_FIELDS)),
-          format === 'csv',
-          PAGE_BUDGET - JSON.stringify(stockSummary).length,
-        );
-        const hasMore = page.count < rows.length;
-        const last = rows[page.count - 1];
         return {
           format,
           sort: input.sort,
           total: list.total,
-          count: page.count,
-          hasMore,
-          nextCursor:
-            hasMore && last
-              ? encodeDateCursor({
-                  date: (last.date as string).slice(0, 10),
-                  id: Number(last.id),
-                  sort: input.sort,
-                })
-              : null,
-          ...page.data,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record:
+              format === 'full'
+                ? undefined
+                : (row) => compactRow(row, COMPACT_CHARGE_FIELDS),
+            csv: format === 'csv',
+            budget: PAGE_BUDGET - JSON.stringify(stockSummary).length,
+            cursor: (row) =>
+              encodeDateCursor({
+                date: (row.date as string).slice(0, 10),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
           stockSummary,
         };
       },
@@ -3195,17 +3369,16 @@ export function createWizBeeTools(
             { ...lotQuery, limit: batch + 1, offset: 0 },
             { nonEmpty, beforeId },
           );
-          const rows = list.results as unknown as Record<string, unknown>[];
-          const page = fillPage(rows.slice(0, batch), false, budget);
-          const hasMore = page.count < rows.length;
-          const last = rows[page.count - 1];
           return {
             total: list.total,
-            count: page.count,
-            hasMore,
-            nextCursor:
-              hasMore && last ? encodeCursor(['lots', Number(last.id)]) : null,
-            ...page.data,
+            ...pageResult(
+              list.results as unknown as Record<string, unknown>[],
+              {
+                batch,
+                budget,
+                cursor: (row) => encodeCursor(['lots', Number(row.id)]),
+              },
+            ),
           };
         };
 
@@ -3227,30 +3400,25 @@ export function createWizBeeTools(
             },
             after,
           );
-          const rows = list.results as unknown as Record<string, unknown>[];
-          const pageRows = rows.slice(0, batch);
-          const page = fillPage(
-            input.format === 'full'
-              ? pageRows
-              : pageRows.map((row) => compactRow(row, COMPACT_ACTOR_FIELDS)),
-            false,
-            budget,
-          );
-          const hasMore = page.count < rows.length;
-          const last = rows[page.count - 1];
           return {
             total: list.total,
-            count: page.count,
-            hasMore,
-            nextCursor:
-              hasMore && last
-                ? encodeCursor([
+            ...pageResult(
+              list.results as unknown as Record<string, unknown>[],
+              {
+                batch,
+                record:
+                  input.format === 'full'
+                    ? undefined
+                    : (row) => compactRow(row, COMPACT_ACTOR_FIELDS),
+                budget,
+                cursor: (row) =>
+                  encodeCursor([
                     'operations',
-                    String(last.date).slice(0, 10),
-                    Number(last.id),
-                  ])
-                : null,
-            ...page.data,
+                    String(row.date).slice(0, 10),
+                    Number(row.id),
+                  ]),
+              },
+            ),
           };
         };
 
@@ -3650,11 +3818,9 @@ export function createWizBeeTools(
 export const wizBeeToolDefinitions = [
   {
     name: 'listApiariesHives',
-    description: 'List all apiaries and their hives for the current user.',
-    parameters: z.object({
-      includeInactive: z.boolean().optional().default(false),
-      q: z.string().optional(),
-    }),
+    description:
+      'List the apiaries and their active hives for the current user, in pages. When hasMore is true, call again with cursor set to nextCursor.',
+    parameters: listApiariesHivesInputSchema,
   },
   {
     name: 'findHives',
@@ -3725,14 +3891,9 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'listMovements',
-    description: 'List hive movements with optional filters.',
-    parameters: z.object({
-      hiveId: z.number().optional(),
-      apiaryId: z.number().optional(),
-      dateStart: z.string().optional(),
-      dateEnd: z.string().optional(),
-      limit: z.number().int().min(1).max(500).optional().default(100),
-    }),
+    description:
+      'List hive movements with optional filters, in pages. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+    parameters: listMovementsInputSchema,
   },
   {
     name: 'createMovement',
@@ -3779,7 +3940,7 @@ export const wizBeeToolDefinitions = [
   {
     name: 'listQueens',
     description:
-      'List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year.',
+      'List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
     parameters: listQueensInputSchema,
   },
   {
