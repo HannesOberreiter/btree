@@ -137,6 +137,8 @@ If API call fails (e.g. Created 0 records):
 - Ask before large datasets: "Should I load all ${year} tasks for your hives?"
 - Summarize by date or type.
 - Multi-year / "what did I do last N years": ALWAYS prefer statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics). Do NOT call fetchTasks across multiple years; raw dataset too large. Use fetchTasks only for short specific window (one season, one apiary) when individual records needed.
+- fetchTasks, fetchCharges and listMovements return one page as CSV. listQueens and listApiariesHives return one page of records. fetchWaxLedger returns one page of lots and one page of operations. If hasMore is true and the answer needs more records, call again with cursor = nextCursor and the same filters.
+- Last action ("When did I last feed?"): fetchTasks with sort newest, limit 1 and dateEnd today, once per task type.
 - Queen age / birth year ("Which colonies still have a queen from 2024?"): call **listQueens** once with bornFrom/bornTo. Do NOT read the year from queen names or call getHiveDetail per hive. A colony whose current queen has active=false has no living queen recorded.
 - Never call same tool with same args twice in one conversation. If error, narrow range or change tool.
 
@@ -281,7 +283,7 @@ export class WizBeeAI {
   private context: WizBeeContext;
 
   constructor(userId: number, beeId: number, rank: 1 | 2 | 3 | 4) {
-    this.context = { userId, beeId, rank };
+    this.context = { userId, beeId, rank, chat: true };
   }
 
   /**

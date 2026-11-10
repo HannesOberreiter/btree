@@ -1,4 +1,5 @@
 /* eslint-disable e18e/prefer-static-regex */
+import httpErrors from 'http-errors';
 import { z } from 'zod';
 
 import { ROLES } from '../../config/constants.config.js';
@@ -6,8 +7,8 @@ import { Logger } from '../../services/logger.service.js';
 import type { Database } from '../../types/database.types.js';
 import {
   createApiary,
-  getApiaryDetail,
   listApiaries,
+  listApiaryHives,
   updateApiaries,
 } from '../modules/apiary.module.js';
 import {
@@ -22,6 +23,7 @@ import {
   listCheckups,
   updateCheckups,
 } from '../modules/checkup.module.js';
+import { listCompanyUsers } from '../modules/company_user.module.js';
 import { createFeeds, listFeeds, updateFeeds } from '../modules/feed.module.js';
 import {
   createHarvests,
@@ -42,13 +44,13 @@ import {
   updateMovedates,
 } from '../modules/movedate.module.js';
 import { listOptions, optionTables } from '../modules/option.module.js';
-import { listQueens } from '../modules/queen.module.js';
+import { listQueens, QUEEN_MISSING_DATE } from '../modules/queen.module.js';
 import {
   listHiveCountByApiary,
   listHiveCountTotal,
   listTaskStatisticsSummary,
 } from '../modules/statistic.module.js';
-import { deleteTasks } from '../modules/task.module.js';
+import { deleteTasks, type TaskKeyset } from '../modules/task.module.js';
 import {
   summarizeTaskAmounts,
   summarizeTaskStock,
@@ -68,6 +70,7 @@ import {
   createWaxOperation,
   listWaxLots,
   listWaxOperations,
+  summarizeWaxLots,
   reverseWaxOperation,
 } from '../modules/wax.module.js';
 import { getApiaryTemperatureSum, getApiaryWeather } from './weather.module.js';
@@ -81,6 +84,8 @@ export interface WizBeeContext {
   userId: number;
   beeId: number;
   rank: 1 | 2 | 3 | 4;
+  /** True for the WizBee chat; it gets the most compact output defaults. */
+  chat?: boolean;
 }
 
 const TOOL_MAX_RANK = {
@@ -98,6 +103,7 @@ const TOOL_MAX_RANK = {
   getHiveDetail: ROLES.read,
   listQueens: ROLES.read,
   getHiveTasks: ROLES.read,
+  listCompanyUsers: ROLES.read,
   fetchOptions: ROLES.read,
   fetchTasks: ROLES.read,
   createFeed: ROLES.user,
@@ -129,41 +135,6 @@ const TOOL_MAX_RANK = {
   btreeDocumentation: ROLES.read,
   calculateSugarWater: ROLES.read,
 } as const;
-
-/** Rows returned by listQueens; keeps the result below MAX_TOOL_RESULT_CHARS. */
-const QUEEN_RESULT_LIMIT = 250;
-
-const listQueensInputSchema = z.object({
-  location: z
-    .enum(['inHive', 'notInHive', 'noHive', 'all'])
-    .optional()
-    .default('inHive')
-    .describe(
-      'inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.',
-    ),
-  bornFrom: z.iso
-    .date()
-    .optional()
-    .describe('Earliest queen birth date (YYYY-MM-DD), inclusive'),
-  bornTo: z.iso
-    .date()
-    .optional()
-    .describe('Latest queen birth date (YYYY-MM-DD), inclusive'),
-  apiaryId: z
-    .number()
-    .optional()
-    .describe('Only queens in colonies / hives of this apiary'),
-  hiveId: z
-    .number()
-    .optional()
-    .describe('Only queens assigned to this colony / hive'),
-  raceId: z.number().optional().describe('Queen race ID from fetchOptions'),
-  matingId: z.number().optional().describe('Queen mating ID from fetchOptions'),
-  q: z
-    .string()
-    .optional()
-    .describe('Search text for queen name or colony / hive name'),
-});
 
 /** Read race and mating names from a listQueens detail row. */
 function optionNames(row: Record<string, unknown>) {
@@ -776,9 +747,11 @@ async function preValidateOwnership(
  *   - System prompt + tool schemas + history ≈ 15-25k tokens
  *   - Safe headroom for reasoning + output ≈ 10k tokens
  *   - That leaves ≥95k tokens for ALL tool results combined.
- * At ~4 chars/token, a single tool result above ~40 KB risks blowing the
- * window after 2-3 calls. We cap hard at 40 KB and instruct the model to
- * narrow its query or use statistics tools instead.
+ * At ~4 chars/token, a result of 60,000 characters is about 15k tokens, so
+ * about 6 full results fit. The cap counts characters of the serialized JSON
+ * (UTF-16 code units, about 60 KB for Latin-script data). Paged tools fill
+ * each page up to the cap; other tools ask the model to narrow its query or
+ * use statistics tools instead.
  */
 const MAX_TOOL_RESULT_CHARS = 60_000;
 
@@ -801,16 +774,10 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
   }
 
   const hintByTool: Record<string, string> = {
-    fetchTasks:
-      'The returned dataset is too large (likely a multi-year range). For multi-year summaries use getHarvestStatistics, getFeedStatistics or getTreatmentStatistics. For detail views, narrow the date range to a single year or a specific apiaryId, or reduce limit.',
     getHiveTasks:
-      'Tasks for this hive/apiary are too many to return in full. Ask the user which year or which task type they are interested in, or use the statistics tools.',
-    fetchCharges:
-      'Too many charges to return. Add a search query (q) or reduce limit.',
-    fetchWaxLedger:
-      'Too much wax ledger data to return. Add a search query, date range or operation type, or reduce limit.',
+      'Tasks for this apiary are too many to return in one result. Call getHiveTasks once per hive, or use fetchTasks with apiaryId, which returns the records in pages.',
     listApiariesHives:
-      'Apiary/hive list is unexpectedly large. Consider setting includeInactive: false or filtering with q.',
+      'One apiary has too many colonies / hives for one result. Use findHives with the apiary name to list its colonies / hives.',
     btreeDocumentation:
       "Documentation payload is too large. Summarize only the section relevant to the user's question instead of returning the whole document.",
   };
@@ -829,12 +796,10 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
     error: {
       code: 'validation_error',
       status: 413,
-      message: `Result too large (${Math.round(size / 1024)} KB). Narrow the query or use a statistics tool.`,
+      message: `Result too large (${size.toLocaleString('en-US')} characters; limit ${MAX_TOOL_RESULT_CHARS.toLocaleString('en-US')}). Narrow the query or use a statistics tool.`,
       hint,
       suggested_next_tool:
-        toolName === 'fetchTasks' || toolName === 'getHiveTasks'
-          ? 'getHarvestStatistics'
-          : undefined,
+        toolName === 'getHiveTasks' ? 'fetchTasks' : undefined,
     },
   };
   return envelope;
@@ -1081,6 +1046,306 @@ function getDefaultDateRange(): { dateStart: string; dateEnd: string } {
  * Task types supported by the fetchTasks tool
  */
 const TASK_TYPES = ['feed', 'treatment', 'harvest', 'checkup', 'todo'] as const;
+const RESULT_FORMATS = ['full', 'compact', 'csv'] as const;
+type ResultFormat = (typeof RESULT_FORMATS)[number];
+
+/** Maximum records for one call of a paged tool. */
+const PAGE_MAX_LIMIT = 1000;
+/** Rows read for one page; a page of this size is larger than the size limit. */
+const PAGE_BATCH: Record<ResultFormat, number> = {
+  full: 100,
+  compact: 300,
+  csv: 600,
+};
+/** Characters kept free in a paged result for the fields around the records. */
+const PAGE_ENVELOPE_CHARS = 1_000;
+/** Characters available for the records of one page. */
+const PAGE_BUDGET = MAX_TOOL_RESULT_CHARS - PAGE_ENVELOPE_CHARS;
+
+const fetchTasksInputSchema = z.object({
+  task: z.enum(TASK_TYPES).describe('Type of task to fetch'),
+  dateStart: z
+    .string()
+    .optional()
+    .describe('Start date in YYYY-MM-DD format (default: 2 months ago)'),
+  dateEnd: z
+    .string()
+    .optional()
+    .describe(
+      'End date in YYYY-MM-DD format (default: 2 months from now). For the last done task, set it to today.',
+    ),
+  apiaryId: z.number().optional().describe('Filter by specific apiary ID'),
+  includeDone: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Include completed tasks'),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by task date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of records. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
+});
+
+function encodeCursor(values: unknown[]) {
+  return Buffer.from(JSON.stringify(values)).toString('base64url');
+}
+
+/** The values of a cursor, or an empty list for a malformed cursor. */
+function readCursor(cursor: string): unknown[] {
+  try {
+    const values: unknown = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    );
+    return Array.isArray(values) ? values : [];
+  } catch {
+    return [];
+  }
+}
+
+function invalidCursor() {
+  return httpErrors.BadRequest(
+    'Invalid cursor. Send the nextCursor of the previous page with the same sort.',
+  );
+}
+
+/** A DATE value, or a DATETIME value as the pool returns it. */
+function isDate(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(value)
+  );
+}
+
+function encodeDateCursor(keyset: TaskKeyset) {
+  return encodeCursor([keyset.date, keyset.id, keyset.sort]);
+}
+
+function decodeDateCursor(
+  cursor: string,
+  sort: TaskKeyset['sort'],
+): TaskKeyset {
+  const [date, id, cursorSort] = readCursor(cursor);
+  if (isDate(date) && Number.isInteger(id) && cursorSort === sort) {
+    return { date, id: id as number, sort };
+  }
+  throw invalidCursor();
+}
+
+/** Nested task objects and the flat fields that replace them in compact rows. */
+const COMPACT_TASK_FIELDS: Record<string, Record<string, string>> = {
+  hive: { hive_name: 'name' },
+  apiary: { apiary_name: 'name' },
+  type: { type_name: 'name' },
+  disease: { disease_name: 'name' },
+  vet: { vet_name: 'name' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  feed_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  harvest_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  treatment_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  checkup_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  movedate_previous_apiary: {
+    previous_apiary_id: 'previous_apiary_id',
+    previous_apiary_name: 'previous_apiary_name',
+  },
+};
+
+/** Row with the nested objects in `fieldMap` replaced by flat fields. */
+function compactRow(
+  row: Record<string, unknown>,
+  fieldMap: Record<string, Record<string, string>>,
+) {
+  const compact: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    const fields = fieldMap[key];
+    if (!fields) {
+      compact[key] = value;
+      continue;
+    }
+    const nested = (value ?? {}) as Record<string, unknown>;
+    for (const [field, source] of Object.entries(fields)) {
+      compact[field] = nested[source] ?? null;
+    }
+  }
+  return compact;
+}
+
+/** Nested charge objects and the flat fields that replace them in compact rows. */
+const COMPACT_CHARGE_FIELDS: Record<string, Record<string, string>> = {
+  type: { type_name: 'name', unit: 'unit' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  source: {
+    source_task: 'task',
+    source_id: 'id',
+    source_hive_id: 'hive_id',
+    hive_name: 'hive_name',
+  },
+};
+
+/** Actor objects and the flat fields that replace them in compact rows. */
+const COMPACT_ACTOR_FIELDS: Record<string, Record<string, string>> = {
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+};
+
+/** Wax ledger list and position after which its next page starts. */
+type WaxCursor =
+  | { list: 'lots'; id: number }
+  | { list: 'operations'; date: string; id: number };
+
+function decodeWaxCursor(cursor: string): WaxCursor {
+  const [list, first, second] = readCursor(cursor);
+  if (list === 'lots' && Number.isInteger(first)) {
+    return { list, id: first as number };
+  }
+  if (list === 'operations' && isDate(first) && Number.isInteger(second)) {
+    return { list, date: first, id: second as number };
+  }
+  throw invalidCursor();
+}
+
+/** Nested movement objects and the flat fields that replace them in compact rows. */
+const COMPACT_MOVEMENT_FIELDS: Record<string, Record<string, string>> = {
+  hive: { hive_name: 'name' },
+  apiary: { apiary_name: 'name' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  movedate_previous_apiary: {
+    previous_apiary_id: 'previous_apiary_id',
+    previous_apiary_name: 'previous_apiary_name',
+  },
+};
+
+function decodeQueenCursor(cursor: string) {
+  const [list, date, id] = readCursor(cursor);
+  if (list === 'queens' && isDate(date) && Number.isInteger(id)) {
+    return { date, id: id as number };
+  }
+  throw invalidCursor();
+}
+
+function decodeApiaryCursor(cursor: string) {
+  const [list, id] = readCursor(cursor);
+  if (list === 'apiaries' && Number.isInteger(id)) return id as number;
+  throw invalidCursor();
+}
+
+/** Task row with the nested objects replaced by flat id and name fields. */
+function compactTaskRow(row: Record<string, unknown>) {
+  return compactRow(row, COMPACT_TASK_FIELDS);
+}
+
+function csvCell(value: unknown) {
+  if (value === null || value === undefined) return '';
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function csvLine(values: unknown[]) {
+  return values.map(csvCell).join(',');
+}
+
+/** Characters that a string adds to the serialized result. */
+function serializedLength(text: string) {
+  return JSON.stringify(text).length - 2;
+}
+
+/**
+ * The first records that fit into `budget` characters, as records or as CSV.
+ * Always keeps the first record, so every call makes progress.
+ */
+function fillPage(
+  records: Record<string, unknown>[],
+  { csv, budget }: { csv: boolean; budget: number },
+): {
+  count: number;
+  data: { items: Record<string, unknown>[] } | { csv: string };
+} {
+  if (!csv) {
+    const items: Record<string, unknown>[] = [];
+    let used = 0;
+    for (const row of records) {
+      const size = JSON.stringify(row).length + 1;
+      if (items.length > 0 && used + size > budget) break;
+      items.push(row);
+      used += size;
+    }
+    return { count: items.length, data: { items } };
+  }
+
+  const columns = [...new Set(records.flatMap((row) => Object.keys(row)))];
+  const lines = [csvLine(columns)];
+  let used = serializedLength(`${lines[0]}\n`);
+  for (const row of records) {
+    const line = csvLine(columns.map((column) => row[column]));
+    const size = serializedLength(`${line}\n`);
+    if (lines.length > 1 && used + size > budget) break;
+    lines.push(line);
+    used += size;
+  }
+  return { count: lines.length - 1, data: { csv: lines.join('\n') } };
+}
+
+/**
+ * One page of `rows`. The caller reads one row more than `batch`, so the
+ * extra row tells whether more rows follow.
+ */
+function pageResult<Row extends Record<string, unknown>>(
+  rows: Row[],
+  options: {
+    batch: number;
+    /** Record of a row on the page; default is the row. */
+    record?: (row: Row) => Record<string, unknown>;
+    csv?: boolean;
+    budget?: number;
+    /** Cursor that starts the next page after this row. */
+    cursor: (row: Row) => string;
+  },
+) {
+  const pageRows = rows.slice(0, options.batch);
+  const page = fillPage(
+    options.record ? pageRows.map(options.record) : pageRows,
+    { csv: options.csv ?? false, budget: options.budget ?? PAGE_BUDGET },
+  );
+  const hasMore = page.count < rows.length;
+  const last = rows[page.count - 1];
+  return {
+    count: page.count,
+    hasMore,
+    nextCursor: hasMore && last ? options.cursor(last) : null,
+    ...page.data,
+  };
+}
+
+const RANK_NAMES: Record<number, string> = Object.fromEntries(
+  Object.entries(ROLES).map(([name, rank]) => [rank, name]),
+);
+
 const WAX_OPERATION_TYPES = [
   'production',
   'purchase',
@@ -1135,6 +1400,31 @@ const waxOutputLineToolSchema = z
     message: 'Existing lotId or productId is required',
     path: ['lotId'],
   });
+const findHivesInputSchema = z.object({
+  q: z
+    .string()
+    .describe(
+      'Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive).',
+    ),
+  includeInactive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Include inactive colonies / hives (modus=false)'),
+  includeDeleted: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Also return soft-deleted colonies / hives'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(1000)
+    .optional()
+    .default(50)
+    .describe('Maximum number of colonies / hives to return (default 50).'),
+});
 const fetchWaxLedgerToolSchema = z.object({
   q: z.string().trim().optional().describe('Search text'),
   dateStart: z.iso.date().optional().describe('First operation date'),
@@ -1148,14 +1438,191 @@ const fetchWaxLedgerToolSchema = z.object({
     .optional()
     .default(false)
     .describe('Include lots whose current stock is zero'),
+  format: z
+    .enum(['compact', 'full'])
+    .optional()
+    .default('compact')
+    .describe(
+      'compact (default): operations with creator_name and editor_name. full: operations with the creator and editor objects.',
+    ),
   limit: z
     .number()
     .int()
     .min(1)
-    .max(500)
+    .max(PAGE_MAX_LIMIT)
     .optional()
-    .default(100)
-    .describe('Maximum lots and operations to return'),
+    .describe(
+      'Maximum lots and operations per list. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of lots or operations from the previous page. Returns the next page of that list only. Send the same filters.',
+    ),
+});
+const listQueensInputSchema = z.object({
+  location: z
+    .enum(['inHive', 'notInHive', 'noHive', 'all'])
+    .optional()
+    .default('inHive')
+    .describe(
+      'inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.',
+    ),
+  bornFrom: z.iso
+    .date()
+    .optional()
+    .describe('Earliest queen birth date (YYYY-MM-DD), inclusive'),
+  bornTo: z.iso
+    .date()
+    .optional()
+    .describe('Latest queen birth date (YYYY-MM-DD), inclusive'),
+  apiaryId: z
+    .number()
+    .optional()
+    .describe('Only queens in colonies / hives of this apiary'),
+  hiveId: z
+    .number()
+    .optional()
+    .describe('Only queens assigned to this colony / hive'),
+  raceId: z.number().optional().describe('Queen race ID from fetchOptions'),
+  matingId: z.number().optional().describe('Queen mating ID from fetchOptions'),
+  q: z
+    .string()
+    .optional()
+    .describe('Search text for queen name or colony / hive name'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of queens. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe('nextCursor of the previous page. Send the same filters.'),
+});
+
+const listMovementsInputSchema = z.object({
+  hiveId: z
+    .number()
+    .optional()
+    .describe('Only movements of this colony / hive'),
+  apiaryId: z.number().optional().describe('Only movements to this apiary'),
+  dateStart: z.iso
+    .date()
+    .optional()
+    .describe('First movement date in YYYY-MM-DD format (default: no limit)'),
+  dateEnd: z.iso
+    .date()
+    .optional()
+    .describe(
+      'Last movement date in YYYY-MM-DD format, inclusive (default: no limit)',
+    ),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by movement date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with hive_name, apiary_name, previous_apiary_id, previous_apiary_name, creator_name and editor_name. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, apiary, previous apiary, creator and editor objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of movements. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
+});
+const listApiariesHivesInputSchema = z.object({
+  includeInactive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Include inactive apiaries'),
+  q: z
+    .string()
+    .optional()
+    .describe(
+      'Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of apiaries. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe('nextCursor of the previous page. Send the same filters.'),
+});
+const fetchChargesInputSchema = z.object({
+  q: z
+    .string()
+    .optional()
+    .describe('Search query to filter charges by name, type or charge number'),
+  dateStart: z.iso
+    .date()
+    .optional()
+    .describe('First charge date in YYYY-MM-DD format (default: no limit)'),
+  dateEnd: z.iso
+    .date()
+    .optional()
+    .describe('Last charge date in YYYY-MM-DD format (default: no limit)'),
+  includeDeleted: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Also return soft-deleted charges'),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by charge date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with type_name, unit, creator_name, editor_name and the source task. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested type, creator, editor and source objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of charges. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
 });
 const createWaxOperationToolSchema = z.object({
   date: z.iso.date().describe('Booking date'),
@@ -1227,41 +1694,54 @@ export function createWizBeeTools(
      */
     listApiariesHives: tool({
       description:
-        'List all apiaries and their colonies / hives for the current user. Returns a structured JSON with apiary details and associated colonies / hives. Use this to enumerate apiaries or to resolve apiaryIds. To look up a specific colony / hive by its number/name (e.g. "Volk 2402"), use findHives instead — the q parameter here does NOT search colony / hive names.',
-      inputSchema: z.object({
-        includeInactive: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include inactive apiaries'),
-        q: z
-          .string()
-          .optional()
-          .describe(
-            'Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that.',
-          ),
-      }),
+        'List the apiaries and their active colonies / hives for the current user, in pages ordered by apiary id. Use this to enumerate apiaries or to resolve apiaryIds. When hasMore is true, call again with cursor set to nextCursor and the same filters. To look up a specific colony / hive by its number/name (e.g. "Volk 2402"), use findHives instead — the q parameter here does NOT search colony / hive names.',
+      inputSchema: listApiariesHivesInputSchema,
       execute: async (input) => {
-        const apiariesResult = await listApiaries(db, context.userId, {
-          deleted: false,
-          modus: input.includeInactive ? undefined : true,
-          q: input.q,
-          limit: 1000,
-          offset: 0,
-          details: false,
-        });
-
-        const result = await Promise.all(
-          apiariesResult.results.map(async (apiary) => {
-            try {
-              return await getApiaryDetail(db, context.userId, apiary.id);
-            } catch {
-              return {};
-            }
-          }),
+        const batch = Math.min(input.limit ?? PAGE_MAX_LIMIT, PAGE_BATCH.full);
+        // One more row than the page can hold tells whether more rows follow.
+        const list = await listApiaries(
+          db,
+          context.userId,
+          {
+            deleted: false,
+            modus: input.includeInactive ? undefined : true,
+            q: input.q,
+            limit: batch + 1,
+            offset: 0,
+            details: false,
+          },
+          {
+            afterId: input.cursor
+              ? decodeApiaryCursor(input.cursor)
+              : undefined,
+          },
         );
-
-        return result;
+        const { hives, movedates } = await listApiaryHives(
+          db,
+          context.userId,
+          list.results.map((apiary) => apiary.id),
+        );
+        const hivesByApiary = new Map<number, Record<string, unknown>[]>();
+        for (const { apiary_id: apiaryId, ...hive } of hives) {
+          if (apiaryId === null) continue;
+          const apiaryHives = hivesByApiary.get(apiaryId) ?? [];
+          apiaryHives.push(hive);
+          hivesByApiary.set(apiaryId, apiaryHives);
+        }
+        const apiaries = list.results.map((apiary) => ({
+          ...apiary,
+          firstMovedate: movedates.find(
+            (movedate) => movedate.apiary_id === apiary.id,
+          ),
+          hives: hivesByApiary.get(apiary.id) ?? [],
+        }));
+        return {
+          total: list.total,
+          ...pageResult(apiaries, {
+            batch,
+            cursor: (apiary) => encodeCursor(['apiaries', apiary.id]),
+          }),
+        };
       },
     }),
 
@@ -1274,39 +1754,20 @@ export function createWizBeeTools(
     findHives: tool({
       description:
         'Find colonies / hives (Bienenvölker) by their user-visible name/number (e.g. "2402", "1608") or by the apiary name they are located in. Use this whenever the user refers to a specific colony / hive ("Volk X", "colony X", "hive X", "Stock X", "Bienenvolk X") so you can resolve the real hiveId and apiaryId. Returns matching colonies / hives with id, name, apiary_id and apiary name. Prefer this over listApiariesHives for colony / hive lookups.',
-      inputSchema: z.object({
-        q: z
-          .string()
-          .describe(
-            'Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive).',
-          ),
-        includeInactive: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include inactive colonies / hives (modus=false)'),
-        includeDeleted: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include soft-deleted colonies / hives'),
-        limit: z
-          .number()
-          .optional()
-          .default(50)
-          .describe(
-            'Maximum number of colonies / hives to return (default 50).',
-          ),
-      }),
+      inputSchema: findHivesInputSchema,
       execute: async (input) => {
-        const raw = await listHives(db, context.userId, {
-          q: input.q,
-          deleted: input.includeDeleted ?? false,
-          modus: input.includeInactive ? undefined : true,
-          limit: input.limit ?? 50,
-          offset: 0,
-          details: false,
-        });
+        const raw = await listHives(
+          db,
+          context.userId,
+          {
+            q: input.q,
+            modus: input.includeInactive ? undefined : true,
+            limit: input.limit ?? 50,
+            offset: 0,
+            details: false,
+          },
+          { includeDeleted: input.includeDeleted ?? false },
+        );
         const results = raw.results;
 
         // Return a compact, purpose-shaped payload so the model sees the IDs
@@ -1316,6 +1777,7 @@ export function createWizBeeTools(
           name: h.name,
           position: h.position,
           modus: h.modus,
+          deleted: h.deleted,
           apiary_id: h.hive_location?.apiary_id ?? null,
           apiary_name: h.hive_location?.apiary_name ?? null,
         }));
@@ -1472,32 +1934,54 @@ export function createWizBeeTools(
 
     listMovements: tool({
       description:
-        'List hive movements. Optionally filter by hive, apiary, or date range. Returns movement IDs needed for updates or deletion.',
-      inputSchema: z.object({
-        hiveId: z.number().optional(),
-        apiaryId: z.number().optional(),
-        dateStart: z.string().optional(),
-        dateEnd: z.string().optional(),
-        limit: z.number().int().min(1).max(500).optional().default(100),
-      }),
+        'List hive movements in pages. Optionally filter by hive, apiary, or date range. Returns movement IDs needed for updates or deletion. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+      inputSchema: listMovementsInputSchema,
       execute: async (input) => {
         const filters: Record<string, unknown>[] = [];
         if (input.hiveId !== undefined)
           filters.push({ 'movedates.hive_id': input.hiveId });
         if (input.apiaryId !== undefined)
           filters.push({ 'movedates.apiary_id': input.apiaryId });
-        if (input.dateStart !== undefined && input.dateEnd !== undefined) {
-          filters.push({
-            date: { from: input.dateStart, to: input.dateEnd },
-          });
-        }
-        return listMovedates(db, context.userId, {
-          filters: JSON.stringify(filters),
-          limit: input.limit,
-          offset: 0,
-          order: 'date',
-          direction: 'desc',
-        });
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeDateCursor(input.cursor, input.sort)
+          : undefined;
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
+        );
+        // One more row than the page can hold tells whether more rows follow.
+        const list = await listMovedates(
+          db,
+          context.userId,
+          { filters: JSON.stringify(filters), limit: batch + 1, offset: 0 },
+          {
+            dateFrom: input.dateStart,
+            dateTo: input.dateEnd,
+            sort: input.sort,
+            keyset,
+          },
+        );
+        return {
+          format,
+          sort: input.sort,
+          total: list.total,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record:
+              format === 'full'
+                ? undefined
+                : (row) => compactRow(row, COMPACT_MOVEMENT_FIELDS),
+            csv: format === 'csv',
+            // A DATETIME, so the cursor keeps the time.
+            cursor: (row) =>
+              encodeDateCursor({
+                date: String(row.date),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
+        };
       },
     }),
 
@@ -1672,7 +2156,7 @@ export function createWizBeeTools(
      */
     listQueens: tool({
       description:
-        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`.',
+        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`. Returns pages in birth date order, queens without a birth date first; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
       inputSchema: listQueensInputSchema,
       execute: async (input) => {
         const filters: Record<string, unknown>[] = [];
@@ -1700,22 +2184,33 @@ export function createWizBeeTools(
           filters.push({ 'queens.mating_id': input.matingId });
         }
         const location = input.location ?? 'inHive';
-        const raw = await listQueens(db, context.userId, {
-          deleted: false,
-          details: true,
-          latest:
-            location === 'inHive'
-              ? true
-              : location === 'notInHive'
-                ? false
-                : undefined,
-          q: input.q,
-          filters: JSON.stringify(filters),
-          order: ['queens.date'],
-          direction: ['asc'],
-          limit: QUEEN_RESULT_LIMIT,
-          offset: 0,
-        });
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH.compact,
+        );
+        // One more row than the page can hold tells whether more rows follow.
+        const raw = await listQueens(
+          db,
+          context.userId,
+          {
+            deleted: false,
+            details: true,
+            latest:
+              location === 'inHive'
+                ? true
+                : location === 'notInHive'
+                  ? false
+                  : undefined,
+            q: input.q,
+            filters: JSON.stringify(filters),
+            limit: batch + 1,
+            offset: 0,
+          },
+          {
+            birthOrder: true,
+            keyset: input.cursor ? decodeQueenCursor(input.cursor) : undefined,
+          },
+        );
         const queens = raw.results.map((q) => {
           // The module return type omits the detail projections.
           const { race, mating } = optionNames(q);
@@ -1735,15 +2230,17 @@ export function createWizBeeTools(
             apiaryName: q.hive_location?.apiary_name ?? null,
           };
         });
-        const truncated = raw.total > queens.length;
         return {
           total: raw.total,
-          returned: queens.length,
-          truncated,
-          ...(truncated && {
-            hint: 'Narrow the request with bornFrom/bornTo, apiaryId, hiveId, raceId, matingId or q to get all matching queens.',
+          ...pageResult(queens, {
+            batch,
+            cursor: (queen) =>
+              encodeCursor([
+                'queens',
+                String(queen.date ?? QUEEN_MISSING_DATE).slice(0, 10),
+                queen.queenId,
+              ]),
           }),
-          queens,
         };
       },
     }),
@@ -1754,7 +2251,7 @@ export function createWizBeeTools(
      */
     getHiveTasks: tool({
       description:
-        'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a specific hive or apiary for a given year.',
+        'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a specific hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId.',
       inputSchema: z.object({
         id: z.number().describe('ID of the hive (or apiary when apiary=true)'),
         year: z
@@ -1770,13 +2267,37 @@ export function createWizBeeTools(
           ),
       }),
       execute: async (input) => {
-        return getHiveTasks(
+        const tasks = await getHiveTasks(
           db,
           { companyId: context.userId, beeId: context.beeId, isLlm: true },
           input.id,
           input.year ?? new Date().getFullYear(),
           input.apiary ?? false,
         );
+        return Object.fromEntries(
+          Object.entries(tasks).map(([kind, rows]) => [
+            kind,
+            (rows as Record<string, unknown>[]).map(compactTaskRow),
+          ]),
+        );
+      },
+    }),
+
+    listCompanyUsers: tool({
+      description:
+        'List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records.',
+      inputSchema: z.object({}),
+      execute: async () => {
+        const members = await listCompanyUsers(db, context.userId);
+        return members.map((member) => ({
+          bee_id: member.bee_id,
+          username: member.user.username,
+          email: member.user.email,
+          rank: RANK_NAMES[member.rank ?? 0] ?? null,
+          last_visit: member.user.last_visit,
+          company_id: member.company.id,
+          company_name: member.company.name,
+        }));
       },
     }),
 
@@ -1814,34 +2335,8 @@ export function createWizBeeTools(
      */
     fetchTasks: tool({
       description:
-        'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. Useful for viewing specific upcoming/recent activities. IMPORTANT: for multi-year summaries or "what did I do last N years" style questions, prefer the statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics) which return aggregates in a fraction of the tokens. Only fetch raw tasks when the user needs concrete records.',
-      inputSchema: z.object({
-        task: z.enum(TASK_TYPES).describe('Type of task to fetch'),
-        dateStart: z
-          .string()
-          .optional()
-          .describe('Start date in YYYY-MM-DD format (default: 2 months ago)'),
-        dateEnd: z
-          .string()
-          .optional()
-          .describe(
-            'End date in YYYY-MM-DD format (default: 2 months from now)',
-          ),
-        apiaryId: z
-          .number()
-          .optional()
-          .describe('Filter by specific apiary ID'),
-        includeDone: z
-          .boolean()
-          .optional()
-          .default(true)
-          .describe('Include completed tasks'),
-        limit: z
-          .number()
-          .optional()
-          .default(200)
-          .describe('Maximum number of results'),
-      }),
+        'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages. Useful for viewing specific upcoming/recent activities. IMPORTANT: for multi-year summaries or "what did I do last N years" style questions, prefer the statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics) which return aggregates in a fraction of the tokens. Only fetch raw tasks when the user needs concrete records. When hasMore is true, call again with cursor set to nextCursor and the same filters to get the next page. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
+      inputSchema: fetchTasksInputSchema,
       execute: async (input) => {
         const { dateStart, dateEnd } = getDefaultDateRange();
 
@@ -1858,46 +2353,67 @@ export function createWizBeeTools(
         }
         const filters = JSON.stringify(filterArray);
 
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeDateCursor(input.cursor, input.sort)
+          : undefined;
+        const direction: 'asc' | 'desc' =
+          input.sort === 'newest' ? 'desc' : 'asc';
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
+        );
+        // One more row than the page can hold tells whether more rows follow.
         const query = {
-          limit: input.limit,
+          limit: batch + 1,
           offset: 0,
+          order: ['date', 'id'] as ('date' | 'id')[],
+          direction: [direction, direction],
           ...(input.apiaryId &&
             input.task === 'todo' && { apiary_id: input.apiaryId }),
           filters,
           done: input.includeDone ? undefined : false,
           deleted: false,
         };
-        let items;
+        let list: { results: object[]; total: number };
         if (input.task === 'todo') {
-          items = (
-            await listTodos(
-              db,
-              {
-                companyId: context.userId,
-                beeId: context.beeId,
-                isLlm: true,
-              },
-              query,
-            )
-          ).results;
+          list = await listTodos(
+            db,
+            {
+              companyId: context.userId,
+              beeId: context.beeId,
+              isLlm: true,
+            },
+            query,
+            keyset,
+          );
         } else if (input.task === 'feed') {
-          items = (await listFeeds(db, context.userId, query)).results;
+          list = await listFeeds(db, context.userId, query, keyset);
         } else if (input.task === 'harvest') {
-          items = (await listHarvests(db, context.userId, query)).results;
+          list = await listHarvests(db, context.userId, query, keyset);
         } else if (input.task === 'treatment') {
-          items = (await listTreatments(db, context.userId, query)).results;
+          list = await listTreatments(db, context.userId, query, keyset);
         } else {
-          items = (await listCheckups(db, context.userId, query)).results;
+          list = await listCheckups(db, context.userId, query, keyset);
         }
 
-        // Return full records as-is. If the payload is too big for the model
-        // context, the wrapper's enforceResultSize() converts it to a
-        // structured "result_too_large" error with a hint to narrow the query.
         return {
           task: input.task,
-          count: items.length,
+          format,
+          sort: input.sort,
           dateRange: { start: startDate, end: endDate },
-          items,
+          total: list.total,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record: format === 'full' ? undefined : compactTaskRow,
+            csv: format === 'csv',
+            cursor: (row) =>
+              encodeDateCursor({
+                date: String(row.date).slice(0, 10),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
         };
       },
     }),
@@ -2643,42 +3159,58 @@ export function createWizBeeTools(
      */
     fetchCharges: tool({
       description:
-        'Fetch charges: the stock movements of the warehouse (German: Lager, Lagerbuchungen) for stock items like sugar, treatments, honey jars etc. Use this to view stock movements, current stock levels (Lagerbestand) and inventory. Charge types are the stock items (Lagerartikel).',
-      inputSchema: z.object({
-        q: z
-          .string()
-          .optional()
-          .describe(
-            'Search query to filter charges by name, type or charge number',
-          ),
-        limit: z
-          .number()
-          .optional()
-          .default(100)
-          .describe('Maximum number of results'),
-      }),
+        'Fetch charges: the stock movements of the warehouse (German: Lager, Lagerbuchungen) for stock items like sugar, treatments, honey jars etc., in pages. Every page also has stockSummary with the current stock levels (Lagerbestand) per stock item. Charge types are the stock items (Lagerartikel). When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+      inputSchema: fetchChargesInputSchema,
       execute: async (input) => {
-        const result = await listCharges(db, context.userId, {
-          limit: input.limit,
-          offset: 0,
-          q: input.q,
-        });
-
-        // Also get stock summary
-        const stockResult = await listChargeStock(db, context.userId, {
-          limit: 1000,
-          offset: 0,
-        });
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeDateCursor(input.cursor, input.sort)
+          : undefined;
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
+        );
+        const [list, stock] = await Promise.all([
+          // One more row than the page can hold tells whether more rows follow.
+          listCharges(
+            db,
+            context.userId,
+            { limit: batch + 1, offset: 0, q: input.q },
+            {
+              includeDeleted: input.includeDeleted,
+              dateFrom: input.dateStart,
+              dateTo: input.dateEnd,
+              sort: input.sort,
+              keyset,
+            },
+          ),
+          listChargeStock(db, context.userId, { limit: 1000, offset: 0 }),
+        ]);
+        const stockSummary = {
+          count: stock.results.length,
+          items: stock.results,
+        };
 
         return {
-          charges: {
-            count: result.results.length,
-            items: result.results,
-          },
-          stockSummary: {
-            count: stockResult.results.length,
-            items: stockResult.results,
-          },
+          format,
+          sort: input.sort,
+          total: list.total,
+          ...pageResult(list.results as Record<string, unknown>[], {
+            batch,
+            record:
+              format === 'full'
+                ? undefined
+                : (row) => compactRow(row, COMPACT_CHARGE_FIELDS),
+            csv: format === 'csv',
+            budget: PAGE_BUDGET - JSON.stringify(stockSummary).length,
+            cursor: (row) =>
+              encodeDateCursor({
+                date: (row.date as string).slice(0, 10),
+                id: Number(row.id),
+                sort: input.sort,
+              }),
+          }),
+          stockSummary,
         };
       },
     }),
@@ -2817,70 +3349,109 @@ export function createWizBeeTools(
      */
     fetchWaxLedger: tool({
       description:
-        'Fetch the separate wax ledger: wax lots with current stock, a product summary, and wax operations. Empty lots are hidden by default. Use returned lot IDs for later processing, use or sale operations.',
+        'Fetch the separate wax ledger: wax lots with current stock, a product summary over all matching lots, and wax operations, in pages. Empty lots are hidden by default. Lots and operations each have hasMore and nextCursor; call again with cursor set to that nextCursor and the same filters to get the next page of that list. Use returned lot IDs for later processing, use or sale operations.',
       inputSchema: fetchWaxLedgerToolSchema,
       execute: async (input) => {
-        const [lotResult, operationResult] = await Promise.all([
-          listWaxLots(db, context.userId, {
-            q: input.q,
-            limit: input.limit,
-            offset: 0,
-          }),
-          listWaxOperations(db, context.userId, {
-            q: input.q,
-            from: input.dateStart,
-            to: input.dateEnd,
-            type: input.operationType,
-            limit: input.limit,
-            offset: 0,
-          }),
-        ]);
-        const lots = input.includeEmpty
-          ? lotResult.results
-          : lotResult.results.filter((lot) => Math.abs(lot.stock_kg) >= 0.005);
-        const grouped = new Map<
-          string,
-          {
-            productId: number | null;
-            productName: string | null;
-            stockKg: number;
-            lotCount: number;
-          }
-        >();
-        for (const lot of lots) {
-          const key = String(lot.product_id ?? 'none');
-          const summary = grouped.get(key) ?? {
-            productId: lot.product_id,
-            productName: lot.product_name,
-            stockKg: 0,
-            lotCount: 0,
+        const cursor = input.cursor ? decodeWaxCursor(input.cursor) : undefined;
+        const lotQuery = { q: input.q };
+        const nonEmpty = !input.includeEmpty;
+        const limit = input.limit ?? PAGE_MAX_LIMIT;
+
+        const readLots = async (
+          beforeId: number | undefined,
+          budget: number,
+        ) => {
+          // Lots are flat, so one batch size fits both formats.
+          const batch = Math.min(limit, PAGE_BATCH.compact);
+          const list = await listWaxLots(
+            db,
+            context.userId,
+            { ...lotQuery, limit: batch + 1, offset: 0 },
+            { nonEmpty, beforeId },
+          );
+          return {
+            total: list.total,
+            ...pageResult(
+              list.results as unknown as Record<string, unknown>[],
+              {
+                batch,
+                budget,
+                cursor: (row) => encodeCursor(['lots', Number(row.id)]),
+              },
+            ),
           };
-          summary.stockKg += lot.stock_kg;
-          summary.lotCount += 1;
-          grouped.set(key, summary);
+        };
+
+        const readOperations = async (
+          after: TaskKeyset | undefined,
+          budget: number,
+        ) => {
+          const batch = Math.min(limit, PAGE_BATCH.full);
+          const list = await listWaxOperations(
+            db,
+            context.userId,
+            {
+              q: input.q,
+              from: input.dateStart,
+              to: input.dateEnd,
+              type: input.operationType,
+              limit: batch + 1,
+              offset: 0,
+            },
+            after,
+          );
+          return {
+            total: list.total,
+            ...pageResult(
+              list.results as unknown as Record<string, unknown>[],
+              {
+                batch,
+                record:
+                  input.format === 'full'
+                    ? undefined
+                    : (row) => compactRow(row, COMPACT_ACTOR_FIELDS),
+                budget,
+                cursor: (row) =>
+                  encodeCursor([
+                    'operations',
+                    String(row.date).slice(0, 10),
+                    Number(row.id),
+                  ]),
+              },
+            ),
+          };
+        };
+
+        if (cursor?.list === 'lots') {
+          return {
+            format: input.format,
+            lots: await readLots(cursor.id, PAGE_BUDGET),
+          };
+        }
+        if (cursor?.list === 'operations') {
+          return {
+            format: input.format,
+            operations: await readOperations(
+              { date: cursor.date, id: cursor.id, sort: 'newest' },
+              PAGE_BUDGET,
+            ),
+          };
         }
 
-        return {
-          lots: {
-            total: lotResult.total,
-            returned: lots.length,
-            items: lots,
-          },
-          productSummary: {
-            scope: 'returnedLots',
-            items: [...grouped.values()].map((summary) => ({
-              productId: summary.productId,
-              productName: summary.productName,
-              stockKg: Math.round(summary.stockKg * 100) / 100,
-              lotCount: summary.lotCount,
-            })),
-          },
-          operations: {
-            total: operationResult.total,
-            returned: operationResult.results.length,
-            items: operationResult.results,
-          },
-        };
+        const productSummary = await summarizeWaxLots(
+          db,
+          context.userId,
+          lotQuery,
+          nonEmpty,
+        );
+        // Lots get at most half of the page, operations the rest.
+        const budget = PAGE_BUDGET - JSON.stringify(productSummary).length;
+        const lots = await readLots(undefined, Math.floor(budget / 2));
+        const operations = await readOperations(
+          undefined,
+          budget - JSON.stringify(lots).length,
+        );
+        return { format: input.format, lots, productSummary, operations };
       },
     }),
 
@@ -3247,11 +3818,15 @@ export function createWizBeeTools(
 export const wizBeeToolDefinitions = [
   {
     name: 'listApiariesHives',
-    description: 'List all apiaries and their hives for the current user.',
-    parameters: z.object({
-      includeInactive: z.boolean().optional().default(false),
-      q: z.string().optional(),
-    }),
+    description:
+      'List the apiaries and their active hives for the current user, in pages. When hasMore is true, call again with cursor set to nextCursor.',
+    parameters: listApiariesHivesInputSchema,
+  },
+  {
+    name: 'findHives',
+    description:
+      'Find colonies / hives by their name/number or by apiary name. Returns hiveId, name, apiary_id and apiary name.',
+    parameters: findHivesInputSchema,
   },
   {
     name: 'createApiary',
@@ -3316,14 +3891,9 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'listMovements',
-    description: 'List hive movements with optional filters.',
-    parameters: z.object({
-      hiveId: z.number().optional(),
-      apiaryId: z.number().optional(),
-      dateStart: z.string().optional(),
-      dateEnd: z.string().optional(),
-      limit: z.number().int().min(1).max(500).optional().default(100),
-    }),
+    description:
+      'List hive movements with optional filters, in pages. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+    parameters: listMovementsInputSchema,
   },
   {
     name: 'createMovement',
@@ -3370,18 +3940,24 @@ export const wizBeeToolDefinitions = [
   {
     name: 'listQueens',
     description:
-      'List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year.',
+      'List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
     parameters: listQueensInputSchema,
   },
   {
     name: 'getHiveTasks',
     description:
-      'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year.',
+      'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId.',
     parameters: z.object({
       id: z.number(),
       year: z.number().optional(),
       apiary: z.boolean().optional().default(false),
     }),
+  },
+  {
+    name: 'listCompanyUsers',
+    description:
+      'List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records.',
+    parameters: z.object({}),
   },
   {
     name: 'fetchOptions',
@@ -3394,15 +3970,8 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchTasks',
     description:
-      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. For multi-year summaries prefer the statistics tools.',
-    parameters: z.object({
-      task: z.enum(TASK_TYPES),
-      dateStart: z.string().optional(),
-      dateEnd: z.string().optional(),
-      apiaryId: z.number().optional(),
-      includeDone: z.boolean().optional().default(true),
-      limit: z.number().optional().default(200),
-    }),
+      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60,000 characters. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
+    parameters: fetchTasksInputSchema,
   },
   {
     name: 'createFeed',
@@ -3639,12 +4208,8 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchCharges',
     description:
-      'Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen), stock levels (Lagerbestand) and inventory.',
-    parameters: z.object({
-      q: z.string().optional(),
-      includeDeleted: z.boolean().optional().default(false),
-      limit: z.number().optional().default(100),
-    }),
+      'Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen) in pages of up to 60,000 characters, with stockSummary (Lagerbestand) on every page. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+    parameters: fetchChargesInputSchema,
   },
   {
     name: 'createCharge',
@@ -3692,7 +4257,7 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchWaxLedger',
     description:
-      'Fetch wax lots, current stock, product summary and wax operations.',
+      'Fetch wax lots, current stock, product summary and wax operations in pages. Lots and operations each have hasMore and nextCursor; send that nextCursor as cursor to get the next page of that list.',
     parameters: fetchWaxLedgerToolSchema,
   },
   {

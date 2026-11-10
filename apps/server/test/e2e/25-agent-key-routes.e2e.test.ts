@@ -628,11 +628,11 @@ describe('agent key & agent API routes', () => {
         body,
       );
       expect(res.statusCode).toEqual(200);
-      expect(res.body.truncated).toBe(false);
-      expect(res.body.total).toEqual(res.body.queens.length);
+      expect(res.body.hasMore).toBe(false);
+      expect(res.body.total).toEqual(res.body.items.length);
       return {
-        queens: res.body.queens,
-        ids: res.body.queens.map((q: any) => q.queenId) as number[],
+        queens: res.body.items,
+        ids: res.body.items.map((q: any) => q.queenId) as number[],
       };
     }
 

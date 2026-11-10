@@ -4,14 +4,21 @@ import { hasInjectionContext, inject } from 'vue';
 // Keys of events that were already sent in this page load.
 const sentOnce = new Set<string>();
 
+// Tracker for code that runs outside a component setup, such as store actions.
+let bootTracker: MatomoTracker | undefined;
+
+export function setBootTracker(tracker: MatomoTracker) {
+  bootTracker = tracker;
+}
+
 /**
  * Matomo events for features that only run in the browser.
  * Do not put free text, names or IDs into the event name.
  */
 export function useTrackEvent() {
   const matomo = hasInjectionContext()
-    ? inject<MatomoTracker | undefined>('matomo', undefined)
-    : undefined;
+    ? inject<MatomoTracker | undefined>('matomo', bootTracker)
+    : bootTracker;
 
   function track(
     category: string,

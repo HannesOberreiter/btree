@@ -1909,7 +1909,7 @@ export interface paths {
               amount?: number | null;
               bestbefore?: string | null;
               charge?: string | null;
-              date?: string | null;
+              date?: string;
               /** @enum {string} */
               kind?: 'in' | 'out';
               name?: string | null;
@@ -14544,7 +14544,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen), stock levels (Lagerbestand) and inventory. */
+    /** @description Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen) in pages of up to 60,000 characters, with stockSummary (Lagerbestand) on every page. When hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -14555,11 +14555,38 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            /** @default false */
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /**
+             * Format: date
+             * @description Last charge date in YYYY-MM-DD format (default: no limit)
+             */
+            dateEnd?: string;
+            /**
+             * Format: date
+             * @description First charge date in YYYY-MM-DD format (default: no limit)
+             */
+            dateStart?: string;
+            /**
+             * @description compact (default): flat records with type_name, unit, creator_name, editor_name and the source task. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested type, creator, editor and source objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /**
+             * @description Also return soft-deleted charges
+             * @default false
+             */
             includeDeleted?: boolean;
-            /** @default 100 */
+            /** @description Maximum number of charges. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
+            /** @description Search query to filter charges by name, type or charge number */
             q?: string;
+            /**
+             * @description Order by charge date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
           };
         };
       };
@@ -14633,7 +14660,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. For multi-year summaries prefer the statistics tools. */
+    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60,000 characters. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today. */
     post: {
       parameters: {
         query?: never;
@@ -14644,14 +14671,36 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description Filter by specific apiary ID */
             apiaryId?: number;
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /** @description End date in YYYY-MM-DD format (default: 2 months from now). For the last done task, set it to today. */
             dateEnd?: string;
+            /** @description Start date in YYYY-MM-DD format (default: 2 months ago) */
             dateStart?: string;
-            /** @default true */
+            /**
+             * @description compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /**
+             * @description Include completed tasks
+             * @default true
+             */
             includeDone?: boolean;
-            /** @default 200 */
+            /** @description Maximum number of records. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
-            /** @enum {string} */
+            /**
+             * @description Order by task date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
+            /**
+             * @description Type of task to fetch
+             * @enum {string}
+             */
             task: 'feed' | 'treatment' | 'harvest' | 'checkup' | 'todo';
           };
         };
@@ -14683,7 +14732,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch wax lots, current stock, product summary and wax operations. */
+    /** @description Fetch wax lots, current stock, product summary and wax operations in pages. Lots and operations each have hasMore and nextCursor; send that nextCursor as cursor to get the next page of that list. */
     post: {
       parameters: {
         query?: never;
@@ -14694,6 +14743,8 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description nextCursor of lots or operations from the previous page. Returns the next page of that list only. Send the same filters. */
+            cursor?: string;
             /**
              * Format: date
              * @description Last operation date
@@ -14705,14 +14756,17 @@ export interface paths {
              */
             dateStart?: string;
             /**
+             * @description compact (default): operations with creator_name and editor_name. full: operations with the creator and editor objects.
+             * @default compact
+             * @enum {string}
+             */
+            format?: 'compact' | 'full';
+            /**
              * @description Include lots whose current stock is zero
              * @default false
              */
             includeEmpty?: boolean;
-            /**
-             * @description Maximum lots and operations to return
-             * @default 100
-             */
+            /** @description Maximum lots and operations per list. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
             /**
              * @description Operation type filter
@@ -14728,6 +14782,64 @@ export interface paths {
               | 'correction';
             /** @description Search text */
             q?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown;
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/wizbee/tools/findHives': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Find colonies / hives by their name/number or by apiary name. Returns hiveId, name, apiary_id and apiary name. */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /**
+             * @description Also return soft-deleted colonies / hives
+             * @default false
+             */
+            includeDeleted?: boolean;
+            /**
+             * @description Include inactive colonies / hives (modus=false)
+             * @default false
+             */
+            includeInactive?: boolean;
+            /**
+             * @description Maximum number of colonies / hives to return (default 50).
+             * @default 50
+             */
+            limit?: number;
+            /** @description Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive). */
+            q: string;
           };
         };
       };
@@ -14926,7 +15038,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year. */
+    /** @description Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId. */
     post: {
       parameters: {
         query?: never;
@@ -15013,7 +15125,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List all apiaries and their hives for the current user. */
+    /** @description List the apiaries and their active hives for the current user, in pages. When hasMore is true, call again with cursor set to nextCursor. */
     post: {
       parameters: {
         query?: never;
@@ -15024,10 +15136,58 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            /** @default false */
+            /** @description nextCursor of the previous page. Send the same filters. */
+            cursor?: string;
+            /**
+             * @description Include inactive apiaries
+             * @default false
+             */
             includeInactive?: boolean;
+            /** @description Maximum number of apiaries. Without limit, the server fills the page up to the result size limit. */
+            limit?: number;
+            /** @description Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that. */
             q?: string;
           };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown;
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/wizbee/tools/listCompanyUsers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records. */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
         };
       };
       responses: {
@@ -15057,7 +15217,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List hive movements with optional filters. */
+    /** @description List hive movements with optional filters, in pages. When hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -15068,12 +15228,35 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description Only movements to this apiary */
             apiaryId?: number;
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /**
+             * Format: date
+             * @description Last movement date in YYYY-MM-DD format, inclusive (default: no limit)
+             */
             dateEnd?: string;
+            /**
+             * Format: date
+             * @description First movement date in YYYY-MM-DD format (default: no limit)
+             */
             dateStart?: string;
+            /**
+             * @description compact (default): flat records with hive_name, apiary_name, previous_apiary_id, previous_apiary_name, creator_name and editor_name. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, apiary, previous apiary, creator and editor objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /** @description Only movements of this colony / hive */
             hiveId?: number;
-            /** @default 100 */
+            /** @description Maximum number of movements. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
+            /**
+             * @description Order by movement date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
           };
         };
       };
@@ -15104,7 +15287,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. */
+    /** @description List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -15127,8 +15310,12 @@ export interface paths {
              * @description Latest queen birth date (YYYY-MM-DD), inclusive
              */
             bornTo?: string;
+            /** @description nextCursor of the previous page. Send the same filters. */
+            cursor?: string;
             /** @description Only queens assigned to this colony / hive */
             hiveId?: number;
+            /** @description Maximum number of queens. Without limit, the server fills the page up to the result size limit. */
+            limit?: number;
             /**
              * @description inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.
              * @default inHive

@@ -116,10 +116,20 @@ function selectQueens(db: Database, companyId: number, details: boolean) {
       ]);
   return query;
 }
+/** Sort key for queens without a birth date, so they come first. */
+export const QUEEN_MISSING_DATE = '1000-01-01';
+
+/** Last queen of a page in the order birth date, then id. */
+export interface QueenKeyset {
+  date: string;
+  id: number;
+}
+
 export async function listQueens(
   db: Database,
   companyId: number,
   input: CompatibilityQuery,
+  options: { birthOrder?: boolean; keyset?: QueenKeyset } = {},
 ) {
   const limit = input.limit === 0 || !input.limit ? 10 : input.limit;
   const offset = input.offset ?? 0;
@@ -208,12 +218,24 @@ export async function listQueens(
       ]),
     );
   }
-  query = applyOrder(
-    query,
-    input.order,
-    input.direction,
-    details ? queenDetailOrderFields : queenBaseOrderFields,
-  ).orderBy('queens.id');
+  if (options.birthOrder) {
+    const birth = sql`COALESCE(queens.date, ${QUEEN_MISSING_DATE})`;
+    query = query.orderBy(birth).orderBy('queens.id');
+    // After the count, so the total still counts all matches.
+    if (options.keyset) {
+      const { date, id } = options.keyset;
+      query = query.where(
+        sql<boolean>`(${birth} > ${date} OR (${birth} = ${date} AND queens.id > ${id}))`,
+      );
+    }
+  } else {
+    query = applyOrder(
+      query,
+      input.order,
+      input.direction,
+      details ? queenDetailOrderFields : queenBaseOrderFields,
+    ).orderBy('queens.id');
+  }
   const [results, total] = await Promise.all([
     query
       .limit(limit)

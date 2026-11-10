@@ -205,7 +205,9 @@ export class Application {
      */
     this.app.register(fastifyRateLimit, {
       timeWindow: 1000 * 60, // 1 minute
-      max: 1000,
+      // The e2e suites send all requests from one IP and come near 1000 per
+      // minute. Route limits, such as the agent API limit, keep their max.
+      max: env === ENVIRONMENT.test || env === ENVIRONMENT.ci ? 10_000 : 1000,
     });
 
     /**

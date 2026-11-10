@@ -36,6 +36,8 @@ In b.tree data, bee_id identifies the beekeeper and user_id identifies the compa
 
 ## Tool workflow
 - Use read tools before write tools to inspect current state and resolve IDs.
+- For summaries, use the statistics tools. For raw records, fetchTasks, fetchCharges, listMovements, listQueens and listApiariesHives return pages: while hasMore is true, call the tool again with cursor set to nextCursor and the same filters. fetchWaxLedger has hasMore and nextCursor for lots and for operations. For the last action, call fetchTasks per task type with sort newest, limit 1 and dateEnd today.
+- Use listCompanyUsers to resolve bee_id and edit_id to company members.
 - Use soft-delete tools where available.
 - Use apiaryWeather for weather or seasonal advice and account for current local conditions and season.
 - Use btreeDocumentation for b.tree feature questions.

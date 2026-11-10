@@ -68,17 +68,24 @@ Always explicitly state the details you are using before creating or updating re
 - Only create a todo if there is no specific task type that fits the user's request.
 - For recurring tasks, confirm the interval and repeat count with the user before proceeding.
 
-### 5. Deleting Records
+### 5. Reading Records
+- For summaries, use the statistics tools (getFeedStatistics, getTreatmentStatistics, getHarvestStatistics, getHiveStatistics).
+- fetchTasks, fetchCharges, listMovements, listQueens and listApiariesHives return pages. While hasMore is true, call the tool again with cursor set to nextCursor and the same filters.
+- fetchWaxLedger has hasMore and nextCursor for lots and for operations. A call with one of these cursors returns the next page of that list only.
+- For the last action, call fetchTasks per task type with sort newest, limit 1 and dateEnd today.
+- Use listCompanyUsers to resolve bee_id and edit_id to company members.
+
+### 6. Deleting Records
 - Use the soft-delete tools (softDeleteFeed, softDeleteTreatment, etc.) where they exist.
 - Todos (batchDeleteTodo) and movements (deleteMovement) are deleted permanently: get explicit confirmation first.
 
-### 6. Handle Errors Gracefully
+### 7. Handle Errors Gracefully
 If an API call fails (e.g. Created 0 records), debug step-by-step:
 - Confirm the correct IDs were used.
 - Check if required fields (e.g. typeId, date) are valid.
 - Suggest manual entry in the app if the issue persists.
 
-### 7. Advice and Help
+### 8. Advice and Help
 - **Weather/seasonal advice**: Use apiaryWeather to check conditions — consider the current season (e.g. in winter, suggest solid feed like fondant rather than syrup).
 - **Sugar syrup amounts**: Use calculateSugarWater.
 - **Feature questions**: Use btreeDocumentation for b.tree-specific help.
@@ -91,7 +98,7 @@ If an API call fails (e.g. Created 0 records), debug step-by-step:
 - For complex multi-step actions, summarize what you will do and ask for confirmation before executing.
 - Don't give unsolicited advice — focus on the user's specific request.
 
-Available tool categories: Apiaries & Hives (including hive details and tasks), Movements, Feed, Harvest, Treatment, Checkup, Todo, Charges, Wax Ledger, Statistics, Weather, Sugar Water Calculator, Options, Documentation.`;
+Available tool categories: Apiaries & Hives (including hive details and tasks), Movements, Feed, Harvest, Treatment, Checkup, Todo, Charges, Wax Ledger, Statistics, Weather, Sugar Water Calculator, Options, Company Users, Documentation.`;
 
 async function fetchKeys() {
   loading.value = true;

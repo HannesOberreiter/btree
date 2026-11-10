@@ -68,7 +68,7 @@ watch(
 );
 
 async function onLogout() {
-  await storeUser.logout();
+  await storeUser.logout('manual');
 }
 
 defineExpose({ $q });

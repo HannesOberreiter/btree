@@ -11,6 +11,7 @@ import type {
 } from '../schemas/charge.schema.js';
 import { actorProjection } from './actor_projection.module.js';
 import { requireChargeTypeOwnership } from './ownership.module.js';
+import type { TaskKeyset } from './task.module.js';
 
 const chargeOrder = {
   id: 'charges.id',
@@ -108,6 +109,18 @@ export async function lockChargeLedger(db: Database, companyId: number) {
     .executeTakeFirst();
 }
 
+/** Options for the paged agent list; the web list does not use them. */
+export interface ChargePageOptions {
+  /** Return active and soft-deleted charges. */
+  includeDeleted?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  /** Order by date, then id, instead of the query order. */
+  sort?: TaskKeyset['sort'];
+  /** Return only the charges after this position. Requires sort. */
+  keyset?: TaskKeyset;
+}
+
 function selectCharges(db: Database, companyId: number) {
   return db
     .selectFrom('charges')
@@ -137,19 +150,27 @@ export async function listCharges(
   db: Database,
   companyId: number,
   input: ChargeListQuery,
+  options: ChargePageOptions = {},
 ) {
   const limit = input.limit === 0 || !input.limit ? 10 : input.limit;
   const offset = input.offset ?? 0;
-  let query = selectCharges(db, companyId).where(
-    'charges.deleted',
-    '=',
-    input.deleted === true,
-  );
+  let query = selectCharges(db, companyId);
   let count = db
     .selectFrom('charges')
     .select(db.fn.countAll<number>().as('total'))
-    .where('charges.user_id', '=', companyId)
-    .where('charges.deleted', '=', input.deleted === true);
+    .where('charges.user_id', '=', companyId);
+  if (!options.includeDeleted) {
+    query = query.where('charges.deleted', '=', input.deleted === true);
+    count = count.where('charges.deleted', '=', input.deleted === true);
+  }
+  if (options.dateFrom) {
+    query = query.where('charges.date', '>=', new Date(options.dateFrom));
+    count = count.where('charges.date', '>=', new Date(options.dateFrom));
+  }
+  if (options.dateTo) {
+    query = query.where('charges.date', '<=', new Date(options.dateTo));
+    count = count.where('charges.date', '<=', new Date(options.dateTo));
+  }
   const search =
     input.q !== undefined && String(input.q).trim()
       ? `%${String(input.q)}%`
@@ -192,9 +213,27 @@ export async function listCharges(
       /* preserve ignored malformed filters */
     }
   }
-  query = applyOrder(query, input.order, input.direction, chargeOrder).orderBy(
-    'charges.id',
-  );
+  if (options.sort) {
+    const sortDirection = options.sort === 'newest' ? 'desc' : 'asc';
+    query = query
+      .orderBy('charges.date', sortDirection)
+      .orderBy('charges.id', sortDirection);
+    // After the count, so the total still counts all matches.
+    if (options.keyset) {
+      const operator = sql.raw(options.sort === 'newest' ? '<' : '>');
+      const { date, id } = options.keyset;
+      query = query.where(
+        sql<boolean>`(charges.date ${operator} ${date} OR (charges.date = ${date} AND charges.id ${operator} ${id}))`,
+      );
+    }
+  } else {
+    query = applyOrder(
+      query,
+      input.order,
+      input.direction,
+      chargeOrder,
+    ).orderBy('charges.id');
+  }
   const [results, total] = await Promise.all([
     query
       .limit(limit)
@@ -281,7 +320,8 @@ async function insertCharge(
     .insertInto('charges')
     .values({
       kind,
-      date: body.date ? new Date(body.date) : undefined,
+      // Old clients can send no date, the charge then gets today.
+      date: body.date ? new Date(body.date) : new Date(),
       bestbefore:
         body.bestbefore === null
           ? null
@@ -374,9 +414,7 @@ export async function updateCharges(
       .updateTable('charges')
       .set({
         ...(body.data.kind !== undefined && { kind: body.data.kind }),
-        ...(body.data.date !== undefined && {
-          date: body.data.date ? new Date(body.data.date) : null,
-        }),
+        ...(body.data.date && { date: new Date(body.data.date) }),
         ...(body.data.bestbefore !== undefined && {
           bestbefore: body.data.bestbefore
             ? new Date(body.data.bestbefore)

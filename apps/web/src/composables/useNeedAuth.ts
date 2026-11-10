@@ -22,7 +22,7 @@ function useNeedAuth() {
       message: '<div data-cy="dialog-session-timeout"></div>'
     })
       .onOk(() => {
-        void storeUser.logout().then(() => close());
+        void storeUser.logout('session-expired').then(() => close());
       })
       .onDismiss(() => {
         state.show = false;

@@ -135,6 +135,68 @@ describe('charge routes', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
     });
+
+    it('post 200 - missing or empty date stores today', async () => {
+      const { date: _date, ...withoutDate } = testInsert;
+      for (const body of [withoutDate, { ...withoutDate, date: '' }]) {
+        const res = await doRequest(
+          agent,
+          'post',
+          route,
+          null,
+          accessToken,
+          body,
+        );
+        expect(res.statusCode).toEqual(200);
+        const saved = await doRequest(
+          agent,
+          'post',
+          `${route}/batchGet`,
+          null,
+          accessToken,
+          { ids: res.body },
+        );
+        expect(saved.body[0].date).toBe(new Date().toISOString().slice(0, 10));
+      }
+    });
+
+    it('patch 400 - null or empty date', async () => {
+      for (const date of [null, '']) {
+        const res = await doRequest(agent, 'patch', route, null, accessToken, {
+          ids: [insertId],
+          data: { date },
+        });
+        expect(res.statusCode).toEqual(400);
+        expectations(res, 'date', 'Invalid value');
+      }
+      const saved = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(saved.body[0].date).toBe(testInsert.date);
+    });
+
+    it('patch 200 - valid date', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { date: '2020-01-15' },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+      const saved = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(saved.body[0].date).toBe('2020-01-15');
+    });
   });
 
   describe('/api/v1/charge inventory mode', () => {

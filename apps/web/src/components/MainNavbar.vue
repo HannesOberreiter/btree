@@ -56,7 +56,7 @@ watch(isOnline, online => {
 });
 
 async function onLogout() {
-  await storeUser.logout();
+  await storeUser.logout('manual');
 }
 
 function onShare() {
