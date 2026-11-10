@@ -15,10 +15,12 @@ import {
   ownedHiveIds,
   parseTaskFilters,
   taskApiaryProjection,
+  taskKeysetCondition,
   taskOrderings,
   taskPagination,
   taskSchedule,
   type TaskActor,
+  type TaskKeyset,
 } from './task.module.js';
 import {
   lockTaskStock,
@@ -67,6 +69,7 @@ export async function listFeeds(
   db: Kysely<DB>,
   companyId: number,
   input: TaskListQuery,
+  keyset?: TaskKeyset,
 ) {
   let base = db
     .selectFrom('feeds')
@@ -149,6 +152,9 @@ export async function listFeeds(
     actorProjection('creator'),
     actorProjection('editor'),
   ]);
+  if (keyset) {
+    query = query.where(taskKeysetCondition('feeds.date', 'feeds.id', keyset));
+  }
   for (const ordering of taskOrderings(
     input.order,
     input.direction,

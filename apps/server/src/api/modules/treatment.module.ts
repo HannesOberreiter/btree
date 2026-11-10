@@ -21,10 +21,12 @@ import {
   ownedHiveIds,
   parseTaskFilters,
   taskApiaryProjection,
+  taskKeysetCondition,
   taskOrderings,
   taskPagination,
   taskSchedule,
   type TaskActor,
+  type TaskKeyset,
 } from './task.module.js';
 import {
   lockTaskStock,
@@ -84,6 +86,7 @@ export async function listTreatments(
   db: Kysely<DB>,
   companyId: number,
   input: TaskListQuery,
+  keyset?: TaskKeyset,
 ) {
   let base = db
     .selectFrom('treatments')
@@ -194,6 +197,11 @@ export async function listTreatments(
     actorProjection('creator'),
     actorProjection('editor'),
   ]);
+  if (keyset) {
+    query = query.where(
+      taskKeysetCondition('treatments.date', 'treatments.id', keyset),
+    );
+  }
   for (const ordering of taskOrderings(
     input.order,
     input.direction,

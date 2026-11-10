@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { Kysely } from 'kysely';
+import type { Kysely, SqlBool } from 'kysely';
 import { sql } from 'kysely';
 
 import type { Database } from '../../types/database.types.js';
@@ -111,6 +111,25 @@ export function taskPagination(limit?: number | null, offset?: number | null) {
   const selectedLimit =
     limit === 0 || limit === undefined || limit === null ? 10 : limit;
   return { limit: selectedLimit, offset: (offset ?? 0) * selectedLimit };
+}
+
+/** Last row of a page in a task list ordered by date, then id. */
+export interface TaskKeyset {
+  date: string;
+  id: number;
+  sort: 'newest' | 'oldest';
+}
+
+/** Selects the rows after the keyset position in the order date, then id. */
+export function taskKeysetCondition(
+  dateColumn: string,
+  idColumn: string,
+  keyset: TaskKeyset,
+) {
+  const operator = sql.raw(keyset.sort === 'newest' ? '<' : '>');
+  const date = sql.ref(dateColumn);
+  const id = sql.ref(idColumn);
+  return sql<SqlBool>`(${date} ${operator} ${keyset.date} OR (${date} = ${keyset.date} AND ${id} ${operator} ${keyset.id}))`;
 }
 
 export function hiveProjection() {
