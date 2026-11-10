@@ -15125,7 +15125,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List all apiaries and their hives for the current user. */
+    /** @description List the apiaries and their active hives for the current user, in pages. When hasMore is true, call again with cursor set to nextCursor. */
     post: {
       parameters: {
         query?: never;
@@ -15136,8 +15136,16 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            /** @default false */
+            /** @description nextCursor of the previous page. Send the same filters. */
+            cursor?: string;
+            /**
+             * @description Include inactive apiaries
+             * @default false
+             */
             includeInactive?: boolean;
+            /** @description Maximum number of apiaries. Without limit, the server fills the page up to the result size limit. */
+            limit?: number;
+            /** @description Search query to filter APIARIES by name / description / note. Does NOT filter by colony / hive name or number — use the findHives tool for that. */
             q?: string;
           };
         };
@@ -15209,7 +15217,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List hive movements with optional filters. */
+    /** @description List hive movements with optional filters, in pages. When hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -15220,12 +15228,35 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description Only movements to this apiary */
             apiaryId?: number;
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /**
+             * Format: date
+             * @description Last movement date in YYYY-MM-DD format, inclusive (default: no limit)
+             */
             dateEnd?: string;
+            /**
+             * Format: date
+             * @description First movement date in YYYY-MM-DD format (default: no limit)
+             */
             dateStart?: string;
+            /**
+             * @description compact (default): flat records with hive_name, apiary_name, previous_apiary_id, previous_apiary_name, creator_name and editor_name. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, apiary, previous apiary, creator and editor objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /** @description Only movements of this colony / hive */
             hiveId?: number;
-            /** @default 100 */
+            /** @description Maximum number of movements. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
+            /**
+             * @description Order by movement date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
           };
         };
       };
@@ -15256,7 +15287,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. */
+    /** @description List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -15279,8 +15310,12 @@ export interface paths {
              * @description Latest queen birth date (YYYY-MM-DD), inclusive
              */
             bornTo?: string;
+            /** @description nextCursor of the previous page. Send the same filters. */
+            cursor?: string;
             /** @description Only queens assigned to this colony / hive */
             hiveId?: number;
+            /** @description Maximum number of queens. Without limit, the server fills the page up to the result size limit. */
+            limit?: number;
             /**
              * @description inHive (default): current queen of each active colony / hive. notInHive: queens that are not the current queen of an active colony / hive, i.e. replaced queens, queens of inactive or deleted colonies / hives, and queens without a hive; hive and apiary fields then show the hive the queen was last assigned to. noHive: only queens without a hive, e.g. virgin or reserve queens. all: every queen.
              * @default inHive

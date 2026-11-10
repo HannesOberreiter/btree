@@ -122,6 +122,7 @@ export async function listApiaries(
   db: Database,
   companyId: number,
   input: ApiaryListQuery,
+  options: { afterId?: number } = {},
 ) {
   let base = db
     .selectFrom('apiaries')
@@ -147,6 +148,10 @@ export async function listApiaries(
     .executeTakeFirstOrThrow();
 
   let query = base.select([...apiarySelections(), hiveCountProjection()]);
+  // After the count, so the total still counts all matches.
+  if (options.afterId !== undefined) {
+    query = query.where('apiaries.id', '>', options.afterId);
+  }
   if (input.details) {
     query = query
       .leftJoin('bees as creator', 'creator.id', 'apiaries.bee_id')
@@ -215,28 +220,85 @@ export async function getApiaryDetail(
       .where('apiary_id', '=', apiary.id)
       .orderBy('date', 'desc')
       .executeTakeFirst(),
-    db
-      .selectFrom('hives_locations')
-      .innerJoin('hives', 'hives.id', 'hives_locations.hive_id')
-      .leftJoin('queens_locations', 'queens_locations.hive_id', 'hives.id')
-      .leftJoin('queens', 'queens.id', 'queens_locations.queen_id')
-      .select([
-        sql<string>`hives.name`.as('name'),
-        'hives.id',
-        'hives.position',
-        'queens_locations.queen_name',
-        'queens_locations.queen_modus',
-        'queens.mark_colour',
-      ])
+    selectApiaryHives(db)
       .where('hives_locations.apiary_id', '=', apiary.id)
-      .where('hives_locations.hive_deleted', '=', false)
-      .where('hives_locations.hive_modus', '=', true)
-      .orderBy('hives.position', 'asc')
-      .orderBy('hives.name', 'asc')
       .execute(),
   ]);
 
   return { ...apiary, firstMovedate, sameLocation, hives };
+}
+
+/** Active hives with their current queen, ordered by position and name. */
+function selectApiaryHives(db: Database) {
+  return db
+    .selectFrom('hives_locations')
+    .innerJoin('hives', 'hives.id', 'hives_locations.hive_id')
+    .leftJoin('queens_locations', 'queens_locations.hive_id', 'hives.id')
+    .leftJoin('queens', 'queens.id', 'queens_locations.queen_id')
+    .select([
+      sql<string>`hives.name`.as('name'),
+      'hives.id',
+      'hives.position',
+      'queens_locations.queen_name',
+      'queens_locations.queen_modus',
+      'queens.mark_colour',
+    ])
+    .where('hives_locations.hive_deleted', '=', false)
+    .where('hives_locations.hive_modus', '=', true)
+    .orderBy('hives.position', 'asc')
+    .orderBy('hives.name', 'asc');
+}
+
+/**
+ * The active hives and the latest movement of each apiary, with two queries
+ * for all apiaries instead of getApiaryDetail per apiary.
+ */
+export async function listApiaryHives(
+  db: Database,
+  companyId: number,
+  apiaryIds: number[],
+) {
+  if (apiaryIds.length === 0) return { hives: [], movedates: [] };
+  const [hives, movedates] = await Promise.all([
+    selectApiaryHives(db)
+      .select('hives_locations.apiary_id')
+      .where('hives_locations.user_id', '=', companyId)
+      .where('hives_locations.apiary_id', 'in', apiaryIds)
+      .execute(),
+    db
+      .selectFrom((eb) =>
+        eb
+          .selectFrom('movedates')
+          .select([
+            'id',
+            sql<Date>`date`.as('date'),
+            'apiary_id',
+            'hive_id',
+            'bee_id',
+            'edit_id',
+            'created_at',
+            'updated_at',
+            sql<number>`ROW_NUMBER() OVER (PARTITION BY apiary_id ORDER BY date DESC, id DESC)`.as(
+              'position',
+            ),
+          ])
+          .where('apiary_id', 'in', apiaryIds)
+          .as('ranked'),
+      )
+      .select([
+        'id',
+        'date',
+        'apiary_id',
+        'hive_id',
+        'bee_id',
+        'edit_id',
+        'created_at',
+        'updated_at',
+      ])
+      .where('position', '=', 1)
+      .execute(),
+  ]);
+  return { hives, movedates };
 }
 
 export async function createApiary(

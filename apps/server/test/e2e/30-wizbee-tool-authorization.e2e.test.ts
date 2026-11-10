@@ -72,9 +72,10 @@ describe('WizBee tool authorization', () => {
 
     expect(result).toEqual({
       total: 0,
-      returned: 0,
-      truncated: false,
-      queens: [],
+      count: 0,
+      hasMore: false,
+      nextCursor: null,
+      items: [],
     });
   });
 
