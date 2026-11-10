@@ -70,7 +70,8 @@ Always explicitly state the details you are using before creating or updating re
 
 ### 5. Reading Records
 - For summaries, use the statistics tools (getFeedStatistics, getTreatmentStatistics, getHarvestStatistics, getHiveStatistics).
-- fetchTasks returns pages. While hasMore is true, call it again with cursor set to nextCursor and the same filters.
+- fetchTasks and fetchCharges return pages. While hasMore is true, call the tool again with cursor set to nextCursor and the same filters.
+- fetchWaxLedger has hasMore and nextCursor for lots and for operations. A call with one of these cursors returns the next page of that list only.
 - For the last action, call fetchTasks per task type with sort newest, limit 1 and dateEnd today.
 - Use listCompanyUsers to resolve bee_id and edit_id to company members.
 

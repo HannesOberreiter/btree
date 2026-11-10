@@ -70,6 +70,7 @@ import {
   createWaxOperation,
   listWaxLots,
   listWaxOperations,
+  summarizeWaxLots,
   reverseWaxOperation,
 } from '../modules/wax.module.js';
 import { getApiaryTemperatureSum, getApiaryWeather } from './weather.module.js';
@@ -781,9 +782,11 @@ async function preValidateOwnership(
  *   - System prompt + tool schemas + history ≈ 15-25k tokens
  *   - Safe headroom for reasoning + output ≈ 10k tokens
  *   - That leaves ≥95k tokens for ALL tool results combined.
- * At ~4 chars/token, a single tool result above ~40 KB risks blowing the
- * window after 2-3 calls. We cap hard at 40 KB and instruct the model to
- * narrow its query or use statistics tools instead.
+ * At ~4 chars/token, a result of 60,000 characters is about 15k tokens, so
+ * about 6 full results fit. The cap counts characters of the serialized JSON
+ * (UTF-16 code units, about 60 KB for Latin-script data). Paged tools fill
+ * each page up to the cap; other tools ask the model to narrow its query or
+ * use statistics tools instead.
  */
 const MAX_TOOL_RESULT_CHARS = 60_000;
 
@@ -808,10 +811,6 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
   const hintByTool: Record<string, string> = {
     getHiveTasks:
       'Tasks for this apiary are too many to return in one result. Call getHiveTasks once per hive, or use fetchTasks with apiaryId, which returns the records in pages.',
-    fetchCharges:
-      'Too many charges to return. Add a search query (q) or reduce limit.',
-    fetchWaxLedger:
-      'Too much wax ledger data to return. Add a search query, date range or operation type, or reduce limit.',
     listApiariesHives:
       'Apiary/hive list is unexpectedly large. Consider setting includeInactive: false or filtering with q.',
     btreeDocumentation:
@@ -832,7 +831,7 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
     error: {
       code: 'validation_error',
       status: 413,
-      message: `Result too large (${Math.round(size / 1024)} KB). Narrow the query or use a statistics tool.`,
+      message: `Result too large (${size.toLocaleString('en-US')} characters; limit ${MAX_TOOL_RESULT_CHARS.toLocaleString('en-US')}). Narrow the query or use a statistics tool.`,
       hint,
       suggested_next_tool:
         toolName === 'getHiveTasks' ? 'fetchTasks' : undefined,
@@ -1082,19 +1081,21 @@ function getDefaultDateRange(): { dateStart: string; dateEnd: string } {
  * Task types supported by the fetchTasks tool
  */
 const TASK_TYPES = ['feed', 'treatment', 'harvest', 'checkup', 'todo'] as const;
-const TASK_RESULT_FORMATS = ['full', 'compact', 'csv'] as const;
-type TaskResultFormat = (typeof TASK_RESULT_FORMATS)[number];
+const RESULT_FORMATS = ['full', 'compact', 'csv'] as const;
+type ResultFormat = (typeof RESULT_FORMATS)[number];
 
-/** Maximum fetchTasks records for one call. */
-const FETCH_TASKS_MAX_LIMIT = 1000;
+/** Maximum records for one call of a paged tool. */
+const PAGE_MAX_LIMIT = 1000;
 /** Rows read for one page; a page of this size is larger than the size limit. */
-const FETCH_TASKS_BATCH: Record<TaskResultFormat, number> = {
+const PAGE_BATCH: Record<ResultFormat, number> = {
   full: 100,
   compact: 300,
   csv: 600,
 };
-/** Characters kept free in a fetchTasks result for the fields around the records. */
-const FETCH_TASKS_ENVELOPE_CHARS = 1_000;
+/** Characters kept free in a paged result for the fields around the records. */
+const PAGE_ENVELOPE_CHARS = 1_000;
+/** Characters available for the records of one page. */
+const PAGE_BUDGET = MAX_TOOL_RESULT_CHARS - PAGE_ENVELOPE_CHARS;
 
 const fetchTasksInputSchema = z.object({
   task: z.enum(TASK_TYPES).describe('Type of task to fetch'),
@@ -1122,7 +1123,7 @@ const fetchTasksInputSchema = z.object({
       'Order by task date, then id. newest (default): latest date first. oldest: earliest date first.',
     ),
   format: z
-    .enum(TASK_RESULT_FORMATS)
+    .enum(RESULT_FORMATS)
     .optional()
     .describe(
       'compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.',
@@ -1131,7 +1132,7 @@ const fetchTasksInputSchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(FETCH_TASKS_MAX_LIMIT)
+    .max(PAGE_MAX_LIMIT)
     .optional()
     .describe(
       'Maximum number of records. Without limit, the server fills the page up to the result size limit.',
@@ -1144,34 +1145,45 @@ const fetchTasksInputSchema = z.object({
     ),
 });
 
-function encodeTaskCursor(keyset: TaskKeyset) {
-  return Buffer.from(
-    JSON.stringify([keyset.date, keyset.id, keyset.sort]),
-  ).toString('base64url');
+function encodeCursor(values: unknown[]) {
+  return Buffer.from(JSON.stringify(values)).toString('base64url');
 }
 
-function decodeTaskCursor(
+/** The values of a cursor, or an empty list for a malformed cursor. */
+function readCursor(cursor: string): unknown[] {
+  try {
+    const values: unknown = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    );
+    return Array.isArray(values) ? values : [];
+  } catch {
+    return [];
+  }
+}
+
+function invalidCursor() {
+  return httpErrors.BadRequest(
+    'Invalid cursor. Send the nextCursor of the previous page with the same sort.',
+  );
+}
+
+function isDate(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function encodeDateCursor(keyset: TaskKeyset) {
+  return encodeCursor([keyset.date, keyset.id, keyset.sort]);
+}
+
+function decodeDateCursor(
   cursor: string,
   sort: TaskKeyset['sort'],
 ): TaskKeyset {
-  try {
-    const [date, id, cursorSort] = JSON.parse(
-      Buffer.from(cursor, 'base64url').toString('utf8'),
-    ) as unknown[];
-    if (
-      typeof date === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-      Number.isInteger(id) &&
-      cursorSort === sort
-    ) {
-      return { date, id: id as number, sort };
-    }
-  } catch {
-    // Handled below with the same error as a well-formed but wrong cursor.
+  const [date, id, cursorSort] = readCursor(cursor);
+  if (isDate(date) && Number.isInteger(id) && cursorSort === sort) {
+    return { date, id: id as number, sort };
   }
-  throw httpErrors.BadRequest(
-    'Invalid cursor. Send the nextCursor of the previous page with the same sort.',
-  );
+  throw invalidCursor();
 }
 
 /** Nested task objects and the flat fields that replace them in compact rows. */
@@ -1193,11 +1205,14 @@ const COMPACT_TASK_FIELDS: Record<string, Record<string, string>> = {
   },
 };
 
-/** Task row with the nested objects replaced by flat id and name fields. */
-function compactTaskRow(row: Record<string, unknown>) {
+/** Row with the nested objects in `fieldMap` replaced by flat fields. */
+function compactRow(
+  row: Record<string, unknown>,
+  fieldMap: Record<string, Record<string, string>>,
+) {
   const compact: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(row)) {
-    const fields = COMPACT_TASK_FIELDS[key];
+    const fields = fieldMap[key];
     if (!fields) {
       compact[key] = value;
       continue;
@@ -1208,6 +1223,46 @@ function compactTaskRow(row: Record<string, unknown>) {
     }
   }
   return compact;
+}
+
+/** Nested charge objects and the flat fields that replace them in compact rows. */
+const COMPACT_CHARGE_FIELDS: Record<string, Record<string, string>> = {
+  type: { type_name: 'name', unit: 'unit' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  source: {
+    source_task: 'task',
+    source_id: 'id',
+    source_hive_id: 'hive_id',
+    hive_name: 'hive_name',
+  },
+};
+
+/** Actor objects and the flat fields that replace them in compact rows. */
+const COMPACT_ACTOR_FIELDS: Record<string, Record<string, string>> = {
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+};
+
+/** Wax ledger list and position after which its next page starts. */
+type WaxCursor =
+  | { list: 'lots'; id: number }
+  | { list: 'operations'; date: string; id: number };
+
+function decodeWaxCursor(cursor: string): WaxCursor {
+  const [list, first, second] = readCursor(cursor);
+  if (list === 'lots' && Number.isInteger(first)) {
+    return { list, id: first as number };
+  }
+  if (list === 'operations' && isDate(first) && Number.isInteger(second)) {
+    return { list, date: first, id: second as number };
+  }
+  throw invalidCursor();
+}
+
+/** Task row with the nested objects replaced by flat id and name fields. */
+function compactTaskRow(row: Record<string, unknown>) {
+  return compactRow(row, COMPACT_TASK_FIELDS);
 }
 
 function csvCell(value: unknown) {
@@ -1226,16 +1281,18 @@ function serializedLength(text: string) {
 }
 
 /**
- * The first rows that fit into the result size limit, as records or as CSV.
- * Always keeps the first row, so every call makes progress.
+ * The first records that fit into `budget` characters, as records or as CSV.
+ * Always keeps the first record, so every call makes progress.
  */
-function fillTaskPage(
-  rows: Record<string, unknown>[],
-  format: TaskResultFormat,
-) {
-  const budget = MAX_TOOL_RESULT_CHARS - FETCH_TASKS_ENVELOPE_CHARS;
-  const records = format === 'full' ? rows : rows.map(compactTaskRow);
-  if (format !== 'csv') {
+function fillPage(
+  records: Record<string, unknown>[],
+  csv: boolean,
+  budget = PAGE_BUDGET,
+): {
+  count: number;
+  data: { items: Record<string, unknown>[] } | { csv: string };
+} {
+  if (!csv) {
     const items: Record<string, unknown>[] = [];
     let used = 0;
     for (const row of records) {
@@ -1356,14 +1413,75 @@ const fetchWaxLedgerToolSchema = z.object({
     .optional()
     .default(false)
     .describe('Include lots whose current stock is zero'),
+  format: z
+    .enum(['compact', 'full'])
+    .optional()
+    .default('compact')
+    .describe(
+      'compact (default): operations with creator_name and editor_name. full: operations with the creator and editor objects.',
+    ),
   limit: z
     .number()
     .int()
     .min(1)
-    .max(500)
+    .max(PAGE_MAX_LIMIT)
     .optional()
-    .default(100)
-    .describe('Maximum lots and operations to return'),
+    .describe(
+      'Maximum lots and operations per list. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of lots or operations from the previous page. Returns the next page of that list only. Send the same filters.',
+    ),
+});
+const fetchChargesInputSchema = z.object({
+  q: z
+    .string()
+    .optional()
+    .describe('Search query to filter charges by name, type or charge number'),
+  dateStart: z.iso
+    .date()
+    .optional()
+    .describe('First charge date in YYYY-MM-DD format (default: no limit)'),
+  dateEnd: z.iso
+    .date()
+    .optional()
+    .describe('Last charge date in YYYY-MM-DD format (default: no limit)'),
+  includeDeleted: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Also return soft-deleted charges'),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by charge date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with type_name, unit, creator_name, editor_name and the source task. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested type, creator, editor and source objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of charges. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
 });
 const createWaxOperationToolSchema = z.object({
   date: z.iso.date().describe('Booking date'),
@@ -2048,13 +2166,13 @@ export function createWizBeeTools(
 
         const format = input.format ?? (context.chat ? 'csv' : 'compact');
         const keyset = input.cursor
-          ? decodeTaskCursor(input.cursor, input.sort)
+          ? decodeDateCursor(input.cursor, input.sort)
           : undefined;
         const direction: 'asc' | 'desc' =
           input.sort === 'newest' ? 'desc' : 'asc';
         const batch = Math.min(
-          input.limit ?? FETCH_TASKS_MAX_LIMIT,
-          FETCH_TASKS_BATCH[format],
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
         );
         // One more row than the page can hold tells whether more rows follow.
         const query = {
@@ -2091,7 +2209,11 @@ export function createWizBeeTools(
         }
 
         const rows = list.results as Record<string, unknown>[];
-        const page = fillTaskPage(rows.slice(0, batch), format);
+        const pageRows = rows.slice(0, batch);
+        const page = fillPage(
+          format === 'full' ? pageRows : pageRows.map(compactTaskRow),
+          format === 'csv',
+        );
         const hasMore = page.count < rows.length;
         const last = rows[page.count - 1];
         return {
@@ -2104,7 +2226,7 @@ export function createWizBeeTools(
           hasMore,
           nextCursor:
             hasMore && last
-              ? encodeTaskCursor({
+              ? encodeDateCursor({
                   date: String(last.date).slice(0, 10),
                   id: Number(last.id),
                   sort: input.sort,
@@ -2856,42 +2978,65 @@ export function createWizBeeTools(
      */
     fetchCharges: tool({
       description:
-        'Fetch charges: the stock movements of the warehouse (German: Lager, Lagerbuchungen) for stock items like sugar, treatments, honey jars etc. Use this to view stock movements, current stock levels (Lagerbestand) and inventory. Charge types are the stock items (Lagerartikel).',
-      inputSchema: z.object({
-        q: z
-          .string()
-          .optional()
-          .describe(
-            'Search query to filter charges by name, type or charge number',
-          ),
-        limit: z
-          .number()
-          .optional()
-          .default(100)
-          .describe('Maximum number of results'),
-      }),
+        'Fetch charges: the stock movements of the warehouse (German: Lager, Lagerbuchungen) for stock items like sugar, treatments, honey jars etc., in pages. Every page also has stockSummary with the current stock levels (Lagerbestand) per stock item. Charge types are the stock items (Lagerartikel). When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+      inputSchema: fetchChargesInputSchema,
       execute: async (input) => {
-        const result = await listCharges(db, context.userId, {
-          limit: input.limit,
-          offset: 0,
-          q: input.q,
-        });
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeDateCursor(input.cursor, input.sort)
+          : undefined;
+        const batch = Math.min(
+          input.limit ?? PAGE_MAX_LIMIT,
+          PAGE_BATCH[format],
+        );
+        const [list, stock] = await Promise.all([
+          // One more row than the page can hold tells whether more rows follow.
+          listCharges(
+            db,
+            context.userId,
+            { limit: batch + 1, offset: 0, q: input.q },
+            {
+              includeDeleted: input.includeDeleted,
+              dateFrom: input.dateStart,
+              dateTo: input.dateEnd,
+              sort: input.sort,
+              keyset,
+            },
+          ),
+          listChargeStock(db, context.userId, { limit: 1000, offset: 0 }),
+        ]);
+        const stockSummary = {
+          count: stock.results.length,
+          items: stock.results,
+        };
 
-        // Also get stock summary
-        const stockResult = await listChargeStock(db, context.userId, {
-          limit: 1000,
-          offset: 0,
-        });
-
+        const rows = list.results as Record<string, unknown>[];
+        const pageRows = rows.slice(0, batch);
+        const page = fillPage(
+          format === 'full'
+            ? pageRows
+            : pageRows.map((row) => compactRow(row, COMPACT_CHARGE_FIELDS)),
+          format === 'csv',
+          PAGE_BUDGET - JSON.stringify(stockSummary).length,
+        );
+        const hasMore = page.count < rows.length;
+        const last = rows[page.count - 1];
         return {
-          charges: {
-            count: result.results.length,
-            items: result.results,
-          },
-          stockSummary: {
-            count: stockResult.results.length,
-            items: stockResult.results,
-          },
+          format,
+          sort: input.sort,
+          total: list.total,
+          count: page.count,
+          hasMore,
+          nextCursor:
+            hasMore && last
+              ? encodeDateCursor({
+                  date: (last.date as string).slice(0, 10),
+                  id: Number(last.id),
+                  sort: input.sort,
+                })
+              : null,
+          ...page.data,
+          stockSummary,
         };
       },
     }),
@@ -3030,70 +3175,115 @@ export function createWizBeeTools(
      */
     fetchWaxLedger: tool({
       description:
-        'Fetch the separate wax ledger: wax lots with current stock, a product summary, and wax operations. Empty lots are hidden by default. Use returned lot IDs for later processing, use or sale operations.',
+        'Fetch the separate wax ledger: wax lots with current stock, a product summary over all matching lots, and wax operations, in pages. Empty lots are hidden by default. Lots and operations each have hasMore and nextCursor; call again with cursor set to that nextCursor and the same filters to get the next page of that list. Use returned lot IDs for later processing, use or sale operations.',
       inputSchema: fetchWaxLedgerToolSchema,
       execute: async (input) => {
-        const [lotResult, operationResult] = await Promise.all([
-          listWaxLots(db, context.userId, {
-            q: input.q,
-            limit: input.limit,
-            offset: 0,
-          }),
-          listWaxOperations(db, context.userId, {
-            q: input.q,
-            from: input.dateStart,
-            to: input.dateEnd,
-            type: input.operationType,
-            limit: input.limit,
-            offset: 0,
-          }),
-        ]);
-        const lots = input.includeEmpty
-          ? lotResult.results
-          : lotResult.results.filter((lot) => Math.abs(lot.stock_kg) >= 0.005);
-        const grouped = new Map<
-          string,
-          {
-            productId: number | null;
-            productName: string | null;
-            stockKg: number;
-            lotCount: number;
-          }
-        >();
-        for (const lot of lots) {
-          const key = String(lot.product_id ?? 'none');
-          const summary = grouped.get(key) ?? {
-            productId: lot.product_id,
-            productName: lot.product_name,
-            stockKg: 0,
-            lotCount: 0,
+        const cursor = input.cursor ? decodeWaxCursor(input.cursor) : undefined;
+        const lotQuery = { q: input.q };
+        const nonEmpty = !input.includeEmpty;
+        const limit = input.limit ?? PAGE_MAX_LIMIT;
+
+        const readLots = async (
+          beforeId: number | undefined,
+          budget: number,
+        ) => {
+          // Lots are flat, so one batch size fits both formats.
+          const batch = Math.min(limit, PAGE_BATCH.compact);
+          const list = await listWaxLots(
+            db,
+            context.userId,
+            { ...lotQuery, limit: batch + 1, offset: 0 },
+            { nonEmpty, beforeId },
+          );
+          const rows = list.results as unknown as Record<string, unknown>[];
+          const page = fillPage(rows.slice(0, batch), false, budget);
+          const hasMore = page.count < rows.length;
+          const last = rows[page.count - 1];
+          return {
+            total: list.total,
+            count: page.count,
+            hasMore,
+            nextCursor:
+              hasMore && last ? encodeCursor(['lots', Number(last.id)]) : null,
+            ...page.data,
           };
-          summary.stockKg += lot.stock_kg;
-          summary.lotCount += 1;
-          grouped.set(key, summary);
+        };
+
+        const readOperations = async (
+          after: TaskKeyset | undefined,
+          budget: number,
+        ) => {
+          const batch = Math.min(limit, PAGE_BATCH.full);
+          const list = await listWaxOperations(
+            db,
+            context.userId,
+            {
+              q: input.q,
+              from: input.dateStart,
+              to: input.dateEnd,
+              type: input.operationType,
+              limit: batch + 1,
+              offset: 0,
+            },
+            after,
+          );
+          const rows = list.results as unknown as Record<string, unknown>[];
+          const pageRows = rows.slice(0, batch);
+          const page = fillPage(
+            input.format === 'full'
+              ? pageRows
+              : pageRows.map((row) => compactRow(row, COMPACT_ACTOR_FIELDS)),
+            false,
+            budget,
+          );
+          const hasMore = page.count < rows.length;
+          const last = rows[page.count - 1];
+          return {
+            total: list.total,
+            count: page.count,
+            hasMore,
+            nextCursor:
+              hasMore && last
+                ? encodeCursor([
+                    'operations',
+                    String(last.date).slice(0, 10),
+                    Number(last.id),
+                  ])
+                : null,
+            ...page.data,
+          };
+        };
+
+        if (cursor?.list === 'lots') {
+          return {
+            format: input.format,
+            lots: await readLots(cursor.id, PAGE_BUDGET),
+          };
+        }
+        if (cursor?.list === 'operations') {
+          return {
+            format: input.format,
+            operations: await readOperations(
+              { date: cursor.date, id: cursor.id, sort: 'newest' },
+              PAGE_BUDGET,
+            ),
+          };
         }
 
-        return {
-          lots: {
-            total: lotResult.total,
-            returned: lots.length,
-            items: lots,
-          },
-          productSummary: {
-            scope: 'returnedLots',
-            items: [...grouped.values()].map((summary) => ({
-              productId: summary.productId,
-              productName: summary.productName,
-              stockKg: Math.round(summary.stockKg * 100) / 100,
-              lotCount: summary.lotCount,
-            })),
-          },
-          operations: {
-            total: operationResult.total,
-            returned: operationResult.results.length,
-            items: operationResult.results,
-          },
-        };
+        const productSummary = await summarizeWaxLots(
+          db,
+          context.userId,
+          lotQuery,
+          nonEmpty,
+        );
+        // Lots get at most half of the page, operations the rest.
+        const budget = PAGE_BUDGET - JSON.stringify(productSummary).length;
+        const lots = await readLots(undefined, Math.floor(budget / 2));
+        const operations = await readOperations(
+          undefined,
+          budget - JSON.stringify(lots).length,
+        );
+        return { format: input.format, lots, productSummary, operations };
       },
     }),
 
@@ -3619,7 +3809,7 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchTasks',
     description:
-      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60 KB. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
+      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60,000 characters. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
     parameters: fetchTasksInputSchema,
   },
   {
@@ -3857,12 +4047,8 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchCharges',
     description:
-      'Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen), stock levels (Lagerbestand) and inventory.',
-    parameters: z.object({
-      q: z.string().optional(),
-      includeDeleted: z.boolean().optional().default(false),
-      limit: z.number().optional().default(100),
-    }),
+      'Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen) in pages of up to 60,000 characters, with stockSummary (Lagerbestand) on every page. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
+    parameters: fetchChargesInputSchema,
   },
   {
     name: 'createCharge',
@@ -3910,7 +4096,7 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchWaxLedger',
     description:
-      'Fetch wax lots, current stock, product summary and wax operations.',
+      'Fetch wax lots, current stock, product summary and wax operations in pages. Lots and operations each have hasMore and nextCursor; send that nextCursor as cursor to get the next page of that list.',
     parameters: fetchWaxLedgerToolSchema,
   },
   {

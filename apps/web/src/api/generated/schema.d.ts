@@ -14544,7 +14544,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen), stock levels (Lagerbestand) and inventory. */
+    /** @description Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen) in pages of up to 60,000 characters, with stockSummary (Lagerbestand) on every page. When hasMore is true, call again with cursor set to nextCursor and the same filters. */
     post: {
       parameters: {
         query?: never;
@@ -14555,11 +14555,38 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            /** @default false */
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /**
+             * Format: date
+             * @description Last charge date in YYYY-MM-DD format (default: no limit)
+             */
+            dateEnd?: string;
+            /**
+             * Format: date
+             * @description First charge date in YYYY-MM-DD format (default: no limit)
+             */
+            dateStart?: string;
+            /**
+             * @description compact (default): flat records with type_name, unit, creator_name, editor_name and the source task. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested type, creator, editor and source objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /**
+             * @description Also return soft-deleted charges
+             * @default false
+             */
             includeDeleted?: boolean;
-            /** @default 100 */
+            /** @description Maximum number of charges. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
+            /** @description Search query to filter charges by name, type or charge number */
             q?: string;
+            /**
+             * @description Order by charge date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
           };
         };
       };
@@ -14633,7 +14660,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60 KB. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today. */
+    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60,000 characters. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today. */
     post: {
       parameters: {
         query?: never;
@@ -14705,7 +14732,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch wax lots, current stock, product summary and wax operations. */
+    /** @description Fetch wax lots, current stock, product summary and wax operations in pages. Lots and operations each have hasMore and nextCursor; send that nextCursor as cursor to get the next page of that list. */
     post: {
       parameters: {
         query?: never;
@@ -14716,6 +14743,8 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description nextCursor of lots or operations from the previous page. Returns the next page of that list only. Send the same filters. */
+            cursor?: string;
             /**
              * Format: date
              * @description Last operation date
@@ -14727,14 +14756,17 @@ export interface paths {
              */
             dateStart?: string;
             /**
+             * @description compact (default): operations with creator_name and editor_name. full: operations with the creator and editor objects.
+             * @default compact
+             * @enum {string}
+             */
+            format?: 'compact' | 'full';
+            /**
              * @description Include lots whose current stock is zero
              * @default false
              */
             includeEmpty?: boolean;
-            /**
-             * @description Maximum lots and operations to return
-             * @default 100
-             */
+            /** @description Maximum lots and operations per list. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
             /**
              * @description Operation type filter

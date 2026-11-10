@@ -10,6 +10,8 @@ import type { TestAgent } from '../utils.js';
 import { createAuthenticatedAgent, demoUser } from '../utils.js';
 
 const db = KyselyServer.getInstance().db;
+/** Far enough ahead that rows of other test files do not fall into it. */
+const year = new Date().getUTCFullYear() + 10;
 
 interface TaskPage {
   format: string;
@@ -78,32 +80,32 @@ describe('WizBee fetchTasks pages and formats', () => {
     hiveIds = hives.map((row) => row.id);
     expect(hiveIds).toHaveLength(2);
 
-    // 2 hives x 3 days in March 2031.
+    // 2 hives x 3 days in March of the test year.
     await post('/treatment', {
       hive_ids: hiveIds,
-      date: '2031-03-01',
+      date: `${year}-03-01`,
       note: 'paging',
       repeat: 2,
       interval: 1,
     });
-    // 2 hives x 16 days in May 2031 with notes of 2000 characters.
+    // 2 hives x 16 days in May of the test year with notes of 2000 characters.
     await post('/treatment', {
       hive_ids: hiveIds,
-      date: '2031-05-01',
+      date: `${year}-05-01`,
       note: 'x'.repeat(2000),
       repeat: 15,
       interval: 1,
     });
-    await post('/feed', { hive_ids: hiveIds, date: '2031-03-01' });
-    await post('/harvest', { hive_ids: hiveIds, date: '2031-03-01' });
+    await post('/feed', { hive_ids: hiveIds, date: `${year}-03-01` });
+    await post('/harvest', { hive_ids: hiveIds, date: `${year}-03-01` });
     await post('/checkup', {
       hive_ids: hiveIds,
-      date: '2031-03-01',
+      date: `${year}-03-01`,
       note: 'a, "b"\nc',
       repeat: 0,
       interval: 0,
     });
-    for (const date of ['2031-03-01', '2031-03-02', '2031-03-03']) {
+    for (const date of [`${year}-03-01`, `${year}-03-02`, `${year}-03-03`]) {
       await post('/todo', { name: `Todo ${date}`, date });
     }
   });
@@ -114,8 +116,8 @@ describe('WizBee fetchTasks pages and formats', () => {
   ])('returns all rows once in pages sorted %s', async (sort, direction) => {
     const pages = await readAllPages({
       task: 'treatment',
-      dateStart: '2031-03-01',
-      dateEnd: '2031-03-31',
+      dateStart: `${year}-03-01`,
+      dateEnd: `${year}-03-31`,
       sort,
       limit: 4,
     });
@@ -140,28 +142,32 @@ describe('WizBee fetchTasks pages and formats', () => {
   it('pages todos by date and id', async () => {
     const pages = await readAllPages({
       task: 'todo',
-      dateStart: '2031-03-01',
-      dateEnd: '2031-03-31',
+      dateStart: `${year}-03-01`,
+      dateEnd: `${year}-03-31`,
       limit: 2,
     });
 
     expect(
       pages.flatMap((page) => (page.items ?? []).map((row) => row.name)),
-    ).toEqual(['Todo 2031-03-03', 'Todo 2031-03-02', 'Todo 2031-03-01']);
+    ).toEqual([
+      `Todo ${year}-03-03`,
+      `Todo ${year}-03-02`,
+      `Todo ${year}-03-01`,
+    ]);
   });
 
   it('rejects a cursor from the other sort order', async () => {
     const first = await fetchTasks({
       task: 'treatment',
-      dateStart: '2031-03-01',
-      dateEnd: '2031-03-31',
+      dateStart: `${year}-03-01`,
+      dateEnd: `${year}-03-31`,
       limit: 1,
     });
 
     const result = await fetchTasks({
       task: 'treatment',
-      dateStart: '2031-03-01',
-      dateEnd: '2031-03-31',
+      dateStart: `${year}-03-01`,
+      dateEnd: `${year}-03-31`,
       sort: 'oldest',
       cursor: first.nextCursor,
     });
@@ -177,8 +183,8 @@ describe('WizBee fetchTasks pages and formats', () => {
     async (format) => {
       const page = await fetchTasks({
         task: 'treatment',
-        dateStart: '2031-05-01',
-        dateEnd: '2031-05-31',
+        dateStart: `${year}-05-01`,
+        dateEnd: `${year}-05-31`,
         format,
       });
 
@@ -201,8 +207,8 @@ describe('WizBee fetchTasks pages and formats', () => {
     async (task) => {
       const page = await fetchTasks({
         task,
-        dateStart: '2031-03-01',
-        dateEnd: '2031-03-01',
+        dateStart: `${year}-03-01`,
+        dateEnd: `${year}-03-01`,
       });
 
       expect(page.format).toEqual('compact');
@@ -235,8 +241,8 @@ describe('WizBee fetchTasks pages and formats', () => {
   it('keeps the nested objects in full rows', async () => {
     const page = await fetchTasks({
       task: 'treatment',
-      dateStart: '2031-03-01',
-      dateEnd: '2031-03-01',
+      dateStart: `${year}-03-01`,
+      dateEnd: `${year}-03-01`,
       format: 'full',
     });
 
@@ -248,7 +254,7 @@ describe('WizBee fetchTasks pages and formats', () => {
 
   it('returns CSV by default in the WizBee chat', async () => {
     const page = await fetchTasks(
-      { task: 'checkup', dateStart: '2031-03-01', dateEnd: '2031-03-01' },
+      { task: 'checkup', dateStart: `${year}-03-01`, dateEnd: `${year}-03-01` },
       { ...actor, chat: true },
     );
 
@@ -264,7 +270,7 @@ describe('WizBee fetchTasks pages and formats', () => {
     const result = (await executeWizBeeTool(
       db,
       'getHiveTasks',
-      { id: hiveIds[0], year: 2031 },
+      { id: hiveIds[0], year },
       actor,
     )) as Record<string, Record<string, unknown>[]>;
 
