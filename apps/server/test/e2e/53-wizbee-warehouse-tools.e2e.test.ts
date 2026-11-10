@@ -268,7 +268,10 @@ describe('WizBee warehouse tools pages and formats', () => {
       expect(page.count).toBeLessThan(40);
       expect(page.hasMore).toBe(true);
       expect(page.nextCursor).toEqual(expect.any(String));
-      expect(JSON.stringify(page).length).toBeLessThanOrEqual(60_000);
+      const size = JSON.stringify(page).length;
+      expect(size).toBeLessThanOrEqual(60_000);
+      // A row has 2,000 to 3,000 characters, so a filled page has no room for one more.
+      expect(size).toBeGreaterThan(55_000);
     },
   );
 
