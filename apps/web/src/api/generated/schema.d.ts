@@ -15048,6 +15048,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/wizbee/tools/listCompanyUsers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records. */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown;
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/wizbee/tools/listMovements': {
     parameters: {
       query?: never;

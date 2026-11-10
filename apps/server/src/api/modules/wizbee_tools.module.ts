@@ -22,6 +22,7 @@ import {
   listCheckups,
   updateCheckups,
 } from '../modules/checkup.module.js';
+import { listCompanyUsers } from '../modules/company_user.module.js';
 import { createFeeds, listFeeds, updateFeeds } from '../modules/feed.module.js';
 import {
   createHarvests,
@@ -98,6 +99,7 @@ const TOOL_MAX_RANK = {
   getHiveDetail: ROLES.read,
   listQueens: ROLES.read,
   getHiveTasks: ROLES.read,
+  listCompanyUsers: ROLES.read,
   fetchOptions: ROLES.read,
   fetchTasks: ROLES.read,
   createFeed: ROLES.user,
@@ -1081,6 +1083,10 @@ function getDefaultDateRange(): { dateStart: string; dateEnd: string } {
  * Task types supported by the fetchTasks tool
  */
 const TASK_TYPES = ['feed', 'treatment', 'harvest', 'checkup', 'todo'] as const;
+const RANK_NAMES: Record<number, string> = Object.fromEntries(
+  Object.entries(ROLES).map(([name, rank]) => [rank, name]),
+);
+
 const WAX_OPERATION_TYPES = [
   'production',
   'purchase',
@@ -1777,6 +1783,24 @@ export function createWizBeeTools(
           input.year ?? new Date().getFullYear(),
           input.apiary ?? false,
         );
+      },
+    }),
+
+    listCompanyUsers: tool({
+      description:
+        'List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records.',
+      inputSchema: z.object({}),
+      execute: async () => {
+        const members = await listCompanyUsers(db, context.userId);
+        return members.map((member) => ({
+          bee_id: member.bee_id,
+          username: member.user.username,
+          email: member.user.email,
+          rank: RANK_NAMES[member.rank ?? 0] ?? null,
+          last_visit: member.user.last_visit,
+          company_id: member.company.id,
+          company_name: member.company.name,
+        }));
       },
     }),
 
@@ -3382,6 +3406,12 @@ export const wizBeeToolDefinitions = [
       year: z.number().optional(),
       apiary: z.boolean().optional().default(false),
     }),
+  },
+  {
+    name: 'listCompanyUsers',
+    description:
+      'List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records.',
+    parameters: z.object({}),
   },
   {
     name: 'fetchOptions',
