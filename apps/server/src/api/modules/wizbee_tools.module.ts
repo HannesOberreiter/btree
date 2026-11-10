@@ -1318,6 +1318,31 @@ const waxOutputLineToolSchema = z
     message: 'Existing lotId or productId is required',
     path: ['lotId'],
   });
+const findHivesInputSchema = z.object({
+  q: z
+    .string()
+    .describe(
+      'Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive).',
+    ),
+  includeInactive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Include inactive colonies / hives (modus=false)'),
+  includeDeleted: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Also return soft-deleted colonies / hives'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(1000)
+    .optional()
+    .default(50)
+    .describe('Maximum number of colonies / hives to return (default 50).'),
+});
 const fetchWaxLedgerToolSchema = z.object({
   q: z.string().trim().optional().describe('Search text'),
   dateStart: z.iso.date().optional().describe('First operation date'),
@@ -1457,39 +1482,20 @@ export function createWizBeeTools(
     findHives: tool({
       description:
         'Find colonies / hives (Bienenvölker) by their user-visible name/number (e.g. "2402", "1608") or by the apiary name they are located in. Use this whenever the user refers to a specific colony / hive ("Volk X", "colony X", "hive X", "Stock X", "Bienenvolk X") so you can resolve the real hiveId and apiaryId. Returns matching colonies / hives with id, name, apiary_id and apiary name. Prefer this over listApiariesHives for colony / hive lookups.',
-      inputSchema: z.object({
-        q: z
-          .string()
-          .describe(
-            'Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive).',
-          ),
-        includeInactive: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include inactive colonies / hives (modus=false)'),
-        includeDeleted: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe('Include soft-deleted colonies / hives'),
-        limit: z
-          .number()
-          .optional()
-          .default(50)
-          .describe(
-            'Maximum number of colonies / hives to return (default 50).',
-          ),
-      }),
+      inputSchema: findHivesInputSchema,
       execute: async (input) => {
-        const raw = await listHives(db, context.userId, {
-          q: input.q,
-          deleted: input.includeDeleted ?? false,
-          modus: input.includeInactive ? undefined : true,
-          limit: input.limit ?? 50,
-          offset: 0,
-          details: false,
-        });
+        const raw = await listHives(
+          db,
+          context.userId,
+          {
+            q: input.q,
+            modus: input.includeInactive ? undefined : true,
+            limit: input.limit ?? 50,
+            offset: 0,
+            details: false,
+          },
+          { includeDeleted: input.includeDeleted ?? false },
+        );
         const results = raw.results;
 
         // Return a compact, purpose-shaped payload so the model sees the IDs
@@ -1499,6 +1505,7 @@ export function createWizBeeTools(
           name: h.name,
           position: h.position,
           modus: h.modus,
+          deleted: h.deleted,
           apiary_id: h.hive_location?.apiary_id ?? null,
           apiary_name: h.hive_location?.apiary_name ?? null,
         }));
@@ -3458,6 +3465,12 @@ export const wizBeeToolDefinitions = [
       includeInactive: z.boolean().optional().default(false),
       q: z.string().optional(),
     }),
+  },
+  {
+    name: 'findHives',
+    description:
+      'Find colonies / hives by their name/number or by apiary name. Returns hiveId, name, apiary_id and apiary name.',
+    parameters: findHivesInputSchema,
   },
   {
     name: 'createApiary',
