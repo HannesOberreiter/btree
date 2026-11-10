@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.12.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.11.0...btree-client-v7.12.0) (2026-11-10)
+
+
+### Features
+
+* **server:** add listCompanyUsers agent tool ([#317](https://github.com/HannesOberreiter/btree/issues/317)) ([fd2ce9b](https://github.com/HannesOberreiter/btree/commit/fd2ce9b00b29d5333d0acf9e81491413859c37bb))
+* **server:** page agent fetchTasks results and add compact formats ([#318](https://github.com/HannesOberreiter/btree/issues/318)) ([2e3d91f](https://github.com/HannesOberreiter/btree/commit/2e3d91f1c18fe396136ab6d913de10cdad62dc4c))
+* **server:** page movement, queen and apiary tools ([#322](https://github.com/HannesOberreiter/btree/issues/322)) ([789f280](https://github.com/HannesOberreiter/btree/commit/789f280a0bfe13b9ff6f6f2e050fc5b247bea6dd))
+* **server:** page warehouse tools ([#321](https://github.com/HannesOberreiter/btree/issues/321)) ([ff10ff2](https://github.com/HannesOberreiter/btree/commit/ff10ff2e8e6d3bc0dc3ed4678312d84349b53f45))
+* **web:** track logout reason as Matomo event ([#315](https://github.com/HannesOberreiter/btree/issues/315)) ([e3e00b5](https://github.com/HannesOberreiter/btree/commit/e3e00b555c6eac2ed59e3ae74daf66efbf0ca3e8))
+
+
+### Bug Fixes
+
+* require a date on charges ([#320](https://github.com/HannesOberreiter/btree/issues/320)) ([1473099](https://github.com/HannesOberreiter/btree/commit/1473099633dad29eda5ae31d46b052d90a44076a))
+* **server:** expose findHives to agents and fix includeDeleted ([#319](https://github.com/HannesOberreiter/btree/issues/319)) ([4516b9c](https://github.com/HannesOberreiter/btree/commit/4516b9ccea5d1f7747815dc364d069c8b581a2d5))
+
 ## [7.11.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.10.4...btree-client-v7.11.0) (2026-11-09)
 
 
