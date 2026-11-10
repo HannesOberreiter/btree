@@ -15,7 +15,11 @@ import {
   requireWaxOriginTypeOwnership,
   requireWaxProductOwnership,
 } from './ownership.module.js';
-import { ownedHiveIds } from './task.module.js';
+import {
+  ownedHiveIds,
+  type TaskKeyset,
+  taskKeysetCondition,
+} from './task.module.js';
 
 interface WaxActor {
   companyId: number;
@@ -42,10 +46,22 @@ function pagination(input: WaxListQuery) {
   return { limit, offset: (input.offset ?? 0) * limit };
 }
 
-export async function listWaxLots(
+/** Stock below this amount counts as an empty lot. */
+const EMPTY_LOT_KG = 0.005;
+
+/** Options for the paged agent list; the web list does not use them. */
+export interface WaxLotPageOptions {
+  /** Return only lots with stock. */
+  nonEmpty?: boolean;
+  /** Return only lots with a lower id. */
+  beforeId?: number;
+}
+
+function selectWaxLots(
   db: Kysely<DB>,
   companyId: number,
   input: WaxListQuery,
+  nonEmpty = false,
 ) {
   let base = db
     .selectFrom('wax_lots')
@@ -74,11 +90,30 @@ export async function listWaxLots(
       ]),
     );
   }
+  if (nonEmpty)
+    base = base.where(
+      sql<boolean>`ABS(${stockExpression(input.as_of)}) >= ${EMPTY_LOT_KG}`,
+    );
+  return base;
+}
+
+export async function listWaxLots(
+  db: Kysely<DB>,
+  companyId: number,
+  input: WaxListQuery,
+  options: WaxLotPageOptions = {},
+) {
+  const base = selectWaxLots(db, companyId, input, options.nonEmpty);
   const count = await base
     .select(sql<number | string>`COUNT(wax_lots.id)`.as('count'))
     .executeTakeFirstOrThrow();
   const page = pagination(input);
-  const results = await base
+  // After the count, so the total still counts all matches.
+  const results = await (
+    options.beforeId === undefined
+      ? base
+      : base.where('wax_lots.id', '<', options.beforeId)
+  )
     .select([
       'wax_lots.id',
       'wax_lots.code',
@@ -99,6 +134,39 @@ export async function listWaxLots(
     results,
     total: Number(count.count),
   };
+}
+
+/** Stock and lot count per product over all matching lots. */
+export async function summarizeWaxLots(
+  db: Kysely<DB>,
+  companyId: number,
+  input: WaxListQuery,
+  nonEmpty = false,
+) {
+  const lots = selectWaxLots(db, companyId, input, nonEmpty)
+    .select([
+      'wax_lots.product_id',
+      'wax_products.name as product_name',
+      stockExpression(input.as_of).as('stock_kg'),
+    ])
+    .as('lot');
+  const rows = await db
+    .selectFrom(lots)
+    .select([
+      'lot.product_id',
+      'lot.product_name',
+      sql<number>`SUM(lot.stock_kg)`.as('stock_kg'),
+      sql<number | string>`COUNT(*)`.as('lot_count'),
+    ])
+    .groupBy(['lot.product_id', 'lot.product_name'])
+    .orderBy('lot.product_name')
+    .execute();
+  return rows.map((row) => ({
+    productId: row.product_id,
+    productName: row.product_name,
+    stockKg: Math.round(row.stock_kg * 100) / 100,
+    lotCount: Number(row.lot_count),
+  }));
 }
 
 async function operationDetails(
@@ -262,6 +330,7 @@ export async function listWaxOperations(
   db: Kysely<DB>,
   companyId: number,
   input: WaxOperationListQuery,
+  keyset?: TaskKeyset,
 ) {
   let base = db
     .selectFrom('wax_operations')
@@ -291,7 +360,18 @@ export async function listWaxOperations(
     .select(sql<number | string>`COUNT(wax_operations.id)`.as('count'))
     .executeTakeFirstOrThrow();
   const page = pagination(input);
-  const ids = await base
+  // After the count, so the total still counts all matches.
+  const ids = await (
+    keyset
+      ? base.where(
+          taskKeysetCondition(
+            'wax_operations.date',
+            'wax_operations.id',
+            keyset,
+          ),
+        )
+      : base
+  )
     .select('wax_operations.id')
     .orderBy('wax_operations.date', 'desc')
     .orderBy('wax_operations.id', 'desc')
