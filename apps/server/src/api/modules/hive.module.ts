@@ -272,6 +272,7 @@ export async function listHives(
   db: Database,
   companyId: number,
   input: HiveListQuery,
+  options: { includeDeleted?: boolean } = {},
 ) {
   let base = db
     .selectFrom('hives')
@@ -282,8 +283,10 @@ export async function listHives(
     .leftJoin('hive_sources', 'hive_sources.id', 'hives.source_id')
     .leftJoin('bees as creator', 'creator.id', 'hives.bee_id')
     .leftJoin('bees as editor', 'editor.id', 'hives.edit_id')
-    .where('hives.user_id', '=', companyId)
-    .where('hives.deleted', '=', input.deleted === true);
+    .where('hives.user_id', '=', companyId);
+  if (!options.includeDeleted) {
+    base = base.where('hives.deleted', '=', input.deleted === true);
+  }
   if (input.modus !== undefined && input.modus !== null) {
     base = base.where('hives.modus', '=', input.modus);
   }

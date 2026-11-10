@@ -14749,6 +14749,64 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/wizbee/tools/findHives': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Find colonies / hives by their name/number or by apiary name. Returns hiveId, name, apiary_id and apiary name. */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /**
+             * @description Also return soft-deleted colonies / hives
+             * @default false
+             */
+            includeDeleted?: boolean;
+            /**
+             * @description Include inactive colonies / hives (modus=false)
+             * @default false
+             */
+            includeInactive?: boolean;
+            /**
+             * @description Maximum number of colonies / hives to return (default 50).
+             * @default 50
+             */
+            limit?: number;
+            /** @description Colony / hive name/number (Volk-Nummer) or apiary name substring to search for (case-insensitive). */
+            q: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown;
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/wizbee/tools/getFeedStatistics': {
     parameters: {
       query?: never;
