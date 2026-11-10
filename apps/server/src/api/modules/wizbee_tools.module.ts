@@ -1,4 +1,5 @@
 /* eslint-disable e18e/prefer-static-regex */
+import httpErrors from 'http-errors';
 import { z } from 'zod';
 
 import { ROLES } from '../../config/constants.config.js';
@@ -49,7 +50,7 @@ import {
   listHiveCountTotal,
   listTaskStatisticsSummary,
 } from '../modules/statistic.module.js';
-import { deleteTasks } from '../modules/task.module.js';
+import { deleteTasks, type TaskKeyset } from '../modules/task.module.js';
 import {
   summarizeTaskAmounts,
   summarizeTaskStock,
@@ -82,6 +83,8 @@ export interface WizBeeContext {
   userId: number;
   beeId: number;
   rank: 1 | 2 | 3 | 4;
+  /** True for the WizBee chat; it gets the most compact output defaults. */
+  chat?: boolean;
 }
 
 const TOOL_MAX_RANK = {
@@ -803,10 +806,8 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
   }
 
   const hintByTool: Record<string, string> = {
-    fetchTasks:
-      'The returned dataset is too large (likely a multi-year range). For multi-year summaries use getHarvestStatistics, getFeedStatistics or getTreatmentStatistics. For detail views, narrow the date range to a single year or a specific apiaryId, or reduce limit.',
     getHiveTasks:
-      'Tasks for this hive/apiary are too many to return in full. Ask the user which year or which task type they are interested in, or use the statistics tools.',
+      'Tasks for this apiary are too many to return in one result. Call getHiveTasks once per hive, or use fetchTasks with apiaryId, which returns the records in pages.',
     fetchCharges:
       'Too many charges to return. Add a search query (q) or reduce limit.',
     fetchWaxLedger:
@@ -834,9 +835,7 @@ function enforceResultSize(toolName: string, result: unknown): unknown {
       message: `Result too large (${Math.round(size / 1024)} KB). Narrow the query or use a statistics tool.`,
       hint,
       suggested_next_tool:
-        toolName === 'fetchTasks' || toolName === 'getHiveTasks'
-          ? 'getHarvestStatistics'
-          : undefined,
+        toolName === 'getHiveTasks' ? 'fetchTasks' : undefined,
     },
   };
   return envelope;
@@ -1083,6 +1082,184 @@ function getDefaultDateRange(): { dateStart: string; dateEnd: string } {
  * Task types supported by the fetchTasks tool
  */
 const TASK_TYPES = ['feed', 'treatment', 'harvest', 'checkup', 'todo'] as const;
+const TASK_RESULT_FORMATS = ['full', 'compact', 'csv'] as const;
+type TaskResultFormat = (typeof TASK_RESULT_FORMATS)[number];
+
+/** Maximum fetchTasks records for one call. */
+const FETCH_TASKS_MAX_LIMIT = 1000;
+/** Rows read for one page; a page of this size is larger than the size limit. */
+const FETCH_TASKS_BATCH: Record<TaskResultFormat, number> = {
+  full: 100,
+  compact: 300,
+  csv: 600,
+};
+/** Characters kept free in a fetchTasks result for the fields around the records. */
+const FETCH_TASKS_ENVELOPE_CHARS = 1_000;
+
+const fetchTasksInputSchema = z.object({
+  task: z.enum(TASK_TYPES).describe('Type of task to fetch'),
+  dateStart: z
+    .string()
+    .optional()
+    .describe('Start date in YYYY-MM-DD format (default: 2 months ago)'),
+  dateEnd: z
+    .string()
+    .optional()
+    .describe(
+      'End date in YYYY-MM-DD format (default: 2 months from now). For the last done task, set it to today.',
+    ),
+  apiaryId: z.number().optional().describe('Filter by specific apiary ID'),
+  includeDone: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Include completed tasks'),
+  sort: z
+    .enum(['newest', 'oldest'])
+    .optional()
+    .default('newest')
+    .describe(
+      'Order by task date, then id. newest (default): latest date first. oldest: earliest date first.',
+    ),
+  format: z
+    .enum(TASK_RESULT_FORMATS)
+    .optional()
+    .describe(
+      'compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.',
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(FETCH_TASKS_MAX_LIMIT)
+    .optional()
+    .describe(
+      'Maximum number of records. Without limit, the server fills the page up to the result size limit.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'nextCursor of the previous page. Send the same filters and the same sort.',
+    ),
+});
+
+function encodeTaskCursor(keyset: TaskKeyset) {
+  return Buffer.from(
+    JSON.stringify([keyset.date, keyset.id, keyset.sort]),
+  ).toString('base64url');
+}
+
+function decodeTaskCursor(
+  cursor: string,
+  sort: TaskKeyset['sort'],
+): TaskKeyset {
+  try {
+    const [date, id, cursorSort] = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    ) as unknown[];
+    if (
+      typeof date === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+      Number.isInteger(id) &&
+      cursorSort === sort
+    ) {
+      return { date, id: id as number, sort };
+    }
+  } catch {
+    // Handled below with the same error as a well-formed but wrong cursor.
+  }
+  throw httpErrors.BadRequest(
+    'Invalid cursor. Send the nextCursor of the previous page with the same sort.',
+  );
+}
+
+/** Nested task objects and the flat fields that replace them in compact rows. */
+const COMPACT_TASK_FIELDS: Record<string, Record<string, string>> = {
+  hive: { hive_name: 'name' },
+  apiary: { apiary_name: 'name' },
+  type: { type_name: 'name' },
+  disease: { disease_name: 'name' },
+  vet: { vet_name: 'name' },
+  creator: { creator_name: 'username' },
+  editor: { editor_name: 'username' },
+  feed_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  harvest_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  treatment_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  checkup_apiary: { apiary_id: 'apiary_id', apiary_name: 'apiary_name' },
+  movedate_previous_apiary: {
+    previous_apiary_id: 'previous_apiary_id',
+    previous_apiary_name: 'previous_apiary_name',
+  },
+};
+
+/** Task row with the nested objects replaced by flat id and name fields. */
+function compactTaskRow(row: Record<string, unknown>) {
+  const compact: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    const fields = COMPACT_TASK_FIELDS[key];
+    if (!fields) {
+      compact[key] = value;
+      continue;
+    }
+    const nested = (value ?? {}) as Record<string, unknown>;
+    for (const [field, source] of Object.entries(fields)) {
+      compact[field] = nested[source] ?? null;
+    }
+  }
+  return compact;
+}
+
+function csvCell(value: unknown) {
+  if (value === null || value === undefined) return '';
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function csvLine(values: unknown[]) {
+  return values.map(csvCell).join(',');
+}
+
+/** Characters that a string adds to the serialized result. */
+function serializedLength(text: string) {
+  return JSON.stringify(text).length - 2;
+}
+
+/**
+ * The first rows that fit into the result size limit, as records or as CSV.
+ * Always keeps the first row, so every call makes progress.
+ */
+function fillTaskPage(
+  rows: Record<string, unknown>[],
+  format: TaskResultFormat,
+) {
+  const budget = MAX_TOOL_RESULT_CHARS - FETCH_TASKS_ENVELOPE_CHARS;
+  const records = format === 'full' ? rows : rows.map(compactTaskRow);
+  if (format !== 'csv') {
+    const items: Record<string, unknown>[] = [];
+    let used = 0;
+    for (const row of records) {
+      const size = JSON.stringify(row).length + 1;
+      if (items.length > 0 && used + size > budget) break;
+      items.push(row);
+      used += size;
+    }
+    return { count: items.length, data: { items } };
+  }
+
+  const columns = [...new Set(records.flatMap((row) => Object.keys(row)))];
+  const lines = [csvLine(columns)];
+  let used = serializedLength(`${lines[0]}\n`);
+  for (const row of records) {
+    const line = csvLine(columns.map((column) => row[column]));
+    const size = serializedLength(`${line}\n`);
+    if (lines.length > 1 && used + size > budget) break;
+    lines.push(line);
+    used += size;
+  }
+  return { count: lines.length - 1, data: { csv: lines.join('\n') } };
+}
+
 const RANK_NAMES: Record<number, string> = Object.fromEntries(
   Object.entries(ROLES).map(([name, rank]) => [rank, name]),
 );
@@ -1760,7 +1937,7 @@ export function createWizBeeTools(
      */
     getHiveTasks: tool({
       description:
-        'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a specific hive or apiary for a given year.',
+        'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a specific hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId.',
       inputSchema: z.object({
         id: z.number().describe('ID of the hive (or apiary when apiary=true)'),
         year: z
@@ -1776,12 +1953,18 @@ export function createWizBeeTools(
           ),
       }),
       execute: async (input) => {
-        return getHiveTasks(
+        const tasks = await getHiveTasks(
           db,
           { companyId: context.userId, beeId: context.beeId, isLlm: true },
           input.id,
           input.year ?? new Date().getFullYear(),
           input.apiary ?? false,
+        );
+        return Object.fromEntries(
+          Object.entries(tasks).map(([kind, rows]) => [
+            kind,
+            (rows as Record<string, unknown>[]).map(compactTaskRow),
+          ]),
         );
       },
     }),
@@ -1838,34 +2021,8 @@ export function createWizBeeTools(
      */
     fetchTasks: tool({
       description:
-        'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. Useful for viewing specific upcoming/recent activities. IMPORTANT: for multi-year summaries or "what did I do last N years" style questions, prefer the statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics) which return aggregates in a fraction of the tokens. Only fetch raw tasks when the user needs concrete records.',
-      inputSchema: z.object({
-        task: z.enum(TASK_TYPES).describe('Type of task to fetch'),
-        dateStart: z
-          .string()
-          .optional()
-          .describe('Start date in YYYY-MM-DD format (default: 2 months ago)'),
-        dateEnd: z
-          .string()
-          .optional()
-          .describe(
-            'End date in YYYY-MM-DD format (default: 2 months from now)',
-          ),
-        apiaryId: z
-          .number()
-          .optional()
-          .describe('Filter by specific apiary ID'),
-        includeDone: z
-          .boolean()
-          .optional()
-          .default(true)
-          .describe('Include completed tasks'),
-        limit: z
-          .number()
-          .optional()
-          .default(200)
-          .describe('Maximum number of results'),
-      }),
+        'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages. Useful for viewing specific upcoming/recent activities. IMPORTANT: for multi-year summaries or "what did I do last N years" style questions, prefer the statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics) which return aggregates in a fraction of the tokens. Only fetch raw tasks when the user needs concrete records. When hasMore is true, call again with cursor set to nextCursor and the same filters to get the next page. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
+      inputSchema: fetchTasksInputSchema,
       execute: async (input) => {
         const { dateStart, dateEnd } = getDefaultDateRange();
 
@@ -1882,46 +2039,71 @@ export function createWizBeeTools(
         }
         const filters = JSON.stringify(filterArray);
 
+        const format = input.format ?? (context.chat ? 'csv' : 'compact');
+        const keyset = input.cursor
+          ? decodeTaskCursor(input.cursor, input.sort)
+          : undefined;
+        const direction: 'asc' | 'desc' =
+          input.sort === 'newest' ? 'desc' : 'asc';
+        const batch = Math.min(
+          input.limit ?? FETCH_TASKS_MAX_LIMIT,
+          FETCH_TASKS_BATCH[format],
+        );
+        // One more row than the page can hold tells whether more rows follow.
         const query = {
-          limit: input.limit,
+          limit: batch + 1,
           offset: 0,
+          order: ['date', 'id'] as ('date' | 'id')[],
+          direction: [direction, direction],
           ...(input.apiaryId &&
             input.task === 'todo' && { apiary_id: input.apiaryId }),
           filters,
           done: input.includeDone ? undefined : false,
           deleted: false,
         };
-        let items;
+        let list: { results: object[]; total: number };
         if (input.task === 'todo') {
-          items = (
-            await listTodos(
-              db,
-              {
-                companyId: context.userId,
-                beeId: context.beeId,
-                isLlm: true,
-              },
-              query,
-            )
-          ).results;
+          list = await listTodos(
+            db,
+            {
+              companyId: context.userId,
+              beeId: context.beeId,
+              isLlm: true,
+            },
+            query,
+            keyset,
+          );
         } else if (input.task === 'feed') {
-          items = (await listFeeds(db, context.userId, query)).results;
+          list = await listFeeds(db, context.userId, query, keyset);
         } else if (input.task === 'harvest') {
-          items = (await listHarvests(db, context.userId, query)).results;
+          list = await listHarvests(db, context.userId, query, keyset);
         } else if (input.task === 'treatment') {
-          items = (await listTreatments(db, context.userId, query)).results;
+          list = await listTreatments(db, context.userId, query, keyset);
         } else {
-          items = (await listCheckups(db, context.userId, query)).results;
+          list = await listCheckups(db, context.userId, query, keyset);
         }
 
-        // Return full records as-is. If the payload is too big for the model
-        // context, the wrapper's enforceResultSize() converts it to a
-        // structured "result_too_large" error with a hint to narrow the query.
+        const rows = list.results as Record<string, unknown>[];
+        const page = fillTaskPage(rows.slice(0, batch), format);
+        const hasMore = page.count < rows.length;
+        const last = rows[page.count - 1];
         return {
           task: input.task,
-          count: items.length,
+          format,
+          sort: input.sort,
           dateRange: { start: startDate, end: endDate },
-          items,
+          total: list.total,
+          count: page.count,
+          hasMore,
+          nextCursor:
+            hasMore && last
+              ? encodeTaskCursor({
+                  date: String(last.date).slice(0, 10),
+                  id: Number(last.id),
+                  sort: input.sort,
+                })
+              : null,
+          ...page.data,
         };
       },
     }),
@@ -3400,7 +3582,7 @@ export const wizBeeToolDefinitions = [
   {
     name: 'getHiveTasks',
     description:
-      'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year.',
+      'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId.',
     parameters: z.object({
       id: z.number(),
       year: z.number().optional(),
@@ -3424,15 +3606,8 @@ export const wizBeeToolDefinitions = [
   {
     name: 'fetchTasks',
     description:
-      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. For multi-year summaries prefer the statistics tools.',
-    parameters: z.object({
-      task: z.enum(TASK_TYPES),
-      dateStart: z.string().optional(),
-      dateEnd: z.string().optional(),
-      apiaryId: z.number().optional(),
-      includeDone: z.boolean().optional().default(true),
-      limit: z.number().optional().default(200),
-    }),
+      'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60 KB. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
+    parameters: fetchTasksInputSchema,
   },
   {
     name: 'createFeed',

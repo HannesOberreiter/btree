@@ -14633,7 +14633,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range. For multi-year summaries prefer the statistics tools. */
+    /** @description Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60 KB. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today. */
     post: {
       parameters: {
         query?: never;
@@ -14644,14 +14644,36 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            /** @description Filter by specific apiary ID */
             apiaryId?: number;
+            /** @description nextCursor of the previous page. Send the same filters and the same sort. */
+            cursor?: string;
+            /** @description End date in YYYY-MM-DD format (default: 2 months from now). For the last done task, set it to today. */
             dateEnd?: string;
+            /** @description Start date in YYYY-MM-DD format (default: 2 months ago) */
             dateStart?: string;
-            /** @default true */
+            /**
+             * @description compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.
+             * @enum {string}
+             */
+            format?: 'full' | 'compact' | 'csv';
+            /**
+             * @description Include completed tasks
+             * @default true
+             */
             includeDone?: boolean;
-            /** @default 200 */
+            /** @description Maximum number of records. Without limit, the server fills the page up to the result size limit. */
             limit?: number;
-            /** @enum {string} */
+            /**
+             * @description Order by task date, then id. newest (default): latest date first. oldest: earliest date first.
+             * @default newest
+             * @enum {string}
+             */
+            sort?: 'newest' | 'oldest';
+            /**
+             * @description Type of task to fetch
+             * @enum {string}
+             */
             task: 'feed' | 'treatment' | 'harvest' | 'checkup' | 'todo';
           };
         };
@@ -14926,7 +14948,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year. */
+    /** @description Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId. */
     post: {
       parameters: {
         query?: never;

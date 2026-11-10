@@ -16,6 +16,7 @@ import type {
 } from '../schemas/todo.schema.js';
 import { actorProjection } from './actor_projection.module.js';
 import { requireApiaryOwnership } from './ownership.module.js';
+import { taskKeysetCondition, type TaskKeyset } from './task.module.js';
 
 export interface TodoActor {
   beeId: number;
@@ -179,6 +180,7 @@ export async function listTodos(
   db: Database,
   actor: TodoActor,
   input: TodoListQuery,
+  keyset?: TaskKeyset,
 ) {
   const page = input.offset ?? 0;
   const pageSize =
@@ -203,6 +205,12 @@ export async function listTodos(
     actorProjection('editor'),
     apiaryProjection(),
   ]);
+
+  if (keyset) {
+    resultQuery = resultQuery.where(
+      taskKeysetCondition('todos.date', 'todos.id', keyset),
+    );
+  }
 
   if (input.order) {
     const fields = Array.isArray(input.order) ? input.order : [input.order];
