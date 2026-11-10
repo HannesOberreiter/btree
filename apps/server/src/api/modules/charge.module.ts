@@ -281,7 +281,8 @@ async function insertCharge(
     .insertInto('charges')
     .values({
       kind,
-      date: body.date ? new Date(body.date) : undefined,
+      // Old clients can send no date, the charge then gets today.
+      date: body.date ? new Date(body.date) : new Date(),
       bestbefore:
         body.bestbefore === null
           ? null
@@ -374,9 +375,7 @@ export async function updateCharges(
       .updateTable('charges')
       .set({
         ...(body.data.kind !== undefined && { kind: body.data.kind }),
-        ...(body.data.date !== undefined && {
-          date: body.data.date ? new Date(body.data.date) : null,
-        }),
+        ...(body.data.date && { date: new Date(body.data.date) }),
         ...(body.data.bestbefore !== undefined && {
           bestbefore: body.data.bestbefore
             ? new Date(body.data.bestbefore)
