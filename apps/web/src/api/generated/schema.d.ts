@@ -1909,7 +1909,7 @@ export interface paths {
               amount?: number | null;
               bestbefore?: string | null;
               charge?: string | null;
-              date?: string | null;
+              date?: string;
               /** @enum {string} */
               kind?: 'in' | 'out';
               name?: string | null;

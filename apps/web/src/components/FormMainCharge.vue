@@ -136,6 +136,7 @@ function onReset() {
     <FormInputDate
       v-model="state.date"
       label="date"
+      :required="isEdit ? false : true"
       :values="values"
       :reset="reset"
     />

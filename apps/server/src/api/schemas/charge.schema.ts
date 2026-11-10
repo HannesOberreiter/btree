@@ -115,7 +115,7 @@ export const chargeCreateSchema = z.union([
 
 export const chargeUpdateDataSchema = z.object({
   kind: z.enum(['in', 'out']).optional(),
-  date: z.string().nullable().optional(),
+  date: z.string().min(1).optional(),
   bestbefore: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   charge: z.string().nullable().optional(),
