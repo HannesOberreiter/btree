@@ -278,7 +278,7 @@ async function followTaskStock(
   await sql`
     UPDATE charges
     INNER JOIN ${sql.table(table)} AS task ON task.id = ${link}
-    SET charges.date = task.date,
+    SET charges.date = COALESCE(task.date, charges.date),
       charges.deleted = task.deleted,
       charges.deleted_at = task.deleted_at,
       charges.edit_id = ${actor.beeId}
