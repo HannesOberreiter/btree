@@ -253,7 +253,8 @@ export async function syncTaskStock(
         kind: booking.kind,
         type_id: booking.charge_type_id,
         amount: booking.amount,
-        date: booking.task.date,
+        // A task can have no date, a charge needs one.
+        date: booking.task.date ?? new Date(),
         deleted: booking.task.deleted,
         deleted_at: booking.task.deleted_at,
         user_id: actor.companyId,

@@ -243,7 +243,11 @@ describe('queen routes', () => {
         foreignIds.mating_id = Number(mating.insertId);
         const mother = await db
           .insertInto('queens')
-          .values({ name: 'Foreign mother', user_id: foreignCompanyId })
+          .values({
+            name: 'Foreign mother',
+            user_id: foreignCompanyId,
+            date: new Date(),
+          })
           .executeTakeFirstOrThrow();
         foreignIds.mother_id = Number(mother.insertId);
       });

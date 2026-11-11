@@ -44,7 +44,7 @@ import {
   updateMovedates,
 } from '../modules/movedate.module.js';
 import { listOptions, optionTables } from '../modules/option.module.js';
-import { listQueens, QUEEN_MISSING_DATE } from '../modules/queen.module.js';
+import { listQueens } from '../modules/queen.module.js';
 import {
   listHiveCountByApiary,
   listHiveCountTotal,
@@ -2156,7 +2156,7 @@ export function createWizBeeTools(
      */
     listQueens: tool({
       description:
-        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`. Returns pages in birth date order, queens without a birth date first; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
+        'List queens with birth date (`date`), mark colour, race, mating, status, hive and apiary. Use this for questions about queen age or birth year instead of reading the year from queen names or calling getHiveDetail per hive. By default (`location: "inHive"`) it returns the current queen of each active colony / hive. Inactive queens are included: `active: false` means the queen is recorded as dead or lost since `inactiveDate`. If the current queen of a colony / hive is inactive, the colony has no living queen recorded (queenless); do not count it as having that queen. Filter by birth date range (`bornFrom`, `bornTo`), `apiaryId`, `hiveId`, `raceId`, `matingId` (IDs from fetchOptions) and `q`. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
       inputSchema: listQueensInputSchema,
       execute: async (input) => {
         const filters: Record<string, unknown>[] = [];
@@ -2237,7 +2237,7 @@ export function createWizBeeTools(
             cursor: (queen) =>
               encodeCursor([
                 'queens',
-                String(queen.date ?? QUEEN_MISSING_DATE).slice(0, 10),
+                String(queen.date).slice(0, 10),
                 queen.queenId,
               ]),
           }),
