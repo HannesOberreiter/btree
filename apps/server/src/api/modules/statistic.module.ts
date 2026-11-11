@@ -9,21 +9,6 @@ import type {
   VarroaStatisticQuery,
 } from '../schemas/statistic.schema.js';
 
-const taskConfigs = {
-  feed: {
-    apiaryIdColumn: 'feed_id',
-    apiaryDateColumn: 'feed_date',
-  },
-  harvest: {
-    apiaryIdColumn: 'harvest_id',
-    apiaryDateColumn: 'harvest_date',
-  },
-  treatment: {
-    apiaryIdColumn: 'treatment_id',
-    apiaryDateColumn: 'treatment_date',
-  },
-} as const;
-
 type TaskSummaryMode = 'year' | 'apiary' | 'type';
 
 type StatisticFilter =
@@ -203,15 +188,14 @@ function taskTypeProjection() {
   `.as('type');
 }
 
-function taskApiaryProjection(task: StatisticTask) {
-  const config = taskConfigs[task];
+// Only for rows grouped by apiary. In other groups, MariaDB would take the
+// apiary, task id and task date from an arbitrary row of the group.
+function taskApiaryProjection() {
   return sql<TaskApiaryProjection | null>`
     CASE WHEN task_apiary.apiary_id IS NOT NULL THEN JSON_OBJECT(
       'apiary_id', task_apiary.apiary_id,
       'apiary_name', task_apiary.apiary_name,
-      'user_id', task_apiary.user_id,
-      ${sql.lit(config.apiaryIdColumn)}, task_apiary.task_id,
-      ${sql.lit(config.apiaryDateColumn)}, task_apiary.task_date
+      'user_id', task_apiary.user_id
     ) ELSE NULL END
   `.as('task_apiary');
 }
@@ -416,7 +400,6 @@ export async function listTaskStatisticsByHive(
       'task.hive_id',
       ...taskMetricSelections(task, true),
       hiveProjection(),
-      taskApiaryProjection(task),
     ])
     .groupBy(['task.hive_id', sql`YEAR(task.date)`]);
 
@@ -476,7 +459,6 @@ export function listTaskStatisticsSummary(
   const selections = [
     sql<string | null>`COUNT(DISTINCT task.hive_id)`.as('hive_count'),
     ...taskMetricSelections(task, false),
-    taskApiaryProjection(task),
   ];
 
   if (mode === 'year') {
@@ -488,7 +470,7 @@ export function listTaskStatisticsSummary(
   }
   if (mode === 'apiary') {
     return base
-      .select(selections)
+      .select([...selections, taskApiaryProjection()])
       .groupBy('task_apiary.apiary_id')
       .orderBy('task_apiary.apiary_name', 'asc')
       .execute();
