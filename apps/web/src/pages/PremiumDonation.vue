@@ -220,7 +220,10 @@ async function successPayment(newDate: string) {
         </div>
 
         <!-- Always-visible summary -->
-        <div class="q-mb-md q-pa-sm bg-grey-2 rounded-borders text-body1">
+        <div
+          class="q-mb-md q-pa-sm rounded-borders text-body1"
+          :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'"
+        >
           <span v-html="$t('membership.sum', { years, sum })" />
         </div>
 
