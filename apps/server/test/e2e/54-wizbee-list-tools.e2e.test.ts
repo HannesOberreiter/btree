@@ -126,8 +126,13 @@ describe('WizBee movement, queen and apiary list pages', () => {
       .execute();
 
     queenIds = [];
-    // Two queens without a birth date share one sort key, so the id decides.
-    for (const date of [`${year}-05-01`, null, `${year}-02-01`, null]) {
+    // Two queens share one birth date, so the id decides.
+    for (const date of [
+      `${year}-05-01`,
+      `${year}-03-01`,
+      `${year}-02-01`,
+      `${year}-03-01`,
+    ]) {
       const ids = await createQueens(db, userId, beeId, {
         name: `ListQueen${tag}`,
         hive_id: null,
@@ -243,7 +248,7 @@ describe('WizBee movement, queen and apiary list pages', () => {
     });
   });
 
-  it('pages queens by birth date, queens without a date first', async () => {
+  it('pages queens by birth date, then id', async () => {
     const result = await readAll('listQueens', {
       location: 'all',
       q: `ListQueen${tag}`,
@@ -252,9 +257,9 @@ describe('WizBee movement, queen and apiary list pages', () => {
 
     expect(result.total).toEqual(4);
     expect(result.items.map((row) => row.queenId)).toEqual([
+      queenIds[2],
       queenIds[1],
       queenIds[3],
-      queenIds[2],
       queenIds[0],
     ]);
   });

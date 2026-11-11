@@ -328,7 +328,7 @@ export interface Charges {
   charge: Generated<string | null>;
   checkup_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */
@@ -994,7 +994,7 @@ export interface Queens {
    */
   bee_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */

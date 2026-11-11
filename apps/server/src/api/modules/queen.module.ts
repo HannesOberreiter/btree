@@ -116,9 +116,6 @@ function selectQueens(db: Database, companyId: number, details: boolean) {
       ]);
   return query;
 }
-/** Sort key for queens without a birth date, so they come first. */
-export const QUEEN_MISSING_DATE = '1000-01-01';
-
 /** Last queen of a page in the order birth date, then id. */
 export interface QueenKeyset {
   date: string;
@@ -219,7 +216,7 @@ export async function listQueens(
     );
   }
   if (options.birthOrder) {
-    const birth = sql`COALESCE(queens.date, ${QUEEN_MISSING_DATE})`;
+    const birth = sql.ref('queens.date');
     query = query.orderBy(birth).orderBy('queens.id');
     // After the count, so the total still counts all matches.
     if (options.keyset) {
