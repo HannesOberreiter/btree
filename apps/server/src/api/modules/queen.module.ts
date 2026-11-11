@@ -433,7 +433,10 @@ async function inactivateOtherQueens(
     .execute();
   for (const row of rows) {
     if (!row.move_date) continue;
-    const current = new Date(row.move_date);
+    // The pool uses dateStrings and timezone Z, so move_date is a UTC
+    // "YYYY-MM-DD HH:MM:SS" string at runtime. Without the Z, new Date()
+    // reads it as local time.
+    const current = new Date(`${String(row.move_date).replace(' ', 'T')}Z`);
     if (row.modus && current < last)
       await db
         .updateTable('queens')
