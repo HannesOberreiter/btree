@@ -1,3 +1,7 @@
+## User impact
+
+<!-- One or two plain sentences: what a beekeeper notices, and where in the app. Write "None." for internal changes. The news on btree.at is written from this section. -->
+
 ## What and why
 
 <!-- What does this pull request change, and why? -->
