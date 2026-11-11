@@ -9,6 +9,7 @@ Monorepo of the b.tree beekeeping app. Each app is a separate pnpm project with 
 
 - `beta` is the default branch. Branch from `beta`, and open the PR against `beta`. Rulesets block direct pushes to `beta` and `main` for everybody.
 - PRs to `beta` are squash merged. The PR title becomes the commit on `beta` and the changelog entry, so write it as a Conventional Commit.
+- Start every PR description with the `## User impact` section of `.github/pull_request_template.md`: one or two plain sentences on what a beekeeper notices and where in the app, or `None.` The btree.at news generator in btree_sites reads this section.
 - release-please assigns a commit to an app by its changed paths. `feat`, `fix`, `perf`, `chore`, `refactor` and `style` start a release of that app; `build`, `ci`, `docs` and `test` do not.
 - `main` gets only PRs from `beta` (merge commit) and the release-please PR. The CI job `pull-protection` enforces this.
 - A merge to `beta` deploys beta.btree.at and the `beta` server image. A release on `main` deploys production.
