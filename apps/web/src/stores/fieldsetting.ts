@@ -1,4 +1,5 @@
 import { useStorage } from '@vueuse/core';
+import cloneDeep from 'lodash-es/cloneDeep';
 import defaultsDeep from 'lodash-es/defaultsDeep';
 import { defineStore } from 'pinia';
 import { useApiFetch } from '../composables/useApi';
@@ -117,7 +118,7 @@ const resetSettings = {
 
 export const useFieldsettingStore = defineStore('fieldsetting', {
   state: () => ({
-    settings: useStorage<Fieldsetting>('fieldsetting', resetSettings)
+    settings: useStorage<Fieldsetting>('fieldsetting', cloneDeep(resetSettings))
   }),
   getters: {
     get: state => state.settings,
@@ -133,8 +134,10 @@ export const useFieldsettingStore = defineStore('fieldsetting', {
       // console.log(payload);
     },
     reset() {
-      this.settings = resetSettings;
-      return resetSettings;
+      // Copy, so later changes do not change the defaults.
+      const settings = cloneDeep(resetSettings);
+      this.settings = settings;
+      return settings;
     },
     refresh(data: any) {
       if (data) {

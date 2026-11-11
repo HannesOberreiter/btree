@@ -3,8 +3,7 @@ import { expect, test } from '../../support/user-helpers';
 test.describe('user - Rearing Table', () => {
   const form = 'form-rearing';
 
-  test.beforeEach(async ({ page, showNewestFirst }) => {
-    await showNewestFirst('rearing');
+  test.beforeEach(async ({ page }) => {
     await page.goto('/table/rearing');
   });
 
