@@ -221,6 +221,82 @@ describe('statistic routes', () => {
     }
   });
 
+  it('returns apiary fields only in rows grouped by apiary', async () => {
+    const db = KyselyServer.getInstance().db;
+    const apiaryIds: number[] = [];
+    const hiveIds: number[] = [];
+    for (const name of ['stat-group-a', 'stat-group-b']) {
+      const apiary = await db
+        .insertInto('apiaries')
+        .values({ name, latitude: 0, longitude: 0, user_id: 1 })
+        .executeTakeFirstOrThrow();
+      const hive = await db
+        .insertInto('hives')
+        .values({ name, user_id: 1, deleted: false })
+        .executeTakeFirstOrThrow();
+      apiaryIds.push(Number(apiary.insertId));
+      hiveIds.push(Number(hive.insertId));
+    }
+    await db
+      .insertInto('movedates')
+      .values(
+        hiveIds.map((hive_id, index) => ({
+          apiary_id: apiaryIds[index],
+          hive_id,
+          date: new Date('2001-01-01'),
+        })),
+      )
+      .execute();
+    const taskRows = hiveIds.map((hive_id) => ({
+      amount: '10',
+      date: new Date('2001-07-01'),
+      deleted: false,
+      hive_id,
+      user_id: 1,
+    }));
+    await db.insertInto('harvests').values(taskRows).execute();
+    await db.insertInto('feeds').values(taskRows).execute();
+    await db.insertInto('treatments').values(taskRows).execute();
+    const filters = JSON.stringify([{ year: 2001 }]);
+
+    try {
+      for (const task of ['harvest', 'feed', 'treatment'] as const) {
+        const year = await listTaskStatisticsSummary(db, 1, task, 'year', {});
+        const type = await listTaskStatisticsSummary(db, 1, task, 'type', {
+          filters,
+        });
+        const apiary = await listTaskStatisticsSummary(db, 1, task, 'apiary', {
+          filters,
+        });
+        const hive = await listTaskStatisticsByHive(db, 1, task, {
+          filters,
+          groupByType: true,
+        });
+
+        expect(year).toContainEqual(expect.objectContaining({ year: 2001 }));
+        expect(type).toHaveLength(1);
+        expect(hive.results).toHaveLength(2);
+        for (const row of [...year, ...type, ...hive.results]) {
+          expect(row).not.toHaveProperty('task_apiary');
+        }
+        expect(apiary.map((row) => row.task_apiary)).toEqual([
+          { apiary_id: apiaryIds[0], apiary_name: 'stat-group-a', user_id: 1 },
+          { apiary_id: apiaryIds[1], apiary_name: 'stat-group-b', user_id: 1 },
+        ]);
+      }
+    } finally {
+      for (const table of ['harvests', 'feeds', 'treatments'] as const) {
+        await db.deleteFrom(table).where('hive_id', 'in', hiveIds).execute();
+      }
+      await db
+        .deleteFrom('movedates')
+        .where('hive_id', 'in', hiveIds)
+        .execute();
+      await db.deleteFrom('hives').where('id', 'in', hiveIds).execute();
+      await db.deleteFrom('apiaries').where('id', 'in', apiaryIds).execute();
+    }
+  });
+
   it('returns rating and Varroa statistics', async () => {
     const rating = await doQueryRequest(
       agent,
