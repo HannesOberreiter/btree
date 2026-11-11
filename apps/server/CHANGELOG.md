@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.13.1](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.13.0...btree-server-v7.13.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* require a birth date on queens ([#329](https://github.com/HannesOberreiter/btree/issues/329)) ([9d4a411](https://github.com/HannesOberreiter/btree/commit/9d4a411b2cf162d9ff1ebcd39dbb0b865e75fc80))
+* require dates on tasks, todos and movements ([#331](https://github.com/HannesOberreiter/btree/issues/331)) ([8623df8](https://github.com/HannesOberreiter/btree/commit/8623df809f5de5ff035146b1e7082df4edaa1268))
+* **server:** keep a new queen active outside UTC ([#333](https://github.com/HannesOberreiter/btree/issues/333)) ([699ee0b](https://github.com/HannesOberreiter/btree/commit/699ee0bc3a3bf1298b256413fba68128052dd6ea))
+* **server:** make queen and charge dates NOT NULL ([#330](https://github.com/HannesOberreiter/btree/issues/330)) ([293a186](https://github.com/HannesOberreiter/btree/commit/293a1866905df7e5957dafc3b9235bf663818314))
+* **server:** return apiary fields only for apiary groups ([#328](https://github.com/HannesOberreiter/btree/issues/328)) ([e1ba26a](https://github.com/HannesOberreiter/btree/commit/e1ba26a4dd47076b3c773ae60da4edb067e97e1f))
+
 ## [7.13.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.12.3...btree-server-v7.13.0) (2026-11-10)
 
 
