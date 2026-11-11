@@ -1,5 +1,15 @@
 # Changelog
 
+## [7.12.1](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.0...btree-client-v7.12.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* require a birth date on queens ([#329](https://github.com/HannesOberreiter/btree/issues/329)) ([9d4a411](https://github.com/HannesOberreiter/btree/commit/9d4a411b2cf162d9ff1ebcd39dbb0b865e75fc80))
+* **web:** make premium summary note readable in dark mode ([#327](https://github.com/HannesOberreiter/btree/issues/327)) ([9f063ad](https://github.com/HannesOberreiter/btree/commit/9f063adc81f5c8fa3ec338a3ca0a4779ca8838b7))
+* **web:** show queen birth date in print view, rename German "kind" ([#332](https://github.com/HannesOberreiter/btree/issues/332)) ([e723b0e](https://github.com/HannesOberreiter/btree/commit/e723b0e09cc90eb1f64b45d07f199a0fca8c642f))
+* **web:** sort date tables newest first, save rating max slider ([#334](https://github.com/HannesOberreiter/btree/issues/334)) ([2becf4d](https://github.com/HannesOberreiter/btree/commit/2becf4d04f3209928fef563025b515093de80dbd))
+
 ## [7.12.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.11.0...btree-client-v7.12.0) (2026-11-10)
 
 
