@@ -1,6 +1,9 @@
+import process from 'node:process';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  createQueens,
   getQueensByIds,
   updateQueenStatus,
 } from '../../src/api/modules/queen.module.js';
@@ -328,6 +331,39 @@ describe('queen routes', () => {
       );
       expect(get.statusCode).toEqual(200);
       expect(get.body[0].hive_id).toBeNull();
+    });
+
+    it('inactivates only the older queen outside UTC', async () => {
+      const db = KyselyServer.getInstance().db;
+      const hive = await db
+        .selectFrom('hives')
+        .select(['user_id', 'bee_id'])
+        .where('id', '=', 1)
+        .executeTakeFirstOrThrow();
+      const timeZone = process.env.TZ;
+      process.env.TZ = 'Europe/Vienna';
+      try {
+        const create = (name: string, moveDate: string) =>
+          createQueens(db, hive.user_id, hive.bee_id!, {
+            name,
+            hive_id: 1,
+            move_date: moveDate,
+            modus: true,
+          });
+        const [oldId] = await create('testQueenOld', '2024-06-10');
+        const [newId] = await create('testQueenNew', '2025-06-10');
+        const queens = await getQueensByIds(db, hive.user_id, [oldId, newId]);
+        const modus = (id: number) => queens.find((q) => q.id === id)?.modus;
+        expect(modus(oldId)).toBe(false);
+        expect(modus(newId)).toBe(true);
+        await db
+          .deleteFrom('queens')
+          .where('id', 'in', [oldId, newId])
+          .execute();
+      } finally {
+        if (timeZone === undefined) delete process.env.TZ;
+        else process.env.TZ = timeZone;
+      }
     });
   });
 
