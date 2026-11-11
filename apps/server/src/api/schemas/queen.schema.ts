@@ -78,7 +78,9 @@ export type PostBody = z.infer<typeof postBodySchema>;
 
 export const patchBodySchema = z.object({
   ids: z.array(numberSchema),
-  data: queenDataSchema.partial(),
+  data: queenDataSchema.partial().extend({
+    date: z.string().min(1).optional(),
+  }),
 });
 export type PatchBody = z.infer<typeof patchBodySchema>;
 

@@ -249,6 +249,7 @@ async function onChange() {
         v-model="state.date"
         label="birth"
         table-id="date"
+        :required="isEdit ? false : true"
         :values="values"
         :reset="reset"
         icon="fas fa-cake-candles"
