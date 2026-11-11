@@ -37,7 +37,7 @@ interface TaskState {
   id: number;
   type_id: number | null;
   amount: number | null;
-  date: Date | null;
+  date: Date;
   done: boolean;
   deleted: boolean;
   deleted_at: Date | null;
@@ -253,8 +253,7 @@ export async function syncTaskStock(
         kind: booking.kind,
         type_id: booking.charge_type_id,
         amount: booking.amount,
-        // A task can have no date, a charge needs one.
-        date: booking.task.date ?? new Date(),
+        date: booking.task.date,
         deleted: booking.task.deleted,
         deleted_at: booking.task.deleted_at,
         user_id: actor.companyId,
@@ -278,7 +277,7 @@ async function followTaskStock(
   await sql`
     UPDATE charges
     INNER JOIN ${sql.table(table)} AS task ON task.id = ${link}
-    SET charges.date = COALESCE(task.date, charges.date),
+    SET charges.date = task.date,
       charges.deleted = task.deleted,
       charges.deleted_at = task.deleted_at,
       charges.edit_id = ${actor.beeId}

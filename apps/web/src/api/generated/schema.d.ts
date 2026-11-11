@@ -2412,7 +2412,7 @@ export interface paths {
               done?: boolean;
               eggs?: boolean | null;
               emptyframes?: number | null;
-              enddate?: string | null;
+              enddate?: string;
               foundation?: number | null;
               honeyframes?: number | null;
               note?: string | null;

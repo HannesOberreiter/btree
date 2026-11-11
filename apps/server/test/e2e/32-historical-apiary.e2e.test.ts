@@ -87,27 +87,52 @@ describe('historical apiary resolution', () => {
 
     const feed = await db
       .insertInto('feeds')
-      .values({ date: taskDate, hive_id: hiveId, user_id: companyId })
+      .values({
+        date: taskDate,
+        enddate: taskDate,
+        hive_id: hiveId,
+        user_id: companyId,
+      })
       .executeTakeFirstOrThrow();
     feedId = Number(feed.insertId);
     const harvest = await db
       .insertInto('harvests')
-      .values({ date: taskDate, hive_id: hiveId, user_id: companyId })
+      .values({
+        date: taskDate,
+        enddate: taskDate,
+        hive_id: hiveId,
+        user_id: companyId,
+      })
       .executeTakeFirstOrThrow();
     harvestId = Number(harvest.insertId);
     const laterHarvest = await db
       .insertInto('harvests')
-      .values({ date: laterDate, hive_id: hiveId, user_id: companyId })
+      .values({
+        date: laterDate,
+        enddate: laterDate,
+        hive_id: hiveId,
+        user_id: companyId,
+      })
       .executeTakeFirstOrThrow();
     laterHarvestId = Number(laterHarvest.insertId);
     const treatment = await db
       .insertInto('treatments')
-      .values({ date: taskDate, hive_id: hiveId, user_id: companyId })
+      .values({
+        date: taskDate,
+        enddate: taskDate,
+        hive_id: hiveId,
+        user_id: companyId,
+      })
       .executeTakeFirstOrThrow();
     treatmentId = Number(treatment.insertId);
     const checkup = await db
       .insertInto('checkups')
-      .values({ date: taskDate, hive_id: hiveId, user_id: companyId })
+      .values({
+        date: taskDate,
+        enddate: taskDate,
+        hive_id: hiveId,
+        user_id: companyId,
+      })
       .executeTakeFirstOrThrow();
     checkupId = Number(checkup.insertId);
 

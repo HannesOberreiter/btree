@@ -143,6 +143,7 @@ describe('statistic routes', () => {
       {
         amount: '10',
         date: new Date('2025-07-01'),
+        enddate: new Date('2025-07-01'),
         deleted: false,
         hive_id: firstHiveId,
         user_id: 1,
@@ -150,6 +151,7 @@ describe('statistic routes', () => {
       {
         amount: '20',
         date: new Date('2025-07-01'),
+        enddate: new Date('2025-07-01'),
         deleted: false,
         hive_id: secondHiveId,
         user_id: 1,
@@ -171,6 +173,7 @@ describe('statistic routes', () => {
           temper: 1,
           varroa: 1,
           date,
+          enddate: date,
           deleted,
           hive_id,
           user_id,
@@ -250,6 +253,7 @@ describe('statistic routes', () => {
     const taskRows = hiveIds.map((hive_id) => ({
       amount: '10',
       date: new Date('2001-07-01'),
+      enddate: new Date('2001-07-01'),
       deleted: false,
       hive_id,
       user_id: 1,
@@ -345,6 +349,7 @@ describe('statistic routes', () => {
           temper: 1,
           varroa,
           date,
+          enddate: date,
           deleted: false,
           hive_id: hiveId,
           user_id: 1,

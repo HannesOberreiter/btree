@@ -218,11 +218,13 @@ export async function ownedHiveIds(
 }
 
 export function taskSchedule(
-  date: string,
+  startDate: string | undefined,
   enddate: string | null | undefined,
   interval: number,
   repeat: number,
 ) {
+  // Old clients can send no date, the task then starts today.
+  const date = startDate || dayjs().format('YYYY-MM-DD');
   const normalizedEnd =
     !enddate || dayjs(enddate).isBefore(dayjs(date)) ? date : enddate;
   return Array.from({ length: repeat + 1 }, (_, index) => ({

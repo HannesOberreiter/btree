@@ -47,14 +47,14 @@ export const patchBodySchema = z.object({
   data: z.object({
     apiary_id: numberSchema.optional(),
     hive_id: numberSchema.optional(),
-    date: z.string().optional(),
+    date: z.string().min(1).optional(),
   }),
 });
 export type PatchBody = z.infer<typeof patchBodySchema>;
 
 export const updateDateBodySchema = z.object({
   ids: z.array(numberSchema),
-  start: z.string(),
+  start: z.string().min(1),
 });
 export type UpdateDateBody = z.infer<typeof updateDateBodySchema>;
 
