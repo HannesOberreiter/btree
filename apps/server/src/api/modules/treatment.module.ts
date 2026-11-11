@@ -62,10 +62,8 @@ function decimalSelection(
 
 function treatmentValues(data: TaskCreateBody | TaskPatchBody['data']) {
   return {
-    ...(data.date !== undefined && { date: new Date(data.date) }),
-    ...(data.enddate !== undefined && {
-      enddate: data.enddate === null ? null : new Date(data.enddate),
-    }),
+    ...(data.date && { date: new Date(data.date) }),
+    ...(data.enddate && { enddate: new Date(data.enddate) }),
     ...(data.amount !== undefined && { amount: data.amount }),
     ...(data.wait !== undefined && { wait: data.wait }),
     ...(data.temperature !== undefined && { temperature: data.temperature }),
@@ -278,14 +276,12 @@ export async function createTreatments(
       actor.companyId,
       input.hive_ids,
     );
-    const schedule = input.date
-      ? taskSchedule(
-          input.date,
-          input.enddate,
-          input.interval ?? 0,
-          input.repeat ?? 0,
-        )
-      : [{ date: undefined, enddate: undefined }];
+    const schedule = taskSchedule(
+      input.date,
+      input.enddate,
+      input.interval ?? 0,
+      input.repeat ?? 0,
+    );
     const ids: number[] = [];
     for (const hiveId of hives) {
       for (const dates of schedule) {
@@ -293,8 +289,8 @@ export async function createTreatments(
           .insertInto('treatments')
           .values({
             ...treatmentValues(input),
-            ...(dates.date !== undefined && { date: dates.date }),
-            ...(dates.enddate !== undefined && { enddate: dates.enddate }),
+            date: dates.date,
+            enddate: dates.enddate,
             hive_id: hiveId,
             bee_id: actor.beeId,
             user_id: actor.companyId,

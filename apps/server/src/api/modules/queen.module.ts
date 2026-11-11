@@ -116,9 +116,6 @@ function selectQueens(db: Database, companyId: number, details: boolean) {
       ]);
   return query;
 }
-/** Sort key for queens without a birth date, so they come first. */
-export const QUEEN_MISSING_DATE = '1000-01-01';
-
 /** Last queen of a page in the order birth date, then id. */
 export interface QueenKeyset {
   date: string;
@@ -219,7 +216,7 @@ export async function listQueens(
     );
   }
   if (options.birthOrder) {
-    const birth = sql`COALESCE(queens.date, ${QUEEN_MISSING_DATE})`;
+    const birth = sql.ref('queens.date');
     query = query.orderBy(birth).orderBy('queens.id');
     // After the count, so the total still counts all matches.
     if (options.keyset) {
@@ -436,7 +433,10 @@ async function inactivateOtherQueens(
     .execute();
   for (const row of rows) {
     if (!row.move_date) continue;
-    const current = new Date(row.move_date);
+    // The pool uses dateStrings and timezone Z, so move_date is a UTC
+    // "YYYY-MM-DD HH:MM:SS" string at runtime. Without the Z, new Date()
+    // reads it as local time.
+    const current = new Date(`${String(row.move_date).replace(' ', 'T')}Z`);
     if (row.modus && current < last)
       await db
         .updateTable('queens')
@@ -451,9 +451,7 @@ function queenValues(data: PatchBody['data']) {
     ...(data.name !== undefined && { name: data.name }),
     ...(data.mark_colour !== undefined && { mark_colour: data.mark_colour }),
     ...(data.mother !== undefined && { mother: data.mother }),
-    ...(data.date !== undefined && {
-      date: data.date ? new Date(data.date) : null,
-    }),
+    ...(data.date && { date: new Date(data.date) }),
     ...(data.move_date !== undefined && {
       move_date: data.move_date ? new Date(data.move_date) : null,
     }),
@@ -494,7 +492,9 @@ export async function createQueens(
       const result = await trx
         .insertInto('queens')
         .values({
-          ...queenValues({ ...body, hive_id: hiveId }),
+          ...queenValues({ ...body, date: undefined, hive_id: hiveId }),
+          // Old clients can send no birth date, the queen then gets today.
+          date: body.date ? new Date(body.date) : new Date(),
           name:
             repeat > 1 ? `${body.name}${(body.start ?? 0) + index}` : body.name,
           user_id: companyId,

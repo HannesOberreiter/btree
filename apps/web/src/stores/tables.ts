@@ -13,7 +13,7 @@ export const useTablesStore = defineStore('tables', {
       visible: useStorage('table-visible-queen', ['name', 'date', 'hive.name']),
       length: useStorage('table-length-queen', 10),
       sort: useStorage('table-sort-col-queen', 'date'),
-      direction: useStorage('table-sort-direction-queen', false)
+      direction: useStorage('table-sort-direction-queen', true)
     },
     virgin: {
       visible: useStorage('table-visible-virgin', [
@@ -23,7 +23,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-virgin', 10),
       sort: useStorage('table-sort-col-virgin', 'date'),
-      direction: useStorage('table-sort-direction-virgin', false)
+      direction: useStorage('table-sort-direction-virgin', true)
     },
     apiary: {
       visible: useStorage('table-visible-apiary', ['name', 'description']),
@@ -39,7 +39,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-movedate', 10),
       sort: useStorage('table-sort-col-movedate', 'date'),
-      direction: useStorage('table-sort-direction-movedate', false)
+      direction: useStorage('table-sort-direction-movedate', true)
     },
     todo: {
       visible: useStorage('table-visible-todo', [
@@ -50,7 +50,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-todo', 10),
       sort: useStorage('table-sort-col-todo', 'date'),
-      direction: useStorage('table-sort-direction-todo', false)
+      direction: useStorage('table-sort-direction-todo', true)
     },
     feed: {
       visible: useStorage('table-visible-feed', [
@@ -61,7 +61,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-feed', 10),
       sort: useStorage('table-sort-col-feed', 'date'),
-      direction: useStorage('table-sort-direction-feed', false)
+      direction: useStorage('table-sort-direction-feed', true)
     },
     harvest: {
       visible: useStorage('table-visible-harvest', [
@@ -72,7 +72,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-harvest', 10),
       sort: useStorage('table-sort-col-harvest', 'date'),
-      direction: useStorage('table-sort-direction-harvest', false)
+      direction: useStorage('table-sort-direction-harvest', true)
     },
     treatment: {
       visible: useStorage('table-visible-treatment', [
@@ -83,7 +83,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-treatment', 10),
       sort: useStorage('table-sort-col-treatment', 'date'),
-      direction: useStorage('table-sort-direction-treatment', false)
+      direction: useStorage('table-sort-direction-treatment', true)
     },
     checkup: {
       visible: useStorage('table-visible-checkup', [
@@ -94,7 +94,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-checkup', 10),
       sort: useStorage('table-sort-col-checkup', 'date'),
-      direction: useStorage('table-sort-direction-checkup', false)
+      direction: useStorage('table-sort-direction-checkup', true)
     },
     charge: {
       visible: useStorage('table-visible-charge', [
@@ -105,7 +105,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-charge', 10),
       sort: useStorage('table-sort-col-charge', 'date'),
-      direction: useStorage('table-sort-direction-charge', false)
+      direction: useStorage('table-sort-direction-charge', true)
     },
     chargeStock: {
       visible: useStorage('table-visible-charge-stock', [
@@ -141,7 +141,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-scale_data', 10),
       sort: useStorage('table-sort-col-scale_data', 'datetime'),
-      direction: useStorage('table-sort-direction-scale_data', false)
+      direction: useStorage('table-sort-direction-scale_data', true)
     },
     rearing: {
       visible: useStorage('table-visible-rearing', [
@@ -151,7 +151,7 @@ export const useTablesStore = defineStore('tables', {
       ]),
       length: useStorage('table-length-rearing', 10),
       sort: useStorage('table-sort-col-rearing', 'date'),
-      direction: useStorage('table-sort-direction-rearing', false)
+      direction: useStorage('table-sort-direction-rearing', true)
     },
     rearing_detail: {
       visible: useStorage('table-visible-rearing_detail', ['job', 'note']),

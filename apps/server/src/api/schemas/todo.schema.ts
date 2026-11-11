@@ -88,7 +88,7 @@ export type TodoCreate = z.infer<typeof todoCreateSchema>;
 
 export const todoUpdateSchema = z.object({
   name: z.string().min(1).max(48).trim().optional(),
-  date: z.string().optional(),
+  date: z.string().min(1).optional(),
   note: z.string().max(2000).optional(),
   url: z.string().max(512).optional(),
   done: z.boolean().optional(),
@@ -113,7 +113,7 @@ export type TodoUpdateStatus = z.infer<typeof todoUpdateStatusSchema>;
 
 export const todoUpdateDateSchema = z.object({
   ids: z.array(numberSchema),
-  start: z.string(),
+  start: z.string().min(1),
 });
 
 export type TodoUpdateDate = z.infer<typeof todoUpdateDateSchema>;

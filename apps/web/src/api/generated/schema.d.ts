@@ -2412,7 +2412,7 @@ export interface paths {
               done?: boolean;
               eggs?: boolean | null;
               emptyframes?: number | null;
-              enddate?: string | null;
+              enddate?: string;
               foundation?: number | null;
               honeyframes?: number | null;
               note?: string | null;
@@ -7771,7 +7771,7 @@ export interface paths {
         content: {
           'application/json': {
             data: {
-              date?: string | null;
+              date?: string;
               hive_id?: null | 'empty';
               mark_colour?: string | null;
               mating_id?: number | null;

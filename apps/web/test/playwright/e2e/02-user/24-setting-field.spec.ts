@@ -40,4 +40,23 @@ test.describe('user - Setting Fields', () => {
     expect(body.settings).toHaveProperty('checkup');
     expect((await responsePromise).ok()).toBe(true);
   });
+
+  test('rating max slider saves to the server', async ({ page, dataCy }) => {
+    const slider = dataCy('setting-field-rating-max');
+    await expect(slider).not.toHaveAttribute('aria-disabled', 'true');
+    const before = Number(await slider.getAttribute('aria-valuenow'));
+    const requestPromise = page.waitForRequest(
+      request =>
+        request.method() === 'PATCH' &&
+        request.url().includes('/v1/fieldsetting')
+    );
+
+    await slider.focus();
+    await page.keyboard.press(before < 10 ? 'ArrowRight' : 'ArrowLeft');
+
+    const body = (await requestPromise).postDataJSON();
+    expect(body.settings.checkup.ratings.max).toBe(
+      before < 10 ? before + 1 : before - 1
+    );
+  });
 });

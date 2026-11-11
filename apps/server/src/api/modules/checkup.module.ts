@@ -66,10 +66,8 @@ function checkupValues(
   data: CheckupCreateBody | CheckupBatchUpdateBody['data'],
 ) {
   return {
-    ...(data.date !== undefined && { date: new Date(data.date) }),
-    ...(data.enddate !== undefined && {
-      enddate: data.enddate === null ? null : new Date(data.enddate),
-    }),
+    ...(data.date && { date: new Date(data.date) }),
+    ...(data.enddate && { enddate: new Date(data.enddate) }),
     ...(data.queen !== undefined && { queen: data.queen }),
     ...(data.queencells !== undefined && { queencells: data.queencells }),
     ...(data.eggs !== undefined && { eggs: data.eggs }),
@@ -320,8 +318,8 @@ export async function createCheckups(
           .insertInto('checkups')
           .values({
             ...checkupValues(input),
-            ...(dates.date !== undefined && { date: dates.date }),
-            ...(dates.enddate !== undefined && { enddate: dates.enddate }),
+            date: dates.date,
+            enddate: dates.enddate,
             hive_id: hiveId,
             bee_id: actor.beeId,
             user_id: actor.companyId,

@@ -6,8 +6,7 @@ const backendURL =
 test.describe('user - Movement Table', () => {
   const form = 'form-movement';
 
-  test.beforeEach(async ({ page, showNewestFirst }) => {
-    await showNewestFirst('movedate');
+  test.beforeEach(async ({ page }) => {
     await page.goto('/table/movement');
   });
 

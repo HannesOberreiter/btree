@@ -1,6 +1,9 @@
+import process from 'node:process';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  createQueens,
   getQueensByIds,
   updateQueenStatus,
 } from '../../src/api/modules/queen.module.js';
@@ -163,6 +166,63 @@ describe('queen routes', () => {
       expect(res.body).toBe(1);
     });
 
+    it('post 200 - missing, null or empty date stores today', async () => {
+      for (const date of [undefined, null, '']) {
+        const res = await doRequest(agent, 'post', route, null, accessToken, {
+          name: 'testQueenNoDate',
+          date,
+        });
+        expect(res.statusCode).toEqual(200);
+        const saved = await doRequest(
+          agent,
+          'post',
+          `${route}/batchGet`,
+          null,
+          accessToken,
+          { ids: res.body },
+        );
+        expect(saved.body[0].date).toBe(new Date().toISOString().slice(0, 10));
+      }
+    });
+
+    it('patch 400 - null or empty date', async () => {
+      for (const date of [null, '']) {
+        const res = await doRequest(agent, 'patch', route, null, accessToken, {
+          ids: [insertId],
+          data: { date },
+        });
+        expect(res.statusCode).toEqual(400);
+        expectations(res, 'date', 'Invalid value');
+      }
+      const saved = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(saved.body[0].date).toBe(testInsert.date);
+    });
+
+    it('patch 200 - valid date', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { date: '2020-01-15' },
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toBe(1);
+      const saved = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(saved.body[0].date).toBe('2020-01-15');
+    });
+
     describe('patch 404 - foreign references', () => {
       const db = KyselyServer.getInstance().db;
       let foreignCompanyId: number;
@@ -186,7 +246,11 @@ describe('queen routes', () => {
         foreignIds.mating_id = Number(mating.insertId);
         const mother = await db
           .insertInto('queens')
-          .values({ name: 'Foreign mother', user_id: foreignCompanyId })
+          .values({
+            name: 'Foreign mother',
+            user_id: foreignCompanyId,
+            date: new Date(),
+          })
           .executeTakeFirstOrThrow();
         foreignIds.mother_id = Number(mother.insertId);
       });
@@ -267,6 +331,39 @@ describe('queen routes', () => {
       );
       expect(get.statusCode).toEqual(200);
       expect(get.body[0].hive_id).toBeNull();
+    });
+
+    it('inactivates only the older queen outside UTC', async () => {
+      const db = KyselyServer.getInstance().db;
+      const hive = await db
+        .selectFrom('hives')
+        .select(['user_id', 'bee_id'])
+        .where('id', '=', 1)
+        .executeTakeFirstOrThrow();
+      const timeZone = process.env.TZ;
+      process.env.TZ = 'Europe/Vienna';
+      try {
+        const create = (name: string, moveDate: string) =>
+          createQueens(db, hive.user_id, hive.bee_id!, {
+            name,
+            hive_id: 1,
+            move_date: moveDate,
+            modus: true,
+          });
+        const [oldId] = await create('testQueenOld', '2024-06-10');
+        const [newId] = await create('testQueenNew', '2025-06-10');
+        const queens = await getQueensByIds(db, hive.user_id, [oldId, newId]);
+        const modus = (id: number) => queens.find((q) => q.id === id)?.modus;
+        expect(modus(oldId)).toBe(false);
+        expect(modus(newId)).toBe(true);
+        await db
+          .deleteFrom('queens')
+          .where('id', 'in', [oldId, newId])
+          .execute();
+      } finally {
+        if (timeZone === undefined) delete process.env.TZ;
+        else process.env.TZ = timeZone;
+      }
     });
   });
 

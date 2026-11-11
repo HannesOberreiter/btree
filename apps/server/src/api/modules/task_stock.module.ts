@@ -37,7 +37,7 @@ interface TaskState {
   id: number;
   type_id: number | null;
   amount: number | null;
-  date: Date | null;
+  date: Date;
   done: boolean;
   deleted: boolean;
   deleted_at: Date | null;

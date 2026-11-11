@@ -439,6 +439,21 @@ describe('task stock bookings', () => {
         expect(String(charge.date)).toEqual('2026-03-01');
     });
 
+    it('books a task without date on today', async () => {
+      const ids = await createFeed({ date: undefined });
+      const charges = await feedCharges(ids);
+      expect(charges).toHaveLength(2);
+      for (const charge of charges) expect(String(charge.date)).toEqual(today);
+
+      // The bookings follow a soft delete and keep their date.
+      const res = await patch('/feed/batchDelete', { ids });
+      expect(res.statusCode).toEqual(200);
+      for (const charge of await feedCharges(ids)) {
+        expect(charge.deleted).toBe(true);
+        expect(String(charge.date)).toEqual(today);
+      }
+    });
+
     it('mirrors soft delete, restore, and hard delete', async () => {
       const ids = await createFeed({});
       let res = await patch('/feed/batchDelete', { ids });

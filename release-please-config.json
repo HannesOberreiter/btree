@@ -50,6 +50,7 @@
       "release-type": "simple",
       "component": "btree-client",
       "include-component-in-tag": true,
+      "exclude-paths": ["apps/web/src/api/generated"],
       "changelog-sections": [
         {
           "type": "feat",

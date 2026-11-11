@@ -127,7 +127,10 @@ export const taskCreateBodySchema = taskDataSchema.extend({
 
 export const taskPatchBodySchema = z.object({
   ids: z.array(numberSchema),
-  data: taskDataSchema.partial(),
+  data: taskDataSchema.partial().extend({
+    date: z.string().min(1).optional(),
+    enddate: z.string().min(1).optional(),
+  }),
 });
 
 export const taskStatusBodySchema = z.object({
@@ -137,8 +140,8 @@ export const taskStatusBodySchema = z.object({
 
 export const taskDateBodySchema = z.object({
   ids: z.array(numberSchema),
-  start: z.string(),
-  end: z.string(),
+  start: z.string().min(1),
+  end: z.string().min(1),
 });
 
 export const taskIdsBodySchema = z.object({ ids: z.array(numberSchema) });
