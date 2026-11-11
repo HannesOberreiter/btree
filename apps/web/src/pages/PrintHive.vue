@@ -86,7 +86,7 @@ const listData = computed(() => {
         <div v-if="data.queen_location">
           <b>{{ $t('queen') }}:</b> {{ data.queen_location.queen_name }}
           {{ data.queen_location.queen_mark_colour }}, {{ $t('birth') }}:
-          {{ useDate.displayFormat(data.queen_location.date) }}
+          {{ useDate.displayFormat(data.queen_location.queen.date) }}
           <div>
             <span v-if="data.queen_location.queen.race"
               >{{ data.queen_location.queen.race.name }},
