@@ -265,7 +265,8 @@ export async function createTodos(
 
     const repeat = body.repeat ?? 0;
     const interval = body.interval ?? 0;
-    let currentDate = body.date;
+    // Old clients can send an empty date, the todo then gets today.
+    let currentDate = body.date || dayjs().format('YYYY-MM-DD');
     for (let index = 0; index <= repeat; index++) {
       if (index > 0) {
         currentDate = dayjs(currentDate)
@@ -295,7 +296,7 @@ export async function updateTodos(
     .updateTable('todos')
     .set({
       ...(body.data.name !== undefined && { name: body.data.name }),
-      ...(body.data.date !== undefined && { date: new Date(body.data.date) }),
+      ...(body.data.date && { date: new Date(body.data.date) }),
       ...(body.data.note !== undefined && { note: body.data.note }),
       ...(body.data.url !== undefined && { url: body.data.url }),
       ...(body.data.done !== undefined && { done: body.data.done }),

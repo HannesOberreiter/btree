@@ -287,7 +287,8 @@ export function createMovedates(
         .values({
           apiary_id: body.apiary_id,
           hive_id: hiveId,
-          date: new Date(body.date),
+          // Old clients can send an empty date, the movement then gets now.
+          date: body.date ? new Date(body.date) : new Date(),
           bee_id: beeId,
         })
         .executeTakeFirstOrThrow();
@@ -318,7 +319,7 @@ export function updateMovedates(
           apiary_id: body.data.apiary_id,
         }),
         ...(body.data.hive_id !== undefined && { hive_id: body.data.hive_id }),
-        ...(body.data.date !== undefined && { date: new Date(body.data.date) }),
+        ...(body.data.date && { date: new Date(body.data.date) }),
       })
       .where('id', 'in', body.ids)
       .where('apiary_id', 'in', (query) =>

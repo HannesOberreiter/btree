@@ -55,10 +55,8 @@ function decimalSelection(
 
 function harvestValues(data: TaskCreateBody | TaskPatchBody['data']) {
   return {
-    ...(data.date !== undefined && { date: new Date(data.date) }),
-    ...(data.enddate !== undefined && {
-      enddate: data.enddate === null ? null : new Date(data.enddate),
-    }),
+    ...(data.date && { date: new Date(data.date) }),
+    ...(data.enddate && { enddate: new Date(data.enddate) }),
     ...(data.amount !== undefined && { amount: data.amount }),
     ...(data.frames !== undefined && { frames: data.frames }),
     ...(data.water !== undefined && { water: data.water }),
@@ -210,14 +208,12 @@ export function createHarvests(
       actor.companyId,
       body.hive_ids,
     );
-    const schedule = body.date
-      ? taskSchedule(
-          body.date,
-          body.enddate,
-          body.interval ?? 0,
-          body.repeat ?? 0,
-        )
-      : [{ date: undefined, enddate: undefined }];
+    const schedule = taskSchedule(
+      body.date,
+      body.enddate,
+      body.interval ?? 0,
+      body.repeat ?? 0,
+    );
     const ids: number[] = [];
     for (const hiveId of hives) {
       for (const dates of schedule) {
@@ -225,8 +221,8 @@ export function createHarvests(
           .insertInto('harvests')
           .values({
             ...harvestValues(body),
-            ...(dates.date !== undefined && { date: dates.date }),
-            ...(dates.enddate !== undefined && { enddate: dates.enddate }),
+            date: dates.date,
+            enddate: dates.enddate,
             hive_id: hiveId,
             bee_id: actor.beeId,
             user_id: actor.companyId,

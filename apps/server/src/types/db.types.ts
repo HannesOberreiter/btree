@@ -192,14 +192,14 @@ export interface CalendarCheckups {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
   creators: Generated<string | null>;
-  date: Generated<Date | null>;
+  date: Date;
   done: Generated<ColumnType<
     boolean,
     boolean | number,
     boolean | number
   > | null>;
   editors: Generated<string | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_ids: Generated<string | null>;
   hive_names: Generated<string | null>;
   task_ids: Generated<string | null>;
@@ -215,14 +215,14 @@ export interface CalendarFeeds {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
   creators: Generated<string | null>;
-  date: Generated<Date | null>;
+  date: Date;
   done: Generated<ColumnType<
     boolean,
     boolean | number,
     boolean | number
   > | null>;
   editors: Generated<string | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_ids: Generated<string | null>;
   hive_names: Generated<string | null>;
   task_ids: Generated<string | null>;
@@ -238,14 +238,14 @@ export interface CalendarHarvests {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
   creators: Generated<string | null>;
-  date: Generated<Date | null>;
+  date: Date;
   done: Generated<ColumnType<
     boolean,
     boolean | number,
     boolean | number
   > | null>;
   editors: Generated<string | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_ids: Generated<string | null>;
   hive_names: Generated<string | null>;
   task_ids: Generated<string | null>;
@@ -284,7 +284,7 @@ export interface CalendarTreatments {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
   creators: Generated<string | null>;
-  date: Generated<Date | null>;
+  date: Date;
   disease_id: Generated<number | null>;
   disease_name: Generated<string | null>;
   done: Generated<ColumnType<
@@ -293,7 +293,7 @@ export interface CalendarTreatments {
     boolean | number
   > | null>;
   editors: Generated<string | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_ids: Generated<string | null>;
   hive_names: Generated<string | null>;
   task_ids: Generated<string | null>;
@@ -419,7 +419,7 @@ export interface Checkups {
   > | null>;
   comb: Generated<Decimal | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */
@@ -444,7 +444,7 @@ export interface Checkups {
     boolean | number
   > | null>;
   emptyframes: Generated<number | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   foundation: Generated<number | null>;
   hive_id: Generated<number | null>;
   honeyframes: Generated<number | null>;
@@ -480,7 +480,7 @@ export interface Checkups {
 export interface CheckupsApiaries {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
-  checkup_date: Generated<Date | null>;
+  checkup_date: Date;
   checkup_id: Generated<number>;
   /**
    * Company
@@ -585,7 +585,7 @@ export interface Feeds {
    */
   bee_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */
@@ -604,7 +604,7 @@ export interface Feeds {
    * Editor
    */
   edit_id: Generated<number | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_id: Generated<number | null>;
   id: Generated<number>;
   note: Generated<string | null>;
@@ -620,7 +620,7 @@ export interface Feeds {
 export interface FeedsApiaries {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
-  feed_date: Generated<Date | null>;
+  feed_date: Date;
   feed_id: Generated<number>;
   /**
    * Company
@@ -676,7 +676,7 @@ export interface Harvests {
   bee_id: Generated<number | null>;
   charge: Generated<string | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */
@@ -695,7 +695,7 @@ export interface Harvests {
    * Editor
    */
   edit_id: Generated<number | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   frames: Generated<Decimal | null>;
   hive_id: Generated<number | null>;
   id: Generated<number>;
@@ -713,7 +713,7 @@ export interface Harvests {
 export interface HarvestsApiaries {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
-  harvest_date: Generated<Date | null>;
+  harvest_date: Date;
   harvest_id: Generated<number>;
   /**
    * Company
@@ -875,7 +875,7 @@ export interface Movedates {
    */
   bee_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * Editor
    */
@@ -891,7 +891,7 @@ export interface MovedatesCounts {
 }
 
 export interface MovedatesPreviousApiary {
-  current_move_date: Generated<Date | null>;
+  current_move_date: Date | null;
   current_move_id: Generated<number | null>;
   hive_id: Generated<number | null>;
   previous_apiary_id: Generated<number | null>;
@@ -1204,7 +1204,7 @@ export interface Todos {
    */
   bee_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   done: Generated<ColumnType<
     boolean,
     boolean | number,
@@ -1259,7 +1259,7 @@ export interface Treatments {
    */
   bee_id: Generated<number | null>;
   created_at: Generated<Date | null>;
-  date: Generated<Date | null>;
+  date: Date;
   /**
    * if element is deleted (soft delete)
    */
@@ -1279,7 +1279,7 @@ export interface Treatments {
    * Editor
    */
   edit_id: Generated<number | null>;
-  enddate: Generated<Date | null>;
+  enddate: Date;
   hive_id: Generated<number | null>;
   id: Generated<number>;
   note: Generated<string | null>;
@@ -1301,7 +1301,7 @@ export interface Treatments {
 export interface TreatmentsApiaries {
   apiary_id: Generated<number>;
   apiary_name: Generated<string | null>;
-  treatment_date: Generated<Date | null>;
+  treatment_date: Date;
   treatment_id: Generated<number>;
   /**
    * Company

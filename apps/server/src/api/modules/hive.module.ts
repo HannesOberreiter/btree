@@ -616,7 +616,8 @@ export async function createHives(
         .insertInto('movedates')
         .values({
           apiary_id: body.apiary_id,
-          date: new Date(body.date),
+          // Old clients can send an empty date, the movement then gets now.
+          date: body.date ? new Date(body.date) : new Date(),
           hive_id: hiveId,
           bee_id: beeId,
         })

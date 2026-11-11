@@ -121,7 +121,10 @@ export const checkupCreateSchema = checkupDataSchema.extend({
   repeat: z.number().min(0).max(15),
 });
 
-export const checkupUpdateDataSchema = checkupDataSchema.partial();
+export const checkupUpdateDataSchema = checkupDataSchema.partial().extend({
+  date: z.string().min(1).optional(),
+  enddate: z.string().min(1).optional(),
+});
 
 export const checkupBatchUpdateSchema = z.object({
   ids: z.array(numberSchema),
