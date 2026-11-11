@@ -7771,7 +7771,7 @@ export interface paths {
         content: {
           'application/json': {
             data: {
-              date?: string | null;
+              date?: string;
               hive_id?: null | 'empty';
               mark_colour?: string | null;
               mating_id?: number | null;

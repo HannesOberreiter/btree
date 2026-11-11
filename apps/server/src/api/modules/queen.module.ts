@@ -451,9 +451,7 @@ function queenValues(data: PatchBody['data']) {
     ...(data.name !== undefined && { name: data.name }),
     ...(data.mark_colour !== undefined && { mark_colour: data.mark_colour }),
     ...(data.mother !== undefined && { mother: data.mother }),
-    ...(data.date !== undefined && {
-      date: data.date ? new Date(data.date) : null,
-    }),
+    ...(data.date && { date: new Date(data.date) }),
     ...(data.move_date !== undefined && {
       move_date: data.move_date ? new Date(data.move_date) : null,
     }),
@@ -494,7 +492,9 @@ export async function createQueens(
       const result = await trx
         .insertInto('queens')
         .values({
-          ...queenValues({ ...body, hive_id: hiveId }),
+          ...queenValues({ ...body, date: undefined, hive_id: hiveId }),
+          // Old clients can send no birth date, the queen then gets today.
+          date: body.date ? new Date(body.date) : new Date(),
           name:
             repeat > 1 ? `${body.name}${(body.start ?? 0) + index}` : body.name,
           user_id: companyId,
