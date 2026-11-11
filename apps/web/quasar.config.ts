@@ -205,7 +205,11 @@ export default defineConfig(ctx => {
               'style-src-elem': ["'self'", "'unsafe-inline'"],
               'style-src': ["'self'", "'unsafe-inline'"],
               'font-src': ["'self'", 'https://*.btree.at', 'data:'],
-              'frame-src': ['https://*.meteoblue.com', 'https://*.paypal.com']
+              'frame-src': [
+                "'self'",
+                'https://*.meteoblue.com',
+                'https://*.paypal.com'
+              ]
             },
             build: {
               sri: false,
