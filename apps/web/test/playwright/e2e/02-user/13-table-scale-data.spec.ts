@@ -6,8 +6,7 @@ const chance = new Chance(12_345);
 test.describe('user - Scale Data Table', () => {
   const form = 'form-scale-data';
 
-  test.beforeEach(async ({ page, showNewestFirst }) => {
-    await showNewestFirst('scale_data');
+  test.beforeEach(async ({ page }) => {
     await page.goto('/table/scale_data');
   });
 

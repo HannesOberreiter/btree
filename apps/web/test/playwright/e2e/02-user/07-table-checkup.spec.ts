@@ -3,8 +3,7 @@ import { expect, test } from '../../support/user-helpers';
 test.describe('user - Checkup Table', () => {
   const form = 'form-quicktool';
 
-  test.beforeEach(async ({ page, showNewestFirst }) => {
-    await showNewestFirst('checkup');
+  test.beforeEach(async ({ page }) => {
     await page.goto('/table/checkup');
   });
 

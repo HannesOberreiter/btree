@@ -6,8 +6,7 @@ const chance = new Chance(12_345);
 test.describe('user - Charge Table', () => {
   const form = 'form-charge';
 
-  test.beforeEach(async ({ page, showNewestFirst }) => {
-    await showNewestFirst('charge');
+  test.beforeEach(async ({ page }) => {
     await page.goto('/table/charge');
   });
 
