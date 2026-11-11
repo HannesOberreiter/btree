@@ -125,9 +125,12 @@ async function onSubmit() {
                           <div class="col-7 q-pl-md">
                             <q-slider
                               v-model="settings.checkup.ratings.max"
+                              data-cy="setting-field-rating-max"
                               :min="0"
                               :max="10"
                               :step="1"
+                              :disable="isSubmitting || isLoading"
+                              @change="onSubmit"
                             />
                           </div>
                         </div>
