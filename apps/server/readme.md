@@ -112,6 +112,16 @@ Use disposable databases for development seeding and E2E. The E2E global setup r
 pnpm run test:e2e
 ```
 
+To use the same database and Redis as CI, start the containers of `infra/test/compose.yml` and run the tests with `env/ci.env`:
+
+```bash
+docker compose -f ../../infra/test/compose.yml up -d --wait
+pnpm run ci:e2e
+docker compose -f ../../infra/test/compose.yml down
+```
+
+`scripts/e2e.sh` in the repository root runs the Playwright tests of the web app against this server.
+
 For development, run `pnpm run dev:build` and `pnpm run dev:serve` in separate terminals. Run `pnpm run lint` separately; CI runs build and E2E, but not lint. Use `pnpm run lint:fix` only when you intend to apply formatting and lint fixes.
 
 ## Database: MariaDB

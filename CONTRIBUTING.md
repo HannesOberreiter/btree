@@ -20,7 +20,7 @@ This repository holds two apps. Each app is a separate pnpm project with its own
 
 1. Fork the repository and create a branch from `beta`.
 2. Make your change. Keep one topic per pull request.
-3. Run lint and the tests of the app that you changed.
+3. Run lint and the tests of the app that you changed. `scripts/e2e.sh` runs the end-to-end tests with Docker, the same way as CI.
 4. Open the pull request against `beta`.
 
 The pull request title becomes the commit message and the changelog entry. Write it as a [Conventional Commit](https://www.conventionalcommits.org/), for example `fix(web): show the hive name in the calendar`. These types start a release of the changed app: `feat`, `fix`, `perf`, `chore`, `refactor`, `style`. These types do not: `build`, `ci`, `docs`, `test`.

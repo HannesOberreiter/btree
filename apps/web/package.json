@@ -15,7 +15,6 @@
     "postinstall": "quasar prepare",
     "api:update": "node scripts/update-api.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ci": "playwright test --reporter=line",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {

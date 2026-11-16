@@ -153,10 +153,7 @@ test('speech processes repeated and different commands in separate sessions', as
   page
 }) => {
   await page.goto('/');
-  const button = page.getByRole('button', {
-    name: 'Speech recognition',
-    exact: true
-  });
+  const button = page.locator('[data-cy="btn-speech"]');
   for (const [index, command] of [
     'calendar',
     'calendar',
@@ -179,7 +176,8 @@ test('speech processes repeated and different commands in separate sessions', as
         page.evaluate(() => (window as TestWindow).speechTest.running)
       )
       .toBe(false);
-    await success.getByRole('button', { name: 'X', exact: true }).click();
+    // The close button is the only button of a notification.
+    await success.getByRole('button').click();
     await expect(success).not.toBeAttached();
   }
 });
@@ -188,9 +186,7 @@ test('speech ignores interim results and uses the final transcript', async ({
   page
 }) => {
   await page.goto('/');
-  await page
-    .getByRole('button', { name: 'Speech recognition', exact: true })
-    .click();
+  await page.locator('[data-cy="btn-speech"]').click();
   await expect
     .poll(() => page.evaluate(() => (window as TestWindow).speechTest.running))
     .toBe(true);
@@ -221,10 +217,7 @@ test('speech can stop, restart, and recover after permission denial', async ({
   page
 }) => {
   await page.goto('/');
-  const button = page.getByRole('button', {
-    name: 'Speech recognition',
-    exact: true
-  });
+  const button = page.locator('[data-cy="btn-speech"]');
   await button.click();
   await expect
     .poll(() => page.evaluate(() => (window as TestWindow).speechTest.running))
@@ -242,7 +235,7 @@ test('speech can stop, restart, and recover after permission denial', async ({
     .poll(() => page.evaluate(() => (window as TestWindow).speechTest.running))
     .toBe(false);
   await expect(
-    page.locator('[data-cy="notification"]').filter({ hasText: 'Found' })
+    page.locator('[data-cy="notification"][data-notification-type="positive"]')
   ).toHaveCount(0);
   await button.click();
   await expect
@@ -262,9 +255,7 @@ test.describe('unsupported speech browser', () => {
   test.use({ speechSupported: false });
   test('disables the microphone', async ({ page }) => {
     await page.goto('/');
-    await expect(
-      page.getByRole('button', { name: 'Speech recognition', exact: true })
-    ).toBeDisabled();
+    await expect(page.locator('[data-cy="btn-speech"]')).toBeDisabled();
   });
 });
 
@@ -299,8 +290,7 @@ for (const { status, pattern } of [
     await page.getByText('Vibration test', { exact: true }).click();
     await page.clock.setFixedTime(new Date('2026-09-15T12:00:02Z'));
     await page
-      .locator('[data-cy="dialog-event"]')
-      .getByText('Open', { exact: false })
+      .locator('[data-cy="dialog-event"] [data-cy="btn-dialog-event-status"]')
       .click();
     await expect
       .poll(() =>

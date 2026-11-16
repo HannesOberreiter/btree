@@ -74,6 +74,9 @@ const calendarOptions = reactive({
   footerToolbarClass: 'calendar-footer-toolbar',
   buttonClass: 'calendar-toolbar-button',
   eventInnerClass: 'calendar-event-content',
+  buttons: {
+    next: { didMount: ({ el }) => (el.dataset.cy = 'calendar-btn-next') }
+  },
   headerToolbar: {
     left: 'prevYear,prev,next,nextYear today',
     right: 'title'

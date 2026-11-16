@@ -133,6 +133,7 @@ function editTask() {
               <b>{{ $t('status') }}: </b>
               <span
                 class="show-pointer"
+                data-cy="btn-dialog-event-status"
                 :class="eventInfo.done ? 'text-green-8' : 'text-red-8'"
                 @click="updateStatus()"
                 >{{ eventInfo.done ? $t('done') : $t('open') }}

@@ -18,7 +18,7 @@ test.describe('user - Hive Table', () => {
     await dataCy('btn-form-save').click();
     await expect(dataCy('form-hive')).not.toBeAttached();
     // The table sorts by name, so the new hive can be on any page.
-    await page.getByPlaceholder('Search', { exact: true }).fill(name);
+    await dataCy('input-table-search').fill(name);
 
     await tableEditRow('form-hive', name);
     await tableDeleteRow(name);

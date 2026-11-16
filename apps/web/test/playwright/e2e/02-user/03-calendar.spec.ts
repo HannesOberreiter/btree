@@ -13,14 +13,8 @@ test.describe('user - Calendar', () => {
     const calendar = page.locator('.calendar-container');
     await expect(calendar.getByRole('grid')).toBeAttached();
 
-    const btnToday = calendar.getByRole('button', {
-      name: 'This Month',
-      exact: true
-    });
-    const btnNext = calendar.getByRole('button', {
-      name: 'Next Month',
-      exact: true
-    });
+    const btnToday = dataCy('calendar-btn-today');
+    const btnNext = dataCy('calendar-btn-next');
 
     await expect(btnToday).toBeDisabled();
     await btnNext.click();
@@ -87,7 +81,7 @@ test.describe('user - Calendar', () => {
     await page.locator('.btn-confirm').click();
     await expect(dataCy('dialog-event')).not.toBeAttached();
 
-    await calendar.getByRole('button', { name: 'Abos', exact: true }).click();
+    await dataCy('calendar-btn-sources').click();
     await expect(dataCy('dialog-calendar-setting')).toBeAttached();
     await dataCy('btn-close-dialog').click();
     await expect(dataCy('dialog-calendar-setting')).not.toBeAttached();

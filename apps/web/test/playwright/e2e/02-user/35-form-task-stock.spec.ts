@@ -1,4 +1,5 @@
 import type { Response } from '@playwright/test';
+import { t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 const backendURL =
@@ -133,14 +134,12 @@ test.describe('user - Task stock booking', () => {
       await expect(dataCy('form-quicktool')).toBeAttached();
       await selectFirstHive();
       await expect(page.locator('.q-menu')).not.toBeAttached();
-      await page.getByRole('combobox', { name: /^(Typ|Type)$/ }).click();
+      await dataCy('dropdown-feed_types').click();
       await page
         .locator('.q-menu .q-item')
         .filter({ hasText: feedName })
         .click();
-      await page
-        .getByRole('spinbutton', { name: /^(Menge|Amount)$/ })
-        .fill('10');
+      await page.locator('[name=amount]').fill('10');
 
       await dataCy('btn-task-stock').click();
       const chip = dataCy('chip-task-stock');
@@ -189,7 +188,7 @@ test.describe('user - Task stock booking', () => {
       await expect(
         page
           .locator('[data-cy=notification]')
-          .filter({ hasText: /^(Erfolg|Success)!/ })
+          .filter({ hasText: new RegExp(`^${t('success')}`) })
       ).toBeVisible();
       feedIds.push(...((await skipped.json()) as number[]));
 
@@ -323,9 +322,7 @@ test.describe('user - Task stock booking', () => {
 
       // An amount edit shows only the difference: 11.85 kg - 7.9 kg.
       await page.goto(`/edit/feed/${feedIds[0]}`);
-      await page
-        .getByRole('spinbutton', { name: /^(Menge|Amount)$/ })
-        .fill('15');
+      await page.locator('[name=amount]').fill('15');
       const editPromise = page.waitForResponse(
         response =>
           response.request().method() === 'PATCH' &&

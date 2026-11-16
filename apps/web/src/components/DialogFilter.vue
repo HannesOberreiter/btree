@@ -595,7 +595,11 @@ function resetFilter() {
         </div>
       </q-card-section>
       <q-card-actions align="center">
-        <BtnBase color="primary" @click="onDialogOK()">
+        <BtnBase
+          color="primary"
+          data-cy="btn-filter-apply"
+          @click="onDialogOK()"
+        >
           {{ $t('filter') }}
         </BtnBase>
         <BtnBase color="negative darken-1" @click="resetFilter()">

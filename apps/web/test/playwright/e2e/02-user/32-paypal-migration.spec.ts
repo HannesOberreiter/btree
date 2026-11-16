@@ -154,10 +154,13 @@ const test = base.extend<{
 async function openPayment(page: Page) {
   await page.goto('/premium');
   await page.locator('input[type="number"]').fill('75');
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('button', { name: '2 Year', exact: true }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByText('Pay with PayPal', { exact: true }).click();
+  await page.locator('[data-cy="btn-premium-amount-next"]').click();
+  await page.locator('[data-cy="btn-premium-years-2"]').click();
+  await page.locator('[data-cy="btn-premium-duration-next"]').click();
+  await page
+    .locator('[data-cy="premium-payment-paypal"] .q-item')
+    .first()
+    .click();
 }
 
 async function createOrder(page: Page) {
@@ -173,9 +176,7 @@ async function expectUnchanged(page: Page, requests: PaymentRequests) {
   await page.clock.fastForward(11000);
   // Success replaces this component with loading/confirmation, even before refresh finishes.
   await expect(page.locator('#paypal_buttons')).toBeAttached();
-  await expect(
-    page.getByText('Thank you for your contribution.', { exact: false })
-  ).not.toBeVisible();
+  await expect(page.locator('[data-cy="premium-thank-you"]')).not.toBeVisible();
   expect(requests.userRefreshes).toBe(0);
   expect(
     await page.evaluate(
@@ -199,9 +200,9 @@ test('loads EUR SDK, creates and captures order, then refreshes premium status',
     page.locator('script[src*="paypal.com/sdk/js"]')
   ).toHaveAttribute('data-user-id-token', '1');
   await page.getByRole('button', { name: 'Approve test order' }).click();
-  await expect(
-    page.getByText('Thank you for your contribution.', { exact: false })
-  ).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('[data-cy="premium-thank-you"]')).toBeVisible({
+    timeout: 20000
+  });
   expect(paymentRequests.captures).toEqual([
     '/api/v1/service/paypal/orders/TEST-ORDER-123/capture'
   ]);

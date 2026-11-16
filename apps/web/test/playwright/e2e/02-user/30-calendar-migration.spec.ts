@@ -233,7 +233,7 @@ test('calendar keeps grouped task IDs and exclusive end dates', async ({
   const refetch = page.waitForResponse(
     r => r.url().includes('/calendar/checkup') && r.request().method() === 'GET'
   );
-  await dialog.getByText('Open', { exact: false }).click();
+  await dialog.locator('[data-cy="btn-dialog-event-status"]').click();
   expect((await request).postDataJSON()).toEqual({
     status: true,
     ids: [11, 12]
@@ -287,9 +287,7 @@ test('calendar navigates views, resizes, and follows dark mode', async ({
   const calendar = page.locator('.calendar-container');
   const title = calendar.locator('.calendar-toolbar-title');
   await expect(title).toHaveText('Sep 26');
-  await calendar
-    .getByRole('button', { name: 'Next Month', exact: true })
-    .click();
+  await calendar.locator('[data-cy="calendar-btn-next"]').click();
   await expect(title).toHaveText('Oct 26');
   await page.keyboard.press('ArrowLeft');
   await expect(title).toHaveText('Sep 26');
@@ -314,16 +312,12 @@ test('calendar navigates views, resizes, and follows dark mode', async ({
   const initialWidth = await grid.evaluate(
     element => element.getBoundingClientRect().width
   );
-  await page
-    .getByRole('button', { name: 'Toggle Sidebar', exact: true })
-    .click();
+  await page.locator('[data-cy="btn-drawer"]').click();
   await expect
     .poll(() => grid.evaluate(element => element.getBoundingClientRect().width))
     .toBeGreaterThan(initialWidth + 100);
   await expectGridFits(calendar);
-  await page
-    .getByRole('button', { name: 'Toggle Sidebar', exact: true })
-    .click();
+  await page.locator('[data-cy="btn-drawer"]').click();
   await expect
     .poll(() => grid.evaluate(element => element.getBoundingClientRect().width))
     .toBeLessThan(initialWidth + 1);
@@ -343,7 +337,7 @@ test('calendar source filters and date-click form still work', async ({
   await expect(
     calendar.getByText('Migration todo', { exact: false })
   ).toBeVisible();
-  await calendar.getByRole('button', { name: 'Abos', exact: true }).click();
+  await calendar.locator('[data-cy="calendar-btn-sources"]').click();
   const settings = page.locator('[data-cy="dialog-calendar-setting"]');
   const todos = settings.locator('[data-cy="calendar-source-todo"]');
   await todos.click();
@@ -507,9 +501,10 @@ for (const { path, title } of [
       .first();
     await expect(footerButton).toHaveCSS('font-size', '12px');
     await expect(footerButton).toHaveCSS('padding', '4px 8px');
-    await expect(
-      page.getByRole('button', { name: 'Next Month', exact: true })
-    ).toHaveCSS('font-size', '14px');
+    await expect(page.locator('[data-cy="calendar-btn-next"]')).toHaveCSS(
+      'font-size',
+      '14px'
+    );
     await expect(event).toHaveCSS('overflow', 'hidden');
     // The title exceeds its available width; hidden overflow must clip it rather than wrap.
     await expect
@@ -535,9 +530,7 @@ test('scale calendar keeps notifications and automatic resizing', async ({
   const initialWidth = await grid.evaluate(
     element => element.getBoundingClientRect().width
   );
-  await page
-    .getByRole('button', { name: 'Toggle Sidebar', exact: true })
-    .click();
+  await page.locator('[data-cy="btn-drawer"]').click();
   await expect
     .poll(() => grid.evaluate(element => element.getBoundingClientRect().width))
     .toBeGreaterThan(initialWidth + 100);

@@ -131,7 +131,8 @@ function useNotification(t?: ComposerTranslation) {
       position: 'top',
       attrs: {
         'data-cy': 'notification',
-        'data-notification-id': id
+        'data-notification-id': id,
+        'data-notification-type': type
       },
       actions: [
         {

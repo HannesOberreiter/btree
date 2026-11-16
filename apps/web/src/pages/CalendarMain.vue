@@ -291,6 +291,8 @@ const calendarOptions = reactive({
   listItemEventBeforeClass: ({ event }) =>
     event.extendedProps.table === 'rearing' ? 'calendar-rearing-marker' : '',
   buttons: {
+    today: { didMount: ({ el }) => (el.dataset.cy = 'calendar-btn-today') },
+    next: { didMount: ({ el }) => (el.dataset.cy = 'calendar-btn-next') },
     dayGridMonth: { text: t('month') },
     months: { text: t('month', 2) },
     listWeek: { text: t('event', 2) },
@@ -299,7 +301,8 @@ const calendarOptions = reactive({
       text: t('abo', 2),
       click() {
         showSetting.value = true;
-      }
+      },
+      didMount: ({ el }) => (el.dataset.cy = 'calendar-btn-sources')
     }
   },
   headerToolbar: {
