@@ -135,6 +135,7 @@ function editValues(val: boolean) {
     "
     :disable="disable"
     :name="label"
+    :data-cy="`input-${label}`"
     type="number"
     :min="minValid"
     :max="maxValid"

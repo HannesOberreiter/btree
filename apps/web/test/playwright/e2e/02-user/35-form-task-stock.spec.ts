@@ -139,7 +139,7 @@ test.describe('user - Task stock booking', () => {
         .locator('.q-menu .q-item')
         .filter({ hasText: feedName })
         .click();
-      await page.locator('[name=amount]').fill('10');
+      await dataCy('input-amount').fill('10');
 
       await dataCy('btn-task-stock').click();
       const chip = dataCy('chip-task-stock');
@@ -322,7 +322,7 @@ test.describe('user - Task stock booking', () => {
 
       // An amount edit shows only the difference: 11.85 kg - 7.9 kg.
       await page.goto(`/edit/feed/${feedIds[0]}`);
-      await page.locator('[name=amount]').fill('15');
+      await dataCy('input-amount').fill('15');
       const editPromise = page.waitForResponse(
         response =>
           response.request().method() === 'PATCH' &&
