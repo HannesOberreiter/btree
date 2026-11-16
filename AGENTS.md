@@ -16,6 +16,7 @@ Monorepo of the b.tree beekeeping app. Each app is a separate pnpm project with 
 
 ## CI
 
+- `infra/test/compose.yml` has the MariaDB and Redis for the tests, locally and in CI. `scripts/e2e.sh` runs the Playwright tests of `apps/web` the same way as the `e2e` CI job; it needs Docker.
 - `.github/workflows/ci.yml` runs on every PR. Jobs that the changed paths do not need are skipped and count as passed. All jobs are required checks, also `e2e`. `pull-protection` is required only for PRs to `main`.
 - `.github/workflows/pr-title.yml` checks that the title of a PR to `beta` is a Conventional Commit. It is a required check.
 - Dependabot opens grouped update PRs to `beta` once a month (`.github/dependabot.yml`). Production dependencies get `fix(deps)` and release the app; development dependencies get `build(deps-dev)`.
