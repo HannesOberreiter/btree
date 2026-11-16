@@ -521,6 +521,7 @@ function openLink(link: string) {
         :disable="link.premium && !storeUser.isPremium"
         :caption="link.premium && !storeUser.isPremium ? $t('premium') : ''"
         dark
+        data-cy="drawer-group"
       >
         <div v-if="Array.isArray(link.menu)">
           <DrawerItem

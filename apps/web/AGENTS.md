@@ -16,15 +16,16 @@ Deployment and Android packaging documentation lives in `README.md`.
 - For backend requests, start with `src/composables/useApi.ts` and `src/composables/useBackend.ts`; query integration lives in `src/composables/useQuery.ts`.
 - For API contract changes, use `src/api/types.ts` and regenerate `src/api/generated/schema.d.ts` with `pnpm api:update`; do not hand-edit the generated schema.
 - For authenticated E2E tests, use `test/playwright/support/user-helpers.ts`; authentication runs per test, not through a shared setup project.
+- In E2E tests, select elements by `data-cy`, so that text and translation changes do not break the tests. For a library element without a test id, build its name with `t()` from `test/playwright/support/i18n.ts`. Test data and mocked API data can stay as literals.
 - For Android packaging changes, read the TWA section of `README.md` and check `public/.well-known/assetlinks.json`.
 
 ## Running and verifying
 
 - Use the declared Node range `^28 || ^26 || ^24 || ^22.22.0` and pinned pnpm `11.5.3` from `package.json`; CI uses Node 22.
 - For local setup, copy `example.env` to `.env`, but set `BACKEND_URL` to an absolute backend URL ending in `/api`, using the actual backend port.
-- Make the backend available before exercising API flows or E2E tests. For local backend setup, follow `apps/server/readme.md`.
-- Use `pnpm test:e2e`, not `pnpm test`, which exits successfully without testing. Start the frontend and backend yourself; Playwright starts neither.
-- For E2E runs, export matching `BACKEND_URL`, `PLAYWRIGHT_BACKEND_URL`, and `PLAYWRIGHT_API_ORIGIN` values in the shell; Playwright does not load `.env`. `BACKEND_URL` includes `/api`; `PLAYWRIGHT_BACKEND_URL` is the backend origin. Keep the frontend on `localhost` for the authenticated fixture's cookie; the default frontend URL is `http://localhost:9000`.
+- Make the backend available before exercising API flows. For local backend setup, follow `apps/server/readme.md`.
+- Run the E2E tests with `scripts/e2e.sh` from the repository root. It starts the containers, the server and the web app, and passes its arguments to `playwright test`; the script header lists the port options. `pnpm test` exits successfully without testing.
+- To run `pnpm test:e2e` against a frontend and backend that you started yourself, export matching `BACKEND_URL`, `PLAYWRIGHT_BACKEND_URL`, and `PLAYWRIGHT_API_ORIGIN` values in the shell; Playwright does not load `.env`. `BACKEND_URL` includes `/api`; `PLAYWRIGHT_BACKEND_URL` is the backend origin. Keep the frontend on `localhost` for the authenticated fixture's cookie; the default frontend URL is `http://localhost:9000`.
 - When PWA dependencies are missing, run `pnpm --dir src-pwa install`; the root install does not include that separate package.
 - For API regeneration against a different backend, set `BTREE_OPENAPI_URL`; the generator defaults to `http://localhost:8101/api/v1/openapi.json`.
 

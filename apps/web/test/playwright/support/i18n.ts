@@ -1,10 +1,20 @@
 import en from '../../../src/i18n/en/index.json' with { type: 'json' };
 
-type Message = keyof typeof en;
+// Message keys, with a dot for nested keys, like "sugarHelper.threeToTwo".
+type Key<T> = {
+  [K in keyof T & string]: T[K] extends string ? K : `${K}.${Key<T[K]>}`;
+}[keyof T & string];
+
+type Message = Key<typeof en>;
 
 // English text of a message, like $t(key, count) for count 1 or 2.
 export function t(key: Message, count: 1 | 2 = 1): string {
-  const value = en[key];
+  const value = key
+    .split('.')
+    .reduce<unknown>(
+      (node, part) => (node as Record<string, unknown> | undefined)?.[part],
+      en
+    );
   if (typeof value !== 'string') {
     throw new Error(`No message: ${key}`);
   }

@@ -197,6 +197,7 @@ async function redirect() {
           color="orange-6"
           class="full-width text-white q-mb-xs"
           :label="`${$t('lastVisit')}: ${truncatedLastUrl}`"
+          data-cy="btn-login-last-visit"
           :disable="isSubmitting"
           :loading="isSubmitting"
         />

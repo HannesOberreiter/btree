@@ -1,0 +1,35 @@
+# Disposable MariaDB and Redis for the tests, locally and in CI. The
+# settings match apps/server/env/ci.env. The database is in memory, so each
+# start gives an empty database.
+#
+#   docker compose -f infra/test/compose.yml up -d --wait
+#   docker compose -f infra/test/compose.yml down
+#
+# Set TEST_DB_PORT or TEST_REDIS_PORT when a host port is in use.
+name: btree-test
+
+services:
+  mariadb:
+    image: mariadb:lts
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: ci_test
+    tmpfs:
+      - /var/lib/mysql
+    ports:
+      - ${TEST_DB_PORT:-3306}:3306
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis
+    ports:
+      - ${TEST_REDIS_PORT:-6379}:6379
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 5s
+      retries: 30

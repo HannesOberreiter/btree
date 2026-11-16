@@ -113,7 +113,11 @@ function requestInvoice() {
 }
 
 const yearOptions = computed(() =>
-  [1, 2, 3, 4, 5].map(n => ({ value: n, label: `${n} ${t('year')}` }))
+  [1, 2, 3, 4, 5].map(n => ({
+    value: n,
+    label: `${n} ${t('year')}`,
+    attrs: { 'data-cy': `btn-premium-years-${n}` }
+  }))
 );
 
 const donationLabel = computed(() => `€ ${donation.value}`);
@@ -201,6 +205,7 @@ async function successPayment(newDate: string) {
       <div
         v-if="paid"
         class="bg-positive text-weight-bold text-white q-pa-md rounded-borders"
+        data-cy="premium-thank-you"
         v-html="$t('membership.thankYou')"
       />
 
@@ -291,6 +296,7 @@ async function successPayment(newDate: string) {
               <q-btn
                 color="primary"
                 :label="$t('next')"
+                data-cy="btn-premium-amount-next"
                 @click="step = 'duration'"
               />
             </q-stepper-navigation>
@@ -318,6 +324,7 @@ async function successPayment(newDate: string) {
                 color="primary"
                 :label="$t('next')"
                 class="q-mr-sm"
+                data-cy="btn-premium-duration-next"
                 @click="step = 'payment'"
               />
               <q-btn flat :label="$t('back')" @click="step = 'amount'" />
@@ -349,6 +356,7 @@ async function successPayment(newDate: string) {
                 <q-expansion-item
                   expand-separator
                   icon="fab fa-paypal"
+                  data-cy="premium-payment-paypal"
                   :label="$t('payment.paypal')"
                   :caption="$t('payment.paypalDescription')"
                 >
