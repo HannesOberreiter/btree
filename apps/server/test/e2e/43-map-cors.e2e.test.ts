@@ -6,7 +6,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Application } from '../../src/config/app.config.js';
+import { Application, parseAuthorized } from '../../src/config/app.config.js';
 import { Logger } from '../../src/services/logger.service.js';
 
 const fixtures = vi.hoisted(() => ({ handlerCalls: 0 }));
@@ -15,7 +15,8 @@ const fixtures = vi.hoisted(() => ({ handlerCalls: 0 }));
 // databases, Redis connections, or application data.
 vi.mock('../../src/config/environment.config.js', () => ({
   env: 'staging',
-  authorized: 'https://beta.btree.at,https://www.btree.at,api-beta.btree.at',
+  authorized:
+    'https://beta.btree.at,https://www.btree.at,https://api-beta.btree.at',
   sessionSecret: 'isolated-test-session-secret-at-least-32-characters',
 }));
 vi.mock('../../src/servers/redis.server.js', () => ({
@@ -82,6 +83,39 @@ describe('cache-safe application CORS', () => {
       expect(response.headers['set-cookie']).toBeUndefined();
     },
   );
+
+  it.each([
+    'https://beta.bt',
+    'https://beta.btree.a',
+    'beta.btree.at',
+    'https://beta.btree.at.example.invalid',
+  ])(
+    'rejects Origin %s that is only part of an allowed origin',
+    async (origin) => {
+      const response = await server.inject({ url, headers: { host, origin } });
+      expect(response.statusCode).toBe(406);
+      expect(response.headers['access-control-allow-origin']).toBeUndefined();
+      expect(fixtures.handlerCalls).toBe(0);
+    },
+  );
+
+  it('rejects a Host fallback that is only part of an allowed hostname', async () => {
+    const response = await server.inject({
+      url,
+      headers: { host: 'api-beta.bt' },
+    });
+    expect(response.statusCode).toBe(406);
+    expect(fixtures.handlerCalls).toBe(0);
+  });
+
+  it('accepts a Host fallback with a port', async () => {
+    const response = await server.inject({
+      url,
+      headers: { host: 'api-beta.btree.at:8443' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  });
 
   it('rejects a disallowed Origin without granting CORS or running the handler', async () => {
     const response = await server.inject({
@@ -173,6 +207,15 @@ describe('cache-safe application CORS', () => {
     );
   });
 
+  it('rejects a Referer whose origin is only part of an allowed origin', async () => {
+    const response = await server.inject({
+      url,
+      headers: { host, referer: 'https://beta.bt/map' },
+    });
+    expect(response.statusCode).toBe(406);
+    expect(fixtures.handlerCalls).toBe(0);
+  });
+
   it('preserves wildcard CORS on external routes', async () => {
     const response = await server.inject({
       url: '/api/v1/external/example',
@@ -183,5 +226,34 @@ describe('cache-safe application CORS', () => {
     expect(
       response.headers['access-control-allow-credentials'],
     ).toBeUndefined();
+  });
+});
+
+describe('parseAuthorized', () => {
+  it('returns exact origins and hostnames', () => {
+    const list = parseAuthorized(
+      'https://app.btree.at, http://localhost:9000/,,https://accounts.google.com',
+    );
+    expect([...list.origins]).toEqual([
+      'https://app.btree.at',
+      'http://localhost:9000',
+      'https://accounts.google.com',
+    ]);
+    expect([...list.hostnames]).toEqual([
+      'app.btree.at',
+      'localhost',
+      'accounts.google.com',
+    ]);
+  });
+
+  it.each([
+    'api-beta.btree.at',
+    'http://192.168.9.*:9000/',
+    'https://app.btree.at/path',
+    'ftp://app.btree.at',
+  ])('throws for the entry %s', (entry) => {
+    expect(() => parseAuthorized(`https://app.btree.at,${entry}`)).toThrow(
+      `AUTHORIZED entry is not an origin: ${entry}`,
+    );
   });
 });
