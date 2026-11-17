@@ -37,3 +37,4 @@ This repository owns application schema migrations and the HTTP and agent-facing
 - Put thin HTTP adapters in typed route modules. Keep static controller methods for substantial transport-specific behavior; derive authenticated scope from the session.
 - Authorize protected routes with `Guard.authorize` and explicit permitted `ROLES`; follow the route family's hook phase rather than forcing every guard into `onRequest`.
 - Define applicable HTTP body, params, query, and response schemas with Zod in `src/api/schemas/`, using `fastify-type-provider-zod` for validation and response typing.
+- When you change the MCP server `version` in `src/api/modules/mcp.module.ts`, also change `version` in `mcp-registry/server.json` and in the server card of `packages/btree_info/public/.well-known/ai-catalog.json` in `HannesOberreiter/btree_sites`, and run `mcp-publisher publish` again. The publish steps are in `mcp-registry/README.md` of the private infra repository.
