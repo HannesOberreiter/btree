@@ -697,6 +697,11 @@ describe('remote MCP routes', () => {
         .map((tool) => tool.name)
         .sort((left, right) => left.localeCompare(right)),
     );
+    for (const definition of wizBeeToolDefinitions) {
+      const tool = tools.find((listed) => listed.name === definition.name);
+      expect(definition.title.length).toBeGreaterThan(0);
+      expect(tool?.title).toBe(definition.title);
+    }
   });
 
   it('lists guided beekeeping prompts', async () => {
