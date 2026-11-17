@@ -71,6 +71,16 @@ function hostHostname(host: string) {
 
 const authorizedList = parseAuthorized(authorized);
 
+/** Paths that any origin can call, without credentials. */
+const EXTERNAL_PATHS = new Set([
+  '/api/v1/auth/google/callback',
+  '/api/v1/auth/apple/callback',
+  '/api/v1/openapi.json',
+  '/api/v1/agent/openapi.json',
+  '/api/v1/chatgpt/openapi.json',
+]);
+const EXTERNAL_PATH_PREFIXES = ['/api/v1/external/', '/api/v1/chatgpt/oauth/'];
+
 /**
  * @description Instantiate server application.
  */
@@ -169,13 +179,8 @@ export class Application {
 
       const isExternal =
         isMcp ||
-        req.url.includes('external') ||
-        req.url.includes('auth/google/callback') ||
-        req.url.includes('auth/apple/callback') ||
-        req.url.endsWith('/v1/openapi.json') ||
-        req.url.includes('agent/openapi.json') ||
-        req.url.includes('chatgpt/oauth/') ||
-        req.url.includes('chatgpt/openapi.json');
+        EXTERNAL_PATHS.has(path) ||
+        EXTERNAL_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 
       if (!isExternal) {
         // Both headers can affect the response, including its rejection status.
