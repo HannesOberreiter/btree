@@ -227,6 +227,36 @@ describe('cache-safe application CORS', () => {
       response.headers['access-control-allow-credentials'],
     ).toBeUndefined();
   });
+
+  it.each([
+    '/api/v1/external/scale/ident/key',
+    '/api/v1/auth/google/callback?code=1',
+    '/api/v1/auth/apple/callback',
+    '/api/v1/openapi.json',
+    '/api/v1/agent/openapi.json',
+    '/api/v1/chatgpt/oauth/token',
+    '/api/v1/chatgpt/openapi.json',
+  ])('treats %s as an external route', async (externalUrl) => {
+    const response = await server.inject({
+      url: externalUrl,
+      headers: { host, origin: 'https://example.invalid' },
+    });
+    expect(response.statusCode).not.toBe(406);
+    expect(response.headers['access-control-allow-origin']).toBe('*');
+  });
+
+  it.each([`${url}?x=external`, '/api/v1/public/external'])(
+    'does not treat %s as an external route',
+    async (internalUrl) => {
+      const response = await server.inject({
+        url: internalUrl,
+        headers: { host, origin: 'https://example.invalid' },
+      });
+      expect(response.statusCode).toBe(406);
+      expect(response.headers['access-control-allow-origin']).toBeUndefined();
+      expect(fixtures.handlerCalls).toBe(0);
+    },
+  );
 });
 
 describe('parseAuthorized', () => {
