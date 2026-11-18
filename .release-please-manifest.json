@@ -1,4 +1,4 @@
 {
-  "apps/server": "7.13.1",
-  "apps/web": "7.12.1"
+  "apps/server": "7.14.0",
+  "apps/web": "7.12.2"
 }

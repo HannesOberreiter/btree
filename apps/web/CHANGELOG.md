@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.12.2](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.1...btree-client-v7.12.2) (2026-11-18)
+
+
+### Bug Fixes
+
+* **deps:** apply patch updates and pin deploy actions ([#346](https://github.com/HannesOberreiter/btree/issues/346)) ([5f47f49](https://github.com/HannesOberreiter/btree/commit/5f47f49402cf26c1a4751d546f379fd169b940b5))
+* **web:** show the pest identification PDF ([#338](https://github.com/HannesOberreiter/btree/issues/338)) ([e33ecbb](https://github.com/HannesOberreiter/btree/commit/e33ecbb390ee892ad3b1d184e12d57e0b68a2de6))
+
 ## [7.12.1](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.0...btree-client-v7.12.1) (2026-11-11)
 
 
