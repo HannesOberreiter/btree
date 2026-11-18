@@ -23,6 +23,7 @@ const orderColumns: Record<
   ScaleDataOrderField,
   | 'scale_data.id'
   | 'scales.name'
+  | 'scales.dev_eui'
   | 'hives.name'
   | 'scale_data.datetime'
   | 'scale_data.weight'
@@ -35,6 +36,7 @@ const orderColumns: Record<
 > = {
   id: 'scale_data.id',
   'scale.name': 'scales.name',
+  'scale.dev_eui': 'scales.dev_eui',
   'scale.hive.name': 'hives.name',
   datetime: 'scale_data.datetime',
   weight: 'scale_data.weight',
@@ -121,6 +123,7 @@ function scaleProjection() {
   return sql<{
     id: number;
     name: string | null;
+    dev_eui: string | null;
     hive_id: number | null;
     user_id: number | null;
     hive: HiveSummary | null;
@@ -128,6 +131,7 @@ function scaleProjection() {
     JSON_OBJECT(
       'id', scales.id,
       'name', scales.name,
+      'dev_eui', scales.dev_eui,
       'hive_id', scales.hive_id,
       'user_id', scales.user_id,
       'hive', CASE WHEN hives.id IS NOT NULL THEN JSON_OBJECT(
@@ -167,7 +171,14 @@ function buildScaleDataQuery(
     );
 
   const search = input.q === undefined ? '' : String(input.q).trim();
-  if (search) query = query.where('scales.name', 'like', `%${search}%`);
+  if (search) {
+    query = query.where((eb) =>
+      eb.or([
+        eb('scales.name', 'like', `%${search}%`),
+        eb('scales.dev_eui', 'like', `%${search}%`),
+      ]),
+    );
+  }
 
   for (const filter of parseFilters(input.filters)) {
     if ('date' in filter) {

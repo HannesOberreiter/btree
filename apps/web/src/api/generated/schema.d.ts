@@ -9192,6 +9192,7 @@ export interface paths {
             | (
                 | 'id'
                 | 'scale.name'
+                | 'scale.dev_eui'
                 | 'scale.hive.name'
                 | 'datetime'
                 | 'weight'
@@ -9205,6 +9206,7 @@ export interface paths {
             | (
                 | 'id'
                 | 'scale.name'
+                | 'scale.dev_eui'
                 | 'scale.hive.name'
                 | 'datetime'
                 | 'weight'
@@ -9238,6 +9240,7 @@ export interface paths {
                 note: string | null;
                 rain: string | number | null;
                 scale?: {
+                  dev_eui: string | null;
                   hive: {
                     bee_id: number | null;
                     created_at: string | null;
@@ -9310,6 +9313,7 @@ export interface paths {
               note: string | null;
               rain: string | number | null;
               scale?: {
+                dev_eui: string | null;
                 hive: {
                   bee_id: number | null;
                   created_at: string | null;
@@ -9463,6 +9467,7 @@ export interface paths {
               note: string | null;
               rain: string | number | null;
               scale?: {
+                dev_eui: string | null;
                 hive: {
                   bee_id: number | null;
                   created_at: string | null;

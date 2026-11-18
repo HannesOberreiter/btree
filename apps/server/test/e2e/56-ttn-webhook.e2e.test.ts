@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
-import { createAgent, createAuthenticatedAgent, doRequest } from '../utils.js';
+import {
+  createAgent,
+  createAuthenticatedAgent,
+  doQueryRequest,
+  doRequest,
+} from '../utils.js';
 
 const devEui = '70B3D57ED0012345';
 const apiKey = 'ttn-webhook-e2e-key';
@@ -208,6 +213,66 @@ describe('TTN webhook', () => {
         .set({ paid: new Date('2099-01-01T00:00:00Z') })
         .where('id', '=', companyId)
         .executeTakeFirst();
+    }
+  });
+
+  it('scale data 200 - finds readings by DevEUI or scale name', async () => {
+    for (const q of [devEui.slice(4, 12), 'ttnScale']) {
+      const res = await doQueryRequest(
+        agent,
+        '/api/v1/scale_data',
+        null,
+        null,
+        { q },
+      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body.total).toBe(1);
+      expect(res.body.results[0].scale).toMatchObject({
+        id: scaleId,
+        dev_eui: devEui,
+      });
+    }
+  });
+
+  it('scale data 200 - sorts by the DevEUI', async () => {
+    const other = await doRequest(agent, 'post', '/api/v1/scale', null, null, {
+      name: 'ttnScaleSort',
+      hive_id: 1,
+      dev_eui: '0000000000000001',
+    });
+    expect(other.statusCode).toBe(200);
+    try {
+      await db
+        .insertInto('scale_data')
+        .values({ datetime: receivedAt, weight: 1, scale_id: other.body.id })
+        .execute();
+      for (const [direction, first] of [
+        ['asc', '0000000000000001'],
+        ['desc', devEui],
+      ]) {
+        const res = await doQueryRequest(
+          agent,
+          '/api/v1/scale_data',
+          null,
+          null,
+          { q: 'ttnScale', order: 'scale.dev_eui', direction },
+        );
+        expect(res.statusCode).toBe(200);
+        expect(
+          res.body.results.map(
+            (row: { scale: { dev_eui: string } }) => row.scale.dev_eui,
+          )[0],
+        ).toBe(first);
+      }
+    } finally {
+      await doRequest(
+        agent,
+        'delete',
+        '/api/v1/scale',
+        other.body.id,
+        null,
+        null,
+      );
     }
   });
 
