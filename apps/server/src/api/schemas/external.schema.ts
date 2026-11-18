@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { devEuiValueSchema } from './scale.schema.js';
+
 export const externalCalendarParamsSchema = z.object({
   source: z.string().min(1),
   api: z.string().min(1),
@@ -21,8 +23,34 @@ export const externalScaleQuerySchema = z.object({
   temp1: z.number().optional(),
   temp2: z.number().optional(),
   hum: z.number().optional(),
+  hum2: z.number().optional(),
   rain: z.number().optional(),
   note: z.string().max(300).optional(),
+});
+
+export const externalTtnParamsSchema = z.object({
+  api: z.string().min(1),
+});
+
+/**
+ * TTN v3 webhook uplink message. Only the parts that b.tree reads are
+ * validated; TTN sends many more fields.
+ */
+export const externalTtnBodySchema = z.looseObject({
+  end_device_ids: z.looseObject({
+    device_id: z.string().optional(),
+    dev_eui: devEuiValueSchema,
+  }),
+  uplink_message: z.looseObject({
+    received_at: z.iso.datetime({ offset: true }).optional(),
+    decoded_payload: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
+
+export const externalTtnResponseSchema = z.object({
+  stored: z.boolean(),
+  reason: z.enum(['no_values', 'rate_limit']).optional(),
+  id: z.number().optional(),
 });
 
 export type ExternalCalendarParams = z.infer<
@@ -31,3 +59,6 @@ export type ExternalCalendarParams = z.infer<
 export type ExternalScaleParams = z.infer<typeof externalScaleParamsSchema>;
 export type MollieWebhookBody = z.infer<typeof mollieWebhookBodySchema>;
 export type ExternalScaleQuery = z.infer<typeof externalScaleQuerySchema>;
+export type ExternalTtnParams = z.infer<typeof externalTtnParamsSchema>;
+export type ExternalTtnBody = z.infer<typeof externalTtnBodySchema>;
+export type ExternalTtnResponse = z.infer<typeof externalTtnResponseSchema>;

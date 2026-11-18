@@ -6,8 +6,8 @@ import { sql } from 'kysely';
 import type { Database } from '../../types/database.types.js';
 import type { DB } from '../../types/db.types.js';
 import type {
-  ExternalScaleParams,
   ExternalScaleQuery,
+  ExternalTtnBody,
 } from '../schemas/external.schema.js';
 import type {
   BatchDeleteBody,
@@ -29,6 +29,7 @@ const orderColumns: Record<
   | 'scale_data.temp1'
   | 'scale_data.temp2'
   | 'scale_data.humidity'
+  | 'scale_data.humidity2'
   | 'scale_data.rain'
   | 'scale_data.note'
 > = {
@@ -40,6 +41,7 @@ const orderColumns: Record<
   temp1: 'scale_data.temp1',
   temp2: 'scale_data.temp2',
   humidity: 'scale_data.humidity',
+  humidity2: 'scale_data.humidity2',
   rain: 'scale_data.rain',
   note: 'scale_data.note',
 };
@@ -54,6 +56,7 @@ type ValueFilter =
   | { temp1: number }
   | { temp2: number }
   | { humidity: number }
+  | { humidity2: number }
   | { rain: number }
   | { note: string };
 
@@ -84,6 +87,8 @@ function parseFilters(value?: string): ScaleDataFilter[] {
         return [{ temp2: candidate.temp2 }];
       if (typeof candidate.humidity === 'number')
         return [{ humidity: candidate.humidity }];
+      if (typeof candidate.humidity2 === 'number')
+        return [{ humidity2: candidate.humidity2 }];
       if (typeof candidate.rain === 'number') return [{ rain: candidate.rain }];
       if (typeof candidate.note === 'string') return [{ note: candidate.note }];
       return [];
@@ -179,6 +184,12 @@ function buildScaleDataQuery(
       query = query.where('scale_data.temp2', '=', String(filter.temp2));
     } else if ('humidity' in filter) {
       query = query.where('scale_data.humidity', '=', String(filter.humidity));
+    } else if ('humidity2' in filter) {
+      query = query.where(
+        'scale_data.humidity2',
+        '=',
+        String(filter.humidity2),
+      );
     } else if ('rain' in filter) {
       query = query.where('scale_data.rain', '=', String(filter.rain));
     } else if ('note' in filter) {
@@ -197,6 +208,7 @@ function selectScaleData(query: ReturnType<typeof buildScaleDataQuery>) {
     'scale_data.temp2',
     'scale_data.rain',
     'scale_data.humidity',
+    'scale_data.humidity2',
     'scale_data.note',
     'scale_data.scale_id',
     scaleProjection(),
@@ -250,6 +262,7 @@ export async function createScaleData(
       temp2: body.temp2 ?? null,
       rain: body.rain ?? null,
       humidity: body.humidity ?? null,
+      humidity2: body.humidity2 ?? null,
       note: body.note ?? null,
       scale_id: body.scale_id,
     })
@@ -264,6 +277,7 @@ export async function createScaleData(
       'temp2',
       'rain',
       'humidity',
+      'humidity2',
       'note',
       'scale_id',
     ])
@@ -291,6 +305,9 @@ export async function updateScaleData(
       ...(body.data.rain !== undefined && { rain: body.data.rain }),
       ...(body.data.humidity !== undefined && {
         humidity: body.data.humidity,
+      }),
+      ...(body.data.humidity2 !== undefined && {
+        humidity2: body.data.humidity2,
       }),
       ...(body.data.note !== undefined && { note: body.data.note }),
       ...(body.data.scale_id !== undefined && {
@@ -342,27 +359,38 @@ export interface WeightWarning {
   }>;
 }
 
+/**
+ * The external scale endpoints find the company by its API key. The GET
+ * endpoint finds the scale by its name, the TTN webhook by its DevEUI.
+ */
+export type ExternalScaleTarget =
+  | { api: string; ident: string }
+  | { api: string; devEui: string };
+
 export async function ingestScaleReading(
   db: Kysely<DB>,
-  params: ExternalScaleParams,
+  target: ExternalScaleTarget,
   input: ExternalScaleQuery,
 ): Promise<{ result: Record<string, unknown>; warning?: WeightWarning }> {
   const company = await db
     .selectFrom('companies')
     .select(['id', 'paid'])
-    .where('api_key', '=', params.api)
+    .where('api_key', '=', target.api)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound('Company not found');
   if (!dayjs(company.paid).isAfter(dayjs())) {
     throw httpErrors.PaymentRequired();
   }
 
-  const scale = await db
+  const scaleQuery = db
     .selectFrom('scales')
     .select(['id', 'name'])
-    .where('name', '=', params.ident)
-    .where('user_id', '=', company.id)
-    .executeTakeFirst();
+    .where('user_id', '=', company.id);
+  const scale = await (
+    'ident' in target
+      ? scaleQuery.where('name', '=', target.ident)
+      : scaleQuery.where('dev_eui', '=', target.devEui)
+  ).executeTakeFirst();
   if (!scale) throw httpErrors.NotFound('Scale not found');
 
   const insertDate = input.datetime ? new Date(input.datetime) : new Date();
@@ -415,6 +443,7 @@ export async function ingestScaleReading(
     temp2: input.temp2 ?? 0,
     rain: input.rain ?? 0,
     humidity: input.hum ?? 0,
+    humidity2: input.hum2 ?? 0,
     note: input.note ?? '',
     scale_id: scale.id,
   };
@@ -429,5 +458,33 @@ export async function ingestScaleReading(
   return {
     result: { id: Number(inserted.insertId), ...values },
     warning,
+  };
+}
+
+/**
+ * Maps the BEEP keys of a TTN payload formatter to a scale reading. The
+ * index pairs temperature and humidity of the same sensor. Gives null when
+ * the payload has no known key.
+ */
+export function readingFromTtnUplink(
+  body: ExternalTtnBody,
+): ExternalScaleQuery | null {
+  const payload = body.uplink_message.decoded_payload ?? {};
+  const value = (key: string) => {
+    const raw = payload[key];
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : undefined;
+  };
+  const values = {
+    weight: value('weight_kg'),
+    temp1: value('t'),
+    hum: value('h'),
+    temp2: value('t_i'),
+    hum2: value('h_i'),
+  };
+  if (Object.values(values).every((item) => item === undefined)) return null;
+  return {
+    action: 'CREATE',
+    datetime: body.uplink_message.received_at,
+    ...values,
   };
 }

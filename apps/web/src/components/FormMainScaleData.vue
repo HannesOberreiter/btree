@@ -52,6 +52,7 @@ const stateDefault = {
   temp1: 0,
   temp2: 0,
   humidity: 0,
+  humidity2: 0,
   rain: 0,
   note: ''
 };
@@ -122,7 +123,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp1"
-      label="temperature"
+      label="scale.temperature1"
       table-id="temp1"
       icon="fas fa-temperature-high"
       numeric-valid="decimal"
@@ -132,7 +133,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp2"
-      label="temperature"
+      label="scale.temperature2"
       table-id="temp2"
       icon="fas fa-temperature-low"
       numeric-valid="decimal"
@@ -142,7 +143,17 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.humidity"
-      label="humidity"
+      label="scale.humidity1"
+      table-id="humidity"
+      icon="fas fa-percent"
+      numeric-valid="decimal"
+      :values="values"
+      :reset="reset"
+    />
+    <FormInputNumeric
+      v-model="state.humidity2"
+      label="scale.humidity2"
+      table-id="humidity2"
       icon="fas fa-percent"
       numeric-valid="decimal"
       :values="values"

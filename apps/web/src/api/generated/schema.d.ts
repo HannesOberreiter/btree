@@ -3708,6 +3708,7 @@ export interface paths {
           action: 'CREATE' | 'CREATE_DEMO';
           datetime?: string;
           hum?: number;
+          hum2?: number;
           note?: string;
           rain?: number;
           temp1?: number;
@@ -3734,6 +3735,70 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/external/ttn/{api}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          api: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            end_device_ids: {
+              dev_eui: string;
+              device_id?: string;
+            } & {
+              [key: string]: unknown;
+            };
+            uplink_message: {
+              decoded_payload?: {
+                [key: string]: unknown;
+              };
+              /** Format: date-time */
+              received_at?: string;
+            } & {
+              [key: string]: unknown;
+            };
+          } & {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              id?: number;
+              /** @enum {string} */
+              reason?: 'no_values' | 'rate_limit';
+              stored: boolean;
+            };
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -9133,6 +9198,7 @@ export interface paths {
                 | 'temp1'
                 | 'temp2'
                 | 'humidity'
+                | 'humidity2'
                 | 'rain'
                 | 'note'
               )
@@ -9145,6 +9211,7 @@ export interface paths {
                 | 'temp1'
                 | 'temp2'
                 | 'humidity'
+                | 'humidity2'
                 | 'rain'
                 | 'note'
               )[];
@@ -9166,6 +9233,7 @@ export interface paths {
               results: {
                 datetime: string | null;
                 humidity: string | number | null;
+                humidity2: string | number | null;
                 id: number;
                 note: string | null;
                 rain: string | number | null;
@@ -9217,6 +9285,7 @@ export interface paths {
           'application/json': {
             datetime: string;
             humidity?: (number | string) | null;
+            humidity2?: (number | string) | null;
             note?: string | null;
             rain?: (number | string) | null;
             scale_id: number;
@@ -9236,6 +9305,7 @@ export interface paths {
             'application/json': {
               datetime: string | null;
               humidity: string | number | null;
+              humidity2: string | number | null;
               id: number;
               note: string | null;
               rain: string | number | null;
@@ -9288,6 +9358,7 @@ export interface paths {
             data: {
               datetime?: string;
               humidity?: (number | string) | null;
+              humidity2?: (number | string) | null;
               note?: string | null;
               rain?: (number | string) | null;
               scale_id?: number;
@@ -9387,6 +9458,7 @@ export interface paths {
             'application/json': {
               datetime: string | null;
               humidity: string | number | null;
+              humidity2: string | number | null;
               id: number;
               note: string | null;
               rain: string | number | null;
@@ -9448,6 +9520,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            dev_eui?: string | null;
             hive_id: number;
             name: string;
           };
@@ -9461,6 +9534,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              dev_eui: string | null;
               hive_id: number | null;
               id: number;
               name: string;
@@ -9484,6 +9558,7 @@ export interface paths {
         content: {
           'application/json': {
             data: {
+              dev_eui?: string | null;
               hive_id?: number;
               name?: string;
             };
@@ -9567,6 +9642,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              dev_eui: string | null;
               hive: {
                 [key: string]: unknown;
               } | null;

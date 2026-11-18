@@ -40,6 +40,7 @@ export async function listScales(db: Database, companyId: number, id?: number) {
       'scales.name',
       'scales.hive_id',
       'scales.user_id',
+      'scales.dev_eui',
       hiveProjection(),
     ])
     .where('scales.user_id', '=', companyId);
@@ -63,6 +64,9 @@ export async function updateScales(
       ...(body.data.hive_id !== undefined && {
         hive_id: body.data.hive_id,
       }),
+      ...(body.data.dev_eui !== undefined && {
+        dev_eui: body.data.dev_eui,
+      }),
     })
     .where('user_id', '=', companyId)
     .where('id', 'in', body.ids)
@@ -84,7 +88,12 @@ export async function createScale(
 
   const insert = await db
     .insertInto('scales')
-    .values({ name: body.name, hive_id: body.hive_id, user_id: companyId })
+    .values({
+      name: body.name,
+      hive_id: body.hive_id,
+      user_id: companyId,
+      dev_eui: body.dev_eui ?? null,
+    })
     .executeTakeFirstOrThrow();
   const result = await db
     .selectFrom('scales')
