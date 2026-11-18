@@ -5,6 +5,7 @@ import { numberSchema } from '../utils/zod.util.js';
 export const scaleDataOrderFieldSchema = z.enum([
   'id',
   'scale.name',
+  'scale.dev_eui',
   'scale.hive.name',
   'datetime',
   'weight',
@@ -85,6 +86,7 @@ const hiveResponseSchema = z
 const scaleResponseSchema = z.object({
   id: z.number(),
   name: z.string().nullable(),
+  dev_eui: z.string().nullable(),
   hive_id: z.number().nullable(),
   user_id: z.number().nullable(),
   hive: hiveResponseSchema,

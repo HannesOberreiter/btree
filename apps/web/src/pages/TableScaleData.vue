@@ -49,6 +49,13 @@ const columns = [
     sortable: true
   },
   {
+    name: 'scale.dev_eui',
+    label: t('scale.devEui'),
+    align: 'left',
+    field: (row: any) => row.scale.dev_eui,
+    sortable: true
+  },
+  {
     name: 'scale.hive.name',
     label: t('hive'),
     align: 'left',

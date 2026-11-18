@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
-import { createAgent, createAuthenticatedAgent, doRequest } from '../utils.js';
+import {
+  createAgent,
+  createAuthenticatedAgent,
+  doQueryRequest,
+  doRequest,
+} from '../utils.js';
 
 const devEui = '70B3D57ED0012345';
 const apiKey = 'ttn-webhook-e2e-key';
@@ -209,6 +214,19 @@ describe('TTN webhook', () => {
         .where('id', '=', companyId)
         .executeTakeFirst();
     }
+  });
+
+  it('scale data 200 - lists, finds and sorts by the DevEUI', async () => {
+    const res = await doQueryRequest(agent, '/api/v1/scale_data', null, null, {
+      q: devEui.slice(4, 12),
+      order: 'scale.dev_eui',
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.results[0].scale).toMatchObject({
+      id: scaleId,
+      dev_eui: devEui,
+    });
   });
 
   it('scale 200 - removes the DevEUI with an empty value', async () => {
