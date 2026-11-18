@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.12.3](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.2...btree-client-v7.12.3) (2026-11-18)
+
+
+### Bug Fixes
+
+* **web:** show pest identification PDF and Dropbox video preview ([#353](https://github.com/HannesOberreiter/btree/issues/353)) ([ba0bd09](https://github.com/HannesOberreiter/btree/commit/ba0bd09289f33306c0cac12b0d4c995a837cdd77))
+
 ## [7.12.2](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.1...btree-client-v7.12.2) (2026-11-18)
 
 
