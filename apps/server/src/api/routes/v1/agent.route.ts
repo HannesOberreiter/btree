@@ -83,6 +83,7 @@ export default async function routes(
   for (const toolDef of wizBeeToolDefinitions) {
     server.post(`/tools/${toolDef.name}`, {
       schema: {
+        summary: toolDef.title,
         description: toolDef.description,
         tags: ['Tools'],
         body: toolDef.parameters,
