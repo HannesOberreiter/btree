@@ -87,9 +87,16 @@ const columns = [
   },
   {
     name: 'humidity',
-    label: t('humidity'),
+    label: `${t('humidity')} 1`,
     align: 'right',
     field: (row: any) => row.humidity,
+    sortable: true
+  },
+  {
+    name: 'humidity2',
+    label: `${t('humidity')} 2`,
+    align: 'right',
+    field: (row: any) => row.humidity2,
     sortable: true
   },
   {

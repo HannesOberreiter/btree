@@ -20,6 +20,7 @@ const testInsert = {
   weight: 1,
   temp1: 2,
   temp2: 2.5,
+  humidity2: 61.5,
   note: '----',
 };
 
@@ -82,6 +83,7 @@ describe('scale Data routes', () => {
       expect(reading).toMatchObject({
         id: insertId,
         scale_id: testInsert.scale_id,
+        humidity2: '61.50',
       });
       expect(reading.scale).toMatchObject({ id: testInsert.scale_id });
       expect(reading.scale.hive).toHaveProperty('grouphive');
@@ -120,11 +122,12 @@ describe('scale Data routes', () => {
         `/api/v1/external/scale/${encodeURIComponent(scale.name ?? '')}/${apiKey}`,
         null,
         null,
-        { action: 'CREATE_DEMO', weight: 1, note: '0042' },
+        { action: 'CREATE_DEMO', weight: 1, hum2: 64, note: '0042' },
       );
       expect(res.statusCode).toBe(200);
       expect(res.body).toMatchObject({
         weight: 1,
+        humidity2: 64,
         note: '0042',
         scale_id: testInsert.scale_id,
       });

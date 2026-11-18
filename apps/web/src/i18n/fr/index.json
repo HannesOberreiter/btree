@@ -661,8 +661,12 @@
     "api": "URL de l'API de la balance",
     "apiHint": "Avec cette URL, vous pouvez télécharger vos données d'échelle de ruche sur le point de terminaison de l'API, dans la limite d'une publication par heure. En production, définissez le paramètre de requête d'action sur 'CREATE'. \nLe paramètre de requête datetime doit être conforme à la norme ISO8601, si le paramètre n'est pas donné, l'heure UTC de téléchargement actuelle sera utilisée.",
     "deleteText": "Êtes-vous sûr de vouloir supprimer {name}? Vous ne pouvez pas annuler cette action et toutes les données de la balance connectée seront supprimées!",
+    "devEui": "DevEUI (LoRaWAN)",
+    "devEuiHint": "Facultatif. 16 caractères hexadécimaux. Le webhook TTN trouve la balance par son DevEUI.",
     "name": "Balance | Balances",
-    "nameHint": "Le nom doit être unique et est nécessaire pour les appels d'API en tant qu'identifiant."
+    "nameHint": "Le nom doit être unique et est nécessaire pour les appels d'API en tant qu'identifiant.",
+    "ttnHint": "Pour les balances LoRaWAN sur The Things Network (TTN). Dans la console TTN, ajoutez à votre application un webhook personnalisé au format JSON, utilisez cette URL comme URL de base et activez les messages uplink. Utilisez un payload formatter avec les clés BEEP (weight_kg, t, h, t_i, h_i). Saisissez le DevEUI de l'appareil dans la balance b.tree. La limite est d'une mesure par heure ; b.tree ignore les autres mesures.",
+    "ttnUrl": "URL du webhook TTN"
   },
   "scale_data": "Données de la balance",
   "search": "Chercher",
@@ -827,6 +831,7 @@
     "alphaNum": "La valeur doit être alphanumérique.",
     "betweenValue": "La valeur doit être comprise entre {min} et {max}.",
     "decimal": "La valeur doit être décimale.",
+    "devEui": "Le DevEUI doit comporter 16 caractères hexadécimaux.",
     "email": "La valeur n'est pas une adresse e-mail valide.",
     "integer": "La valeur n'est pas un entier.",
     "maxLengthValue": "La longueur maximale est {max}.",

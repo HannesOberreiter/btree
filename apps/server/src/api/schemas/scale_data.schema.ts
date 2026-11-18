@@ -11,6 +11,7 @@ export const scaleDataOrderFieldSchema = z.enum([
   'temp1',
   'temp2',
   'humidity',
+  'humidity2',
   'rain',
   'note',
 ]);
@@ -41,6 +42,7 @@ export const scaleDataValuesSchema = z.object({
   temp2: decimalInputSchema.nullable().optional(),
   rain: decimalInputSchema.nullable().optional(),
   humidity: decimalInputSchema.nullable().optional(),
+  humidity2: decimalInputSchema.nullable().optional(),
   note: z.string().max(300).nullable().optional(),
   scale_id: numberSchema.optional(),
 });
@@ -96,6 +98,7 @@ export const scaleDataResponseSchema = z.object({
   temp2: decimalResponseSchema,
   rain: decimalResponseSchema,
   humidity: decimalResponseSchema,
+  humidity2: decimalResponseSchema,
   note: z.string().nullable(),
   scale_id: z.number().nullable(),
   scale: scaleResponseSchema.optional(),

@@ -52,6 +52,7 @@ const stateDefault = {
   temp1: 0,
   temp2: 0,
   humidity: 0,
+  humidity2: 0,
   rain: 0,
   note: ''
 };
@@ -143,6 +144,16 @@ function onReset() {
     <FormInputNumeric
       v-model="state.humidity"
       label="humidity"
+      table-id="humidity"
+      icon="fas fa-percent"
+      numeric-valid="decimal"
+      :values="values"
+      :reset="reset"
+    />
+    <FormInputNumeric
+      v-model="state.humidity2"
+      label="humidity"
+      table-id="humidity2"
       icon="fas fa-percent"
       numeric-valid="decimal"
       :values="values"

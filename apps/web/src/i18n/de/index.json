@@ -661,8 +661,12 @@
     "api": "Stockwaagen-API-URL",
     "apiHint": "Mit dieser URL kannst du deine Stockwaagen-Daten auf den API-Endpunkt hochladen, die Beschränkung ist 1x pro Stunde. Setze in der Produktion den Aktionsabfrageparameter auf „CREATE“. Der datetime-Abfrageparameter muss ISO-8601-konform sein. Wenn der Parameter nicht angegeben wird, wird die aktuelle Upload-UTC-Zeit verwendet.",
     "deleteText": "Möchtest du {name} wirklich löschen? Du kannst diese Aktion nicht rückgängig machen und alle verbundenen Waagendaten werden gelöscht!",
+    "devEui": "DevEUI (LoRaWAN)",
+    "devEuiHint": "Optional. 16 Hex-Zeichen. Der TTN-Webhook findet die Waage über ihre DevEUI.",
     "name": "Waage | Waagen",
-    "nameHint": "Der Name muss eindeutig sein und wird für API-Aufrufe als Bezeichner benötigt."
+    "nameHint": "Der Name muss eindeutig sein und wird für API-Aufrufe als Bezeichner benötigt.",
+    "ttnHint": "Für LoRaWAN-Waagen in The Things Network (TTN). Lege in der TTN Console für deine Anwendung einen Custom Webhook mit dem Format JSON an, trage diese URL als Base URL ein und aktiviere Uplink-Nachrichten. Verwende einen Payload Formatter mit den BEEP-Schlüsseln (weight_kg, t, h, t_i, h_i). Trage die DevEUI des Geräts bei der b.tree-Waage ein. Die Beschränkung ist 1 Messwert pro Stunde; b.tree verwirft weitere Messwerte.",
+    "ttnUrl": "TTN-Webhook-URL"
   },
   "scale_data": "Stockwaagen-Daten",
   "search": "Suche",
@@ -827,6 +831,7 @@
     "alphaNum": "Der Wert muss alphanumerisch sein.",
     "betweenValue": "Der Wert muss zwischen {min} und {max} liegen.",
     "decimal": "Der Wert muss dezimal sein.",
+    "devEui": "Die DevEUI muss 16 Hex-Zeichen haben.",
     "email": "Der Wert ist keine gültige E-Mail-Adresse.",
     "integer": "Der Wert ist keine Ganzzahl.",
     "maxLengthValue": "Die maximale Länge beträgt {max}.",

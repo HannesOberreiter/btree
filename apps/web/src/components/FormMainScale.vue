@@ -5,6 +5,7 @@ import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
+import { devEui } from '../helpers/i18n-validators';
 import FormButtons from './FormButtons.vue';
 import FormDropdownEdit from './FormDropdownEdit.vue';
 import FormDropdownOption from './FormDropdownOption.vue';
@@ -43,7 +44,8 @@ const editOptions = ref([]) as any;
 const editOptionsCopy = ref([]) as any;
 
 const stateDefault = {
-  name: ''
+  name: '',
+  dev_eui: ''
 };
 
 const state = ref<FormScale>({
@@ -99,6 +101,18 @@ function onReset() {
       table="hive"
       label="hive"
       table-id="hive_id"
+      :values="values"
+      :reset="reset"
+    />
+    <FormInputText
+      v-model="state.dev_eui"
+      label="scale.devEui"
+      table-id="dev_eui"
+      name="dev_eui"
+      icon="fas fa-tower-broadcast"
+      :hint="$t('scale.devEuiHint')"
+      :max-valid="23"
+      :extra-rules="{ devEui }"
       :values="values"
       :reset="reset"
     />

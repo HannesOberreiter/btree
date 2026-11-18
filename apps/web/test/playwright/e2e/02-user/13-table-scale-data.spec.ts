@@ -17,6 +17,15 @@ test.describe('user - Scale Data Table', () => {
     await dataCy('btn-new-scale').click();
     await expect(dataCy('form-scale')).toBeAttached();
     await page.locator('[name=scale]').fill(chance.province());
+    await page.locator('[name=dev_eui]').fill('zz-b3-d5-7e-d0-01-23-45');
+    await dataCy('btn-form-save').click();
+    await expect(dataCy('form-scale')).toBeAttached();
+    const devEui = Array.from({ length: 8 }, () =>
+      Math.floor(Math.random() * 256)
+        .toString(16)
+        .padStart(2, '0')
+    ).join('-');
+    await page.locator('[name=dev_eui]').fill(devEui);
     await dataCy('btn-form-save').click();
     await expect(dataCy(form)).not.toBeAttached();
   });

@@ -661,8 +661,12 @@
     "api": "Scale API URL",
     "apiHint": "With this URL you can upload your hive scale data to the API endpoint, limit 1 post per hour. In production, set the action query param to 'CREATE'. The datetime query param needs to conform to ISO 8601. If the param is not given, the current upload UTC time is used.",
     "deleteText": "Are you sure you want to delete {name}? You cannot undo this action, and all connected scale data will be deleted!",
+    "devEui": "DevEUI (LoRaWAN)",
+    "devEuiHint": "Optional. 16 hex characters. The TTN webhook finds the scale by its DevEUI.",
     "name": "Scale | Scales",
-    "nameHint": "Name needs to be unique and is needed for API calls as identifier."
+    "nameHint": "Name needs to be unique and is needed for API calls as identifier.",
+    "ttnHint": "For LoRaWAN scales on The Things Network (TTN). In the TTN Console, add a custom webhook with the JSON format to your application, use this URL as the base URL and turn on uplink messages. Use a payload formatter with the BEEP keys (weight_kg, t, h, t_i, h_i). Enter the DevEUI of the device in the b.tree scale. The limit is 1 reading per hour; b.tree drops other readings.",
+    "ttnUrl": "TTN webhook URL"
   },
   "scale_data": "Hive scale data",
   "search": "Search",
@@ -827,6 +831,7 @@
     "alphaNum": "The value must be alphanumeric.",
     "betweenValue": "The value must be between {min} and {max}.",
     "decimal": "Value must be decimal.",
+    "devEui": "The DevEUI must have 16 hex characters.",
     "email": "Value is not a valid email address.",
     "integer": "Value is not an integer.",
     "maxLengthValue": "The maximum length is {max}.",
