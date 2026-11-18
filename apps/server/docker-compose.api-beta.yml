@@ -22,11 +22,13 @@ services:
       - ./migration:/home/node/app/db/seeds/migration
     ports:
       - '1339:8101'
+    # journald keeps the logs when watchtower recreates the container.
+    # Read: journalctl CONTAINER_NAME=btree-server-beta --since -1d
+    # Retention: /etc/systemd/journald.conf.d/btree.conf on the host.
     logging:
-      driver: local
+      driver: journald
       options:
-        max-size: 20m
-        max-file: 5
+        tag: '{{.Name}}'
 
 networks:
   default:
