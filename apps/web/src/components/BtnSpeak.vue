@@ -223,6 +223,7 @@ function handleResult(result: any, command: string) {
     :color="speech.isListening.value ? 'secondary' : 'white'"
     size="md"
     icon="fas fa-microphone"
+    data-cy="btn-speech"
     :aria-label="$t('speech.tooltip')"
     @click="onStart"
   >

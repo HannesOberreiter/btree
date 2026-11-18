@@ -275,6 +275,7 @@ function editValues(val: boolean) {
     v-model="modelValue"
     :label="`${disable ? `${$t(label)} - ${$t('multipleValues')}` : $t(label)}${required ? ' *' : ''}`"
     :name="label"
+    :data-cy="`dropdown-${table}`"
     :loading="isLoading"
     :disable="isLoading || disable"
     :options="options"

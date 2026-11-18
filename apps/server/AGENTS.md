@@ -21,7 +21,7 @@ This repository owns application schema migrations and the HTTP and agent-facing
 
 - Use Node 22 and pinned pnpm 11.4.0.
 - Run `pnpm run build` before Knex commands, development serving, or E2E; they consume `dist`. Keep `pnpm run dev:build` running when serving changing TypeScript.
-- Provide MariaDB, Redis, and the selected environment file before E2E; `pnpm run test:e2e` starts the compiled server itself. Do not start another backend on its port.
+- Before E2E, start MariaDB and Redis with `docker compose -f infra/test/compose.yml up -d --wait` from the repository root, then run `pnpm run ci:e2e`; it uses the tracked `env/ci.env`. `pnpm run test:e2e` uses a local `env/test.env` instead. Both start the compiled server themselves. Do not start another backend on its port.
 - Keep E2E serial; tests share a database managed by global setup.
 - Run lint separately from CI's build/E2E checks; `pnpm run lint` checks, while `pnpm run lint:fix` writes.
 - Use the DB type wrapper rather than bare codegen; it normalizes tinyint and Decimal types. It defaults to `env/development.env`; its positional environment argument does not inherit runtime `SERVER` selection.
@@ -37,3 +37,4 @@ This repository owns application schema migrations and the HTTP and agent-facing
 - Put thin HTTP adapters in typed route modules. Keep static controller methods for substantial transport-specific behavior; derive authenticated scope from the session.
 - Authorize protected routes with `Guard.authorize` and explicit permitted `ROLES`; follow the route family's hook phase rather than forcing every guard into `onRequest`.
 - Define applicable HTTP body, params, query, and response schemas with Zod in `src/api/schemas/`, using `fastify-type-provider-zod` for validation and response typing.
+- When you change the MCP server `version` in `src/api/modules/mcp.module.ts`, also change `version` in `mcp-registry/server.json` and in the server card of `packages/btree_info/public/.well-known/ai-catalog.json` in `HannesOberreiter/btree_sites`, and run `mcp-publisher publish` again. The publish steps are in `mcp-registry/README.md` of the private infra repository.

@@ -40,6 +40,7 @@ const optionColumns = computed(() => {
     dense
     debounce="300"
     :placeholder="$t('search')"
+    data-cy="input-table-search"
   >
     <template #append>
       <q-icon name="fas fa-magnifier" />

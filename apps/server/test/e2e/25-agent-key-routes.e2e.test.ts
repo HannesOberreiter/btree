@@ -752,6 +752,20 @@ describe('agent key & agent API routes', () => {
         ),
       ).toBe(true);
     });
+
+    it('uses the tool title as the summary in both OpenAPI specs', async () => {
+      for (const specUrl of [
+        '/api/v1/agent/openapi.json',
+        '/api/v1/chatgpt/openapi.json',
+      ]) {
+        const res = await noAuthFetch('GET', specUrl);
+        expect(res.statusCode).toEqual(200);
+        const [, pathItem] = Object.entries(res.body.paths).find(([path]) =>
+          path.endsWith('/tools/listQueens'),
+        ) as [string, { post: { summary: string } }];
+        expect(pathItem.post.summary).toEqual('List queens');
+      }
+    });
   });
 
   describe('expired key handling', () => {

@@ -88,6 +88,7 @@ export function createBtreeMcpServer(authInfo: AuthInfo | undefined) {
   const server = new McpServer(
     {
       name: 'b.tree Beekeeping Manager',
+      // Keep equal to the MCP Registry entry; see apps/server/AGENTS.md.
       version: '1.0.0',
     },
     { instructions: BTREE_MCP_INSTRUCTIONS },
@@ -98,6 +99,7 @@ export function createBtreeMcpServer(authInfo: AuthInfo | undefined) {
     server.registerTool(
       definition.name,
       {
+        title: definition.title,
         description: definition.description,
         inputSchema: definition.parameters,
         annotations: {

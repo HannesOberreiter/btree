@@ -1,3 +1,4 @@
+import { t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 test.describe('user - Sugar water calculator', () => {
@@ -18,7 +19,10 @@ test.describe('user - Sugar water calculator', () => {
     await expect(theoretical).toHaveValue('12');
 
     await page.locator('.q-form .q-select').click();
-    await page.locator('.q-menu .q-item').filter({ hasText: '3:2' }).click();
+    await page
+      .locator('.q-menu .q-item')
+      .filter({ hasText: t('sugarHelper.threeToTwo') })
+      .click();
     await expect(solution).toHaveValue('16');
     await expect(sugar).toHaveValue('12.6');
     await expect(water).toHaveValue('8.4');

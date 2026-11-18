@@ -30,6 +30,58 @@ import { Logger, redactIcalApiKeyFromUrl } from '../services/logger.service.js';
 import { ENVIRONMENT } from './constants.config.js';
 
 /**
+ * Parses the comma-separated AUTHORIZED value into exact origins and their
+ * hostnames. Throws for an entry that is not an http or https origin, so that
+ * a wrong value stops the server at startup.
+ */
+export function parseAuthorized(value: string | undefined) {
+  const origins = new Set<string>();
+  const hostnames = new Set<string>();
+  for (const entry of (value ?? '').split(',')) {
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    let url: URL | undefined;
+    try {
+      url = new URL(trimmed);
+    } catch {
+      url = undefined;
+    }
+    if (
+      !url ||
+      !['http:', 'https:'].includes(url.protocol) ||
+      trimmed.includes('*') ||
+      url.origin !== trimmed.replace(/\/$/, '')
+    ) {
+      throw new Error(`AUTHORIZED entry is not an origin: ${trimmed}`);
+    }
+    origins.add(url.origin);
+    hostnames.add(url.hostname);
+  }
+  return { origins, hostnames };
+}
+
+/** The hostname of a Host header value without its port, or '' if invalid. */
+function hostHostname(host: string) {
+  try {
+    return new URL(`http://${host}`).hostname;
+  } catch {
+    return '';
+  }
+}
+
+const authorizedList = parseAuthorized(authorized);
+
+/** Paths that any origin can call, without credentials. */
+const EXTERNAL_PATHS = new Set([
+  '/api/v1/auth/google/callback',
+  '/api/v1/auth/apple/callback',
+  '/api/v1/openapi.json',
+  '/api/v1/agent/openapi.json',
+  '/api/v1/chatgpt/openapi.json',
+]);
+const EXTERNAL_PATH_PREFIXES = ['/api/v1/external/', '/api/v1/chatgpt/oauth/'];
+
+/**
  * @description Instantiate server application.
  */
 export class Application {
@@ -102,6 +154,8 @@ export class Application {
       // but only reflect a real Origin header in the CORS response.
       // MCP clients commonly omit Origin; keep it absent for MCP Origin checks.
       // https://github.com/expressjs/cors/issues/262
+      // The Host value has no scheme, so it is compared by hostname only.
+      let originIsHost = false;
       if (!req.headers.origin && !isMcp) {
         if (req.headers.referer) {
           try {
@@ -110,23 +164,23 @@ export class Application {
           } catch (error) {
             Logger.getInstance().pino.error(error, 'Error parsing referer');
             req.headers.origin = req.headers?.host ?? '';
+            originIsHost = true;
           }
         } else if (req.headers.host) {
           req.headers.origin = req.headers.host;
+          originIsHost = true;
         }
       }
 
       const origin = req.headers.origin ?? '';
+      const isAuthorized = originIsHost
+        ? authorizedList.hostnames.has(hostHostname(origin))
+        : authorizedList.origins.has(origin);
 
       const isExternal =
         isMcp ||
-        req.url.includes('external') ||
-        req.url.includes('auth/google/callback') ||
-        req.url.includes('auth/apple/callback') ||
-        req.url.endsWith('/v1/openapi.json') ||
-        req.url.includes('agent/openapi.json') ||
-        req.url.includes('chatgpt/oauth/') ||
-        req.url.includes('chatgpt/openapi.json');
+        EXTERNAL_PATHS.has(path) ||
+        EXTERNAL_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 
       if (!isExternal) {
         // Both headers can affect the response, including its rejection status.
@@ -134,11 +188,7 @@ export class Application {
         reply.header('Vary', 'Origin, Referer');
       }
 
-      if (
-        !isExternal &&
-        env !== ENVIRONMENT.development &&
-        !authorized.includes(origin)
-      ) {
+      if (!isExternal && env !== ENVIRONMENT.development && !isAuthorized) {
         reply.status(406).send();
         return;
       }

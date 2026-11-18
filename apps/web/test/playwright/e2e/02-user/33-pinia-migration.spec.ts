@@ -1,3 +1,4 @@
+import { t } from '../../support/i18n';
 import { expect, test as base } from '../../support/user-helpers';
 import type { Page } from '../../support/user-helpers';
 
@@ -178,7 +179,7 @@ test.describe('UI authentication', () => {
     await expect.poll(() => requests.userStatuses).toEqual([401]);
     await page.locator('[name="email"]').fill('pinia@example.test');
     await page.locator('[name="password"]').fill('mock-password');
-    await page.getByRole('button', { name: /^Last visit:/ }).click();
+    await page.locator('[data-cy="btn-login-last-visit"]').click();
     await expect(page).toHaveURL(/\/setting\/company$/);
     expect(requests.logins).toEqual([
       { email: 'pinia@example.test', password: 'mock-password' }
@@ -211,7 +212,7 @@ test.describe('UI authentication', () => {
     await page.goto('/setting/company');
     await expect(page).toHaveURL(/\/visitor\/login\?next=/);
     await expect(
-      page.getByRole('button', { name: /^Last visit:/ })
+      page.locator('[data-cy="btn-login-last-visit"]')
     ).toBeEnabled();
     expect(requests.logins).toHaveLength(1);
   });
@@ -258,10 +259,15 @@ test('persists nested table length, sort direction and visible columns after rel
   await table.locator('.q-table__bottom .q-select').click();
   await page.getByRole('option', { name: '50', exact: true }).click();
   await table.locator('.q-table__top .q-select').click();
-  await page.getByRole('option', { name: 'ID', exact: true }).click();
-  await page.getByRole('option', { name: 'Description', exact: true }).click();
+  await page.getByRole('option', { name: t('id'), exact: true }).click();
+  await page
+    .getByRole('option', { name: t('description'), exact: true })
+    .click();
   await page.keyboard.press('Escape');
-  const idHeader = table.getByRole('columnheader', { name: 'ID', exact: true });
+  const idHeader = table.getByRole('columnheader', {
+    name: t('id'),
+    exact: true
+  });
   await idHeader.click();
   await expect
     .poll(() => latestQuery(requests.apiaries))
@@ -291,10 +297,13 @@ test('persists nested table length, sort direction and visible columns after rel
       });
     await expect(table.locator('.q-table__bottom .q-select')).toHaveText('50');
     await expect(
-      table.getByRole('columnheader', { name: 'ID', exact: true })
+      table.getByRole('columnheader', { name: t('id'), exact: true })
     ).toBeVisible();
     await expect(
-      table.getByRole('columnheader', { name: 'Description', exact: true })
+      table.getByRole('columnheader', {
+        name: t('description'),
+        exact: true
+      })
     ).toHaveCount(0);
     await expect(table.locator('tbody tr').first()).toContainText(
       'Birch grove'
@@ -324,16 +333,19 @@ test('retains active table filters across SPA navigation and BtnReturn', async (
     .filter({ has: page.locator('.fa-filter-circle-xmark, .fa-filter') });
   await filterButton.click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('combobox', { name: 'Type', exact: true }).click();
+  await dialog.locator('[data-cy="dropdown-hive_types"]').click();
   await page.getByRole('option', { name: 'Langstroth', exact: true }).click();
-  await dialog.getByRole('button', { name: 'Filter', exact: true }).click();
+  await dialog.locator('[data-cy="btn-filter-apply"]').click();
   await expect(dialog).not.toBeVisible();
   const filters = JSON.stringify([{ type_id: 41 }]);
   await expect.poll(() => latestQuery(requests.hives).filters).toBe(filters);
   await expect(filterButton).toHaveClass(/bg-negative/);
   const documents = requests.documents;
   await page
-    .getByRole('button', { name: 'Expand "Colonies"', exact: true })
+    .locator('[data-cy="drawer-group"]')
+    .filter({ has: page.locator('[data-cy="route-table-apiary"]') })
+    .locator('.q-item')
+    .first()
     .click();
   await page.locator('[data-cy="route-table-apiary"]').click();
   await expect(page).toHaveURL(/\/table\/apiary$/);
@@ -342,10 +354,10 @@ test('retains active table filters across SPA navigation and BtnReturn', async (
   expect(requests.documents).toBe(documents);
   await expect(filterButton).toHaveClass(/bg-negative/);
   await filterButton.click();
-  await expect(
-    dialog.locator('.q-select').filter({ hasText: 'Type' })
-  ).toContainText('Langstroth');
-  await dialog.getByRole('button', { name: 'Filter', exact: true }).click();
+  await expect(dialog.locator('[data-cy="dropdown-hive_types"]')).toHaveValue(
+    'Langstroth'
+  );
+  await dialog.locator('[data-cy="btn-filter-apply"]').click();
   // Force a new query after returning, rather than only inspecting cached data.
   const count = requests.hives.length;
   await page.locator('[data-cy="btn-table-modus"]').click();

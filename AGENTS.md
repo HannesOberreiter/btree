@@ -9,12 +9,14 @@ Monorepo of the b.tree beekeeping app. Each app is a separate pnpm project with 
 
 - `beta` is the default branch. Branch from `beta`, and open the PR against `beta`. Rulesets block direct pushes to `beta` and `main` for everybody.
 - PRs to `beta` are squash merged. The PR title becomes the commit on `beta` and the changelog entry, so write it as a Conventional Commit.
+- Start every PR description with the `## User impact` section of `.github/pull_request_template.md`: one or two plain sentences on what a beekeeper notices and where in the app, or `None.` The btree.at news generator in btree_sites reads this section.
 - release-please assigns a commit to an app by its changed paths. `feat`, `fix`, `perf`, `chore`, `refactor` and `style` start a release of that app; `build`, `ci`, `docs` and `test` do not.
 - `main` gets only PRs from `beta` (merge commit) and the release-please PR. The CI job `pull-protection` enforces this.
 - A merge to `beta` deploys beta.btree.at and the `beta` server image. A release on `main` deploys production.
 
 ## CI
 
+- `infra/test/compose.yml` has the MariaDB and Redis for the tests, locally and in CI. `scripts/e2e.sh` runs the Playwright tests of `apps/web` the same way as the `e2e` CI job; it needs Docker.
 - `.github/workflows/ci.yml` runs on every PR. Jobs that the changed paths do not need are skipped and count as passed. All jobs are required checks, also `e2e`. `pull-protection` is required only for PRs to `main`.
 - `.github/workflows/pr-title.yml` checks that the title of a PR to `beta` is a Conventional Commit. It is a required check.
 - Dependabot opens grouped update PRs to `beta` once a month (`.github/dependabot.yml`). Production dependencies get `fix(deps)` and release the app; development dependencies get `build(deps-dev)`.
