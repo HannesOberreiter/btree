@@ -16,8 +16,8 @@ permissions: {}
 env:
   REVIEW_MODEL: claude-sonnet-5-5 # coordinator: runs the reviewers, verifies findings
   REVIEWER_MODEL: claude-haiku-5-5 # review-privacy, review-tests, review-standards, review-compat
-  REVIEWER_DEEP_MODEL: claude-sonnet-5-5 # review-bugs, review-spec: they trace code outside the diff
-  PI_VERSION: 1.4.0
+  REVIEWER_DEEP_MODEL: claude-fable-5-2 # review-bugs, review-spec: they trace code outside the diff
+  PI_VERSION: 1.5.2
   PI_SUBAGENTS_VERSION: 0.22.0
 
 jobs:
