@@ -1,5 +1,17 @@
 # Changelog
 
+## [7.15.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.14.0...btree-server-v7.15.0) (2026-11-18)
+
+
+### Features
+
+* add TTN webhook for LoRaWAN scales ([#358](https://github.com/HannesOberreiter/btree/issues/358)) ([60cdef3](https://github.com/HannesOberreiter/btree/commit/60cdef321d7b49a19145bd286da5f899ea4a9c72))
+
+
+### Bug Fixes
+
+* **server:** exec node so it receives SIGTERM ([#356](https://github.com/HannesOberreiter/btree/issues/356)) ([0bd5c6c](https://github.com/HannesOberreiter/btree/commit/0bd5c6c2937852ed90832c6ae7424a1a6bd83556))
+
 ## [7.14.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.13.1...btree-server-v7.14.0) (2026-11-18)
 
 
