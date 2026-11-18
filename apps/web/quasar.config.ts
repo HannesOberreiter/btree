@@ -202,6 +202,8 @@ export default defineConfig(ctx => {
                 'https://*.openweathermap.org',
                 'https://*.inaturalist.org'
               ],
+              // The Dropbox video preview plays a blob URL.
+              'media-src': ["'self'", 'blob:'],
               'style-src-elem': ["'self'", "'unsafe-inline'"],
               'style-src': ["'self'", "'unsafe-inline'"],
               'font-src': ["'self'", 'https://*.btree.at', 'data:'],
@@ -289,6 +291,13 @@ export default defineConfig(ctx => {
         conf.clientsClaim = true;
         conf.skipWaiting = true;
         conf.cleanupOutdatedCaches = true;
+        // The pest maps show the PDFs in an iframe. An iframe load is a
+        // navigation request, and the navigation fallback would answer it
+        // with index.html instead of the PDF.
+        conf.navigateFallbackDenylist = [
+          ...(conf.navigateFallbackDenylist ?? []),
+          /^\/documents\//
+        ];
       }
     }
   };
