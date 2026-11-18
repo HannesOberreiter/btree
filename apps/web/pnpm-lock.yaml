@@ -12,8 +12,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       '@fullcalendar/vue3':
-        specifier: ^7.1.5
-        version: 7.1.5(temporal-polyfill@1.0.8)(vue@3.5.42(typescript@6.0.3))
+        specifier: 7.1.0
+        version: 7.1.0(temporal-polyfill@1.0.8)(vue@3.5.42(typescript@6.0.3))
       '@khmyznikov/pwa-install':
         specifier: ^0.7.0
         version: 0.7.0(@lit/react@1.0.8(@types/react@19.2.15))(@types/dom-chromium-installation-events@101.0.4)(@types/web-app-manifest@1.0.9)(lit@3.3.3)
@@ -116,7 +116,7 @@ importers:
         version: 1.63.0
       '@quasar/app-vite':
         specifier: 3.10.4
-        version: 3.10.4(@types/node@25.9.8)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(quasar@2.33.2)(sass@1.108.1)(terser@5.51.2)(typescript@6.0.3)(vue-router@5.3.1(@vue/compiler-sfc@3.5.43)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(rolldown@1.3.0)(vite@8.3.8(@types/node@25.9.8)(jiti@2.7.0)(sass-embedded@1.108.1)(sass@1.108.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))(yaml@2.9.1)
+        version: 3.10.4(@types/node@25.9.8)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(quasar@2.33.2)(sass@1.108.1)(supports-color@10.2.2)(terser@5.51.2)(typescript@6.0.3)(vue-router@5.3.1(@vue/compiler-sfc@3.5.43)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(rolldown@1.3.0)(vite@8.3.8(@types/node@25.9.8)(jiti@2.7.0)(sass-embedded@1.108.1)(sass@1.108.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))(yaml@2.9.1)
       '@types/chance':
         specifier: ^1.1.8
         version: 1.1.8
@@ -417,21 +417,21 @@ packages:
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@full-ui/headless-calendar@7.1.5':
-    resolution: {integrity: sha512-kTSGhUM7NkdJFvv6Pu9WWQrLDUg9L/1l1DSOp/IoOEutH0n2AEu10wWXl37kgXHU1+3WpxDM7h+MXTaO++QH2A==}
+  '@full-ui/headless-calendar@7.1.0':
+    resolution: {integrity: sha512-T54tSUik/ia9Jj4xduFHv1p98eVBgLnE33Q6qhpg+WWkqKCLBCbtVyMcTPPIOP5jjTV2MbtjrRvRt1RLSryGHA==}
     peerDependencies:
-      temporal-polyfill: ^1.0.7
+      temporal-polyfill: ^1.0.1
 
-  '@fullcalendar/core@7.1.5':
-    resolution: {integrity: sha512-adUp5YFeQmEJ5MAF0Qs3U0cNNvxQQ+dmAXiG5FFzrHULMkdB0ktnyTkcGcfM9ZlDlO4cxrRLXFiBwALJ13+Utg==}
+  '@fullcalendar/core@7.1.0':
+    resolution: {integrity: sha512-a+ABP7zQpPWpwPT8EsOdShpeOVrJyx/XYStqERd8ibld/FLi/dzpd95r7w3RIdFqFm9iUv0gdGvBshSlI/dbPw==}
     peerDependencies:
-      '@full-ui/headless-calendar': 7.1.5
-      temporal-polyfill: ^1.0.7
+      '@full-ui/headless-calendar': 7.1.0
+      temporal-polyfill: ^1.0.1
 
-  '@fullcalendar/vue3@7.1.5':
-    resolution: {integrity: sha512-vC910eO8f0X+la5++mj+fu3t1/eqv1Zionm20QhXAPrDu9AK40i73HYeukDC/XX29Y0VLUari54q3bECV1eRWA==}
+  '@fullcalendar/vue3@7.1.0':
+    resolution: {integrity: sha512-eCuNgZ9Rk3fbFXyo0XG/4PmGhm8kr0b2fa+JRDfX86kPOlpYBe8fKF9pG/KuLIA2LTslGLUSTzn7LhPt2wIVdg==}
     peerDependencies:
-      temporal-polyfill: ^1.0.7
+      temporal-polyfill: ^1.0.1
       vue: ^3.0.11
 
   '@humanfs/core@0.19.2':
@@ -3490,19 +3490,19 @@ snapshots:
       levn: 0.4.1
     optional: true
 
-  '@full-ui/headless-calendar@7.1.5(temporal-polyfill@1.0.8)':
+  '@full-ui/headless-calendar@7.1.0(temporal-polyfill@1.0.8)':
     dependencies:
       temporal-polyfill: 1.0.8
 
-  '@fullcalendar/core@7.1.5(@full-ui/headless-calendar@7.1.5(temporal-polyfill@1.0.8))(temporal-polyfill@1.0.8)':
+  '@fullcalendar/core@7.1.0(@full-ui/headless-calendar@7.1.0(temporal-polyfill@1.0.8))(temporal-polyfill@1.0.8)':
     dependencies:
-      '@full-ui/headless-calendar': 7.1.5(temporal-polyfill@1.0.8)
+      '@full-ui/headless-calendar': 7.1.0(temporal-polyfill@1.0.8)
       temporal-polyfill: 1.0.8
 
-  '@fullcalendar/vue3@7.1.5(temporal-polyfill@1.0.8)(vue@3.5.42(typescript@6.0.3))':
+  '@fullcalendar/vue3@7.1.0(temporal-polyfill@1.0.8)(vue@3.5.42(typescript@6.0.3))':
     dependencies:
-      '@full-ui/headless-calendar': 7.1.5(temporal-polyfill@1.0.8)
-      '@fullcalendar/core': 7.1.5(@full-ui/headless-calendar@7.1.5(temporal-polyfill@1.0.8))(temporal-polyfill@1.0.8)
+      '@full-ui/headless-calendar': 7.1.0(temporal-polyfill@1.0.8)
+      '@fullcalendar/core': 7.1.0(@full-ui/headless-calendar@7.1.0(temporal-polyfill@1.0.8))(temporal-polyfill@1.0.8)
       preact: 10.29.8
       temporal-polyfill: 1.0.8
       vue: 3.5.42(typescript@6.0.3)
@@ -3944,7 +3944,7 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@quasar/app-vite@3.10.4(@types/node@25.9.8)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(quasar@2.33.2)(sass@1.108.1)(terser@5.51.2)(typescript@6.0.3)(vue-router@5.3.1(@vue/compiler-sfc@3.5.43)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(rolldown@1.3.0)(vite@8.3.8(@types/node@25.9.8)(jiti@2.7.0)(sass-embedded@1.108.1)(sass@1.108.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))(yaml@2.9.1)':
+  '@quasar/app-vite@3.10.4(@types/node@25.9.8)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(quasar@2.33.2)(sass@1.108.1)(supports-color@10.2.2)(terser@5.51.2)(typescript@6.0.3)(vue-router@5.3.1(@vue/compiler-sfc@3.5.43)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.42(typescript@6.0.3)))(rolldown@1.3.0)(vite@8.3.8(@types/node@25.9.8)(jiti@2.7.0)(sass-embedded@1.108.1)(sass@1.108.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))(yaml@2.9.1)':
     dependencies:
       '@clack/prompts': 1.8.1
       '@quasar/art': 1.0.0
@@ -3974,7 +3974,7 @@ snapshots:
       sass-embedded: 1.108.1
       semver: 7.8.6
       serialize-javascript: 7.1.4
-      serve-static: 2.2.1
+      serve-static: 2.2.1(supports-color@10.2.2)
       tinyglobby: 0.2.17
       ts-essentials: 10.2.1(typescript@6.0.3)
       vite: 8.3.8(@types/node@25.9.8)(jiti@2.7.0)(sass-embedded@1.108.1)(sass@1.108.1)(terser@5.51.2)(yaml@2.9.1)
@@ -5783,7 +5783,7 @@ snapshots:
 
   semver@7.8.6: {}
 
-  send@1.2.1:
+  send@1.2.1(supports-color@10.2.2):
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       encodeurl: 2.0.1
@@ -5801,12 +5801,12 @@ snapshots:
 
   serialize-javascript@7.1.4: {}
 
-  serve-static@2.2.1:
+  serve-static@2.2.1(supports-color@10.2.2):
     dependencies:
       encodeurl: 2.0.1
       escape-html: 1.0.3
       parseurl: 1.3.3
-      send: 1.2.1
+      send: 1.2.1(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
