@@ -3818,18 +3818,21 @@ export function createWizBeeTools(
 export const wizBeeToolDefinitions = [
   {
     name: 'listApiariesHives',
+    title: 'List apiaries and hives',
     description:
       'List the apiaries and their active hives for the current user, in pages. When hasMore is true, call again with cursor set to nextCursor.',
     parameters: listApiariesHivesInputSchema,
   },
   {
     name: 'findHives',
+    title: 'Find hives',
     description:
       'Find colonies / hives by their name/number or by apiary name. Returns hiveId, name, apiary_id and apiary name.',
     parameters: findHivesInputSchema,
   },
   {
     name: 'createApiary',
+    title: 'Create apiary',
     description: 'Create a new apiary.',
     parameters: z.object({
       name: z.string().min(3).max(45),
@@ -3844,6 +3847,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchApiary',
+    title: 'Edit apiary',
     description: 'Update an existing apiary by its ID.',
     parameters: z.object({
       id: z.number(),
@@ -3859,6 +3863,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'createHive',
+    title: 'Create hive',
     description:
       'Create one hive with its required apiary connection and initial movement.',
     parameters: z.object({
@@ -3876,6 +3881,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchHive',
+    title: 'Edit hive',
     description: 'Update an existing hive by its ID.',
     parameters: z.object({
       hiveId: z.number(),
@@ -3891,12 +3897,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'listMovements',
+    title: 'List hive movements',
     description:
       'List hive movements with optional filters, in pages. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
     parameters: listMovementsInputSchema,
   },
   {
     name: 'createMovement',
+    title: 'Record hive movement',
     description: 'Create a movement for one hive to an existing apiary.',
     parameters: z.object({
       hiveId: z.number(),
@@ -3906,6 +3914,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchMovement',
+    title: 'Edit hive movement',
     description: 'Update an existing movement by its ID.',
     parameters: z.object({
       id: z.number(),
@@ -3915,6 +3924,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'deleteMovement',
+    title: 'Delete hive movement',
     description:
       'Delete one movement by its ID. Cannot delete a hive’s last movement.',
     parameters: z.object({
@@ -3923,6 +3933,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'apiaryWeather',
+    title: 'Get apiary weather',
     description: 'Get weather and GTS for a specific apiary.',
     parameters: z.object({
       apiaryId: z.number(),
@@ -3931,6 +3942,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'getHiveDetail',
+    title: 'Get hive details',
     description:
       'Get a detailed static summary for a single hive (queen, location, type, source, neighbours).',
     parameters: z.object({
@@ -3939,12 +3951,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'listQueens',
+    title: 'List queens',
     description:
       'List queens with birth date, mark colour, race, mating, status, hive and apiary. Defaults to the current queen of each active hive; inactive (dead or lost) queens are included with active=false. Use this for questions about queen age or birth year. Returns pages in birth date order; when hasMore is true, call again with cursor set to nextCursor and the same filters.',
     parameters: listQueensInputSchema,
   },
   {
     name: 'getHiveTasks',
+    title: 'Get hive tasks of a year',
     description:
       'Get all tasks (feed, harvest, treatment, checkup, movedate, todo) for a hive or apiary for a given year, as flat records with ids and names. For an apiary with many hives, call it per hive or use fetchTasks with apiaryId.',
     parameters: z.object({
@@ -3955,12 +3969,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'listCompanyUsers',
+    title: 'List company members',
     description:
       'List the members of the current company with bee_id, username, email, rank and last visit. Use it to resolve bee_id and edit_id in task records.',
     parameters: z.object({}),
   },
   {
     name: 'fetchOptions',
+    title: 'Get account options',
     description:
       'Fetch all available option/lookup lists at once (hive types, task types, wax products, wax origin types, etc.).',
     parameters: z.object({
@@ -3969,12 +3985,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'fetchTasks',
+    title: 'Get task records',
     description:
       'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages of up to 60,000 characters. For multi-year summaries prefer the statistics tools. When hasMore is true, call again with cursor set to nextCursor and the same filters. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
     parameters: fetchTasksInputSchema,
   },
   {
     name: 'createFeed',
+    title: 'Record feeding',
     description: 'Create a new feed record for one or more hives.',
     parameters: z.object({
       hiveIds: z.array(z.number()).min(1),
@@ -3995,6 +4013,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchFeed',
+    title: 'Edit feedings',
     description: 'Update one or more existing feed records by their IDs.',
     parameters: z.object({
       ids: z.array(z.number()).min(1),
@@ -4008,11 +4027,13 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'softDeleteFeed',
+    title: 'Delete feedings',
     description: 'Soft-delete one or more feed records by their IDs.',
     parameters: z.object({ ids: z.array(z.number()).min(1) }),
   },
   {
     name: 'createHarvest',
+    title: 'Record harvest',
     description: 'Create a new harvest record for one or more hives.',
     parameters: z.object({
       hiveIds: z.array(z.number()).min(1),
@@ -4036,6 +4057,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchHarvest',
+    title: 'Edit harvests',
     description: 'Update one or more existing harvest records by their IDs.',
     parameters: z.object({
       ids: z.array(z.number()).min(1),
@@ -4055,11 +4077,13 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'softDeleteHarvest',
+    title: 'Delete harvests',
     description: 'Soft-delete one or more harvest records by their IDs.',
     parameters: z.object({ ids: z.array(z.number()).min(1) }),
   },
   {
     name: 'createTreatment',
+    title: 'Record treatment',
     description: 'Create a new treatment record for one or more hives.',
     parameters: z.object({
       hiveIds: z.array(z.number()).min(1),
@@ -4084,6 +4108,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchTreatment',
+    title: 'Edit treatments',
     description: 'Update one or more existing treatment records by their IDs.',
     parameters: z.object({
       ids: z.array(z.number()).min(1),
@@ -4101,11 +4126,13 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'softDeleteTreatment',
+    title: 'Delete treatments',
     description: 'Soft-delete one or more treatment records by their IDs.',
     parameters: z.object({ ids: z.array(z.number()).min(1) }),
   },
   {
     name: 'createCheckup',
+    title: 'Record inspection',
     description:
       'Create a new checkup/inspection record for one or more hives.',
     parameters: z.object({
@@ -4139,6 +4166,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchCheckup',
+    title: 'Edit inspections',
     description:
       'Update one or more existing checkup/inspection records by their IDs.',
     parameters: z.object({
@@ -4170,12 +4198,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'softDeleteCheckup',
+    title: 'Delete inspections',
     description:
       'Soft-delete one or more checkup/inspection records by their IDs.',
     parameters: z.object({ ids: z.array(z.number()).min(1) }),
   },
   {
     name: 'createTodo',
+    title: 'Create todo',
     description: 'Create a new todo/reminder.',
     parameters: z.object({
       name: z.string().min(1).max(48),
@@ -4188,6 +4218,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchTodo',
+    title: 'Edit todos',
     description: 'Update one or more existing todos by their IDs.',
     parameters: z.object({
       ids: z.array(z.number()).min(1),
@@ -4200,6 +4231,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'batchDeleteTodo',
+    title: 'Delete todos',
     description: 'Delete one or more todos by their IDs.',
     parameters: z.object({
       ids: z.array(z.number()).min(1),
@@ -4207,12 +4239,14 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'fetchCharges',
+    title: 'Get stock charges',
     description:
       'Fetch charges: stock movements of the warehouse (German: Lager, Lagerbuchungen) in pages of up to 60,000 characters, with stockSummary (Lagerbestand) on every page. When hasMore is true, call again with cursor set to nextCursor and the same filters.',
     parameters: fetchChargesInputSchema,
   },
   {
     name: 'createCharge',
+    title: 'Record stock charge',
     description:
       'Create a new charge: a stock movement in the warehouse (German: Lagerbuchung) for sugar, treatments, honey jars, etc.',
     parameters: z.object({
@@ -4230,6 +4264,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'patchCharge',
+    title: 'Edit stock charges',
     description:
       'Update one or more existing charges (stock movements, German: Lagerbuchungen) by their IDs.',
     parameters: z.object({
@@ -4248,6 +4283,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'softDeleteCharge',
+    title: 'Delete stock charges',
     description:
       'Soft-delete one or more charges (stock movements, German: Lagerbuchungen) by their IDs.',
     parameters: z.object({
@@ -4256,23 +4292,27 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'fetchWaxLedger',
+    title: 'Get wax ledger',
     description:
       'Fetch wax lots, current stock, product summary and wax operations in pages. Lots and operations each have hasMore and nextCursor; send that nextCursor as cursor to get the next page of that list.',
     parameters: fetchWaxLedgerToolSchema,
   },
   {
     name: 'createWaxOperation',
+    title: 'Record wax operation',
     description: 'Create a wax ledger operation.',
     parameters: createWaxOperationToolSchema,
   },
   {
     name: 'reverseWaxOperation',
+    title: 'Reverse wax operation',
     description:
       'Reverse a wax operation through an auditable correction entry.',
     parameters: reverseWaxOperationToolSchema,
   },
   {
     name: 'getHiveStatistics',
+    title: 'Get hive statistics',
     description: 'Get hive count statistics (total and per apiary).',
     parameters: z.object({
       date: z.string().optional(),
@@ -4280,6 +4320,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'getHarvestStatistics',
+    title: 'Get harvest statistics',
     description: 'Get harvest statistics (by year, apiary, type).',
     parameters: z.object({
       year: z.number().optional(),
@@ -4287,6 +4328,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'getFeedStatistics',
+    title: 'Get feeding statistics',
     description: 'Get feed statistics (by year, apiary, type).',
     parameters: z.object({
       year: z.number().optional(),
@@ -4294,6 +4336,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'getTreatmentStatistics',
+    title: 'Get treatment statistics',
     description: 'Get treatment statistics (by year, apiary, type).',
     parameters: z.object({
       year: z.number().optional(),
@@ -4301,6 +4344,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'btreeDocumentation',
+    title: 'Search b.tree documentation',
     description:
       'Fetch b.tree software documentation sections for a query. Without a query, returns only the list of sections.',
     parameters: z.object({
@@ -4309,6 +4353,7 @@ export const wizBeeToolDefinitions = [
   },
   {
     name: 'calculateSugarWater',
+    title: 'Calculate sugar syrup',
     description: 'Calculate sugar water mixture for bee feeding.',
     parameters: z.object({
       ratio: z.enum(['1:1', '3:2']),

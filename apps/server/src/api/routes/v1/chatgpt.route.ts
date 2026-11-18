@@ -24,6 +24,7 @@ import {
 type OpenApiPathItem = {
   post: {
     tags: string[];
+    summary: string;
     description: string;
     requestBody: {
       required: boolean;
@@ -47,6 +48,7 @@ function buildChatGptToolSpec() {
       toolPaths[`/tools/${toolDef.name}`] = {
         post: {
           tags: ['Tools'],
+          summary: toolDef.title,
           description: toolDef.description,
           requestBody: {
             required: true,

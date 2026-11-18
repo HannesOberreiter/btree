@@ -99,6 +99,7 @@ export function createBtreeMcpServer(authInfo: AuthInfo | undefined) {
     server.registerTool(
       definition.name,
       {
+        title: definition.title,
         description: definition.description,
         inputSchema: definition.parameters,
         annotations: {
