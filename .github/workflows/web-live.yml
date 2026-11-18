@@ -30,11 +30,11 @@ jobs:
       MATOMO_SITE_ID: ${{ secrets.MATOMO_SITE_ID }}
       PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           package_json_file: apps/web/package.json
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
@@ -62,7 +62,7 @@ jobs:
         run: bash scripts/upload-bunny.sh dist/pwa
 
       - name: Purge BunnyCDN
-        uses: fjogeleit/http-request-action@v1
+        uses: fjogeleit/http-request-action@f98bb26551cd1af7d3eb2674578a80754ece88db # v2.0.1
         with:
           url: 'https://api.bunny.net/pullzone/${{env.ZONE_ID}}/purgeCache'
           method: POST
