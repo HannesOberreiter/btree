@@ -123,7 +123,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp1"
-      label="temperature"
+      label="scale.temperature1"
       table-id="temp1"
       icon="fas fa-temperature-high"
       numeric-valid="decimal"
@@ -133,7 +133,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp2"
-      label="temperature"
+      label="scale.temperature2"
       table-id="temp2"
       icon="fas fa-temperature-low"
       numeric-valid="decimal"
@@ -143,7 +143,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.humidity"
-      label="humidity"
+      label="scale.humidity1"
       table-id="humidity"
       icon="fas fa-percent"
       numeric-valid="decimal"
@@ -152,7 +152,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.humidity2"
-      label="humidity"
+      label="scale.humidity2"
       table-id="humidity2"
       icon="fas fa-percent"
       numeric-valid="decimal"

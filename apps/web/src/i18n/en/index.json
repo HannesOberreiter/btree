@@ -663,8 +663,12 @@
     "deleteText": "Are you sure you want to delete {name}? You cannot undo this action, and all connected scale data will be deleted!",
     "devEui": "DevEUI (LoRaWAN)",
     "devEuiHint": "Optional. 16 hex characters. The TTN webhook finds the scale by its DevEUI.",
+    "humidity1": "Humidity 1",
+    "humidity2": "Humidity 2",
     "name": "Scale | Scales",
     "nameHint": "Name needs to be unique and is needed for API calls as identifier.",
+    "temperature1": "Temperature 1",
+    "temperature2": "Temperature 2",
     "ttnHint": "For LoRaWAN scales on The Things Network (TTN). In the TTN Console, add a custom webhook with the JSON format to your application, use this URL as the base URL and turn on uplink messages. Use a payload formatter with the BEEP keys (weight_kg, t, h, t_i, h_i). Enter the DevEUI of the device in the b.tree scale. The limit is 1 reading per hour; b.tree drops other readings.",
     "ttnUrl": "TTN webhook URL"
   },

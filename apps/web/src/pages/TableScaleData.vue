@@ -73,28 +73,28 @@ const columns = [
   },
   {
     name: 'temp1',
-    label: `${t('temperature')} 1`,
+    label: t('scale.temperature1'),
     align: 'right',
     field: (row: any) => row.temp1,
     sortable: true
   },
   {
     name: 'temp2',
-    label: `${t('temperature')} 2`,
+    label: t('scale.temperature2'),
     align: 'right',
     field: (row: any) => row.temp2,
     sortable: true
   },
   {
     name: 'humidity',
-    label: `${t('humidity')} 1`,
+    label: t('scale.humidity1'),
     align: 'right',
     field: (row: any) => row.humidity,
     sortable: true
   },
   {
     name: 'humidity2',
-    label: `${t('humidity')} 2`,
+    label: t('scale.humidity2'),
     align: 'right',
     field: (row: any) => row.humidity2,
     sortable: true

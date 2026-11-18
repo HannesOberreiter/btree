@@ -1,4 +1,5 @@
 import Chance from 'chance';
+import { t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 const chance = new Chance(12_345);
@@ -19,7 +20,9 @@ test.describe('user - Scale Data Table', () => {
     await page.locator('[name=scale]').fill(chance.province());
     await page.locator('[name=dev_eui]').fill('zz-b3-d5-7e-d0-01-23-45');
     await dataCy('btn-form-save').click();
-    await expect(dataCy('form-scale')).toBeAttached();
+    await expect(
+      dataCy('form-scale').getByText(t('validations.devEui'))
+    ).toBeVisible();
     const devEui = Array.from({ length: 8 }, () =>
       Math.floor(Math.random() * 256)
         .toString(16)

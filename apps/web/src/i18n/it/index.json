@@ -663,8 +663,12 @@
     "deleteText": "Sei sicuro di eliminare {name}. Non è possibile annullare questa azione e tutti i dati della bilancia collegata verranno eliminati!",
     "devEui": "DevEUI (LoRaWAN)",
     "devEuiHint": "Facoltativo. 16 caratteri esadecimali. Il webhook TTN trova la bilancia tramite il suo DevEUI.",
+    "humidity1": "Umidità 1",
+    "humidity2": "Umidità 2",
     "name": "Bilancia | Bilance",
     "nameHint": "Il nome deve essere univoco ed è necessario per le chiamate API come identificatore.",
+    "temperature1": "Temperatura 1",
+    "temperature2": "Temperatura 2",
     "ttnHint": "Per le bilance LoRaWAN su The Things Network (TTN). Nella console TTN aggiungi alla tua applicazione un webhook personalizzato con il formato JSON, usa questo URL come base URL e attiva i messaggi uplink. Usa un payload formatter con le chiavi BEEP (weight_kg, t, h, t_i, h_i). Inserisci il DevEUI del dispositivo nella bilancia b.tree. Il limite è 1 misurazione all'ora; b.tree scarta le altre misurazioni.",
     "ttnUrl": "URL del webhook TTN"
   },
