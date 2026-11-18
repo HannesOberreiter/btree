@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.14.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.13.1...btree-server-v7.14.0) (2026-11-18)
+
+
+### Features
+
+* **server:** add titles to MCP tools ([#344](https://github.com/HannesOberreiter/btree/issues/344)) ([dcfe945](https://github.com/HannesOberreiter/btree/commit/dcfe94561117c60163946bb11e68c36653a351c6))
+
+
+### Bug Fixes
+
+* **deps:** apply patch updates and pin deploy actions ([#346](https://github.com/HannesOberreiter/btree/issues/346)) ([5f47f49](https://github.com/HannesOberreiter/btree/commit/5f47f49402cf26c1a4751d546f379fd169b940b5))
+* **server:** match CORS origins exactly ([#341](https://github.com/HannesOberreiter/btree/issues/341)) ([efde0a8](https://github.com/HannesOberreiter/btree/commit/efde0a89555802c859f5077080dd35539f45e0d8))
+* **server:** match external CORS routes by path ([#342](https://github.com/HannesOberreiter/btree/issues/342)) ([ade0b99](https://github.com/HannesOberreiter/btree/commit/ade0b9991b21a110c373e9c059c43045b5557f96))
+
 ## [7.13.1](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.13.0...btree-server-v7.13.1) (2026-11-11)
 
 
