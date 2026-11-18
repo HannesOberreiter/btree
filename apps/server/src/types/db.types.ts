@@ -1122,6 +1122,7 @@ export interface RefreshTokens {
 export interface ScaleData {
   datetime: Generated<Date | null>;
   humidity: Generated<Decimal | null>;
+  humidity2: Generated<Decimal | null>;
   id: Generated<number>;
   note: Generated<string | null>;
   rain: Generated<Decimal | null>;
@@ -1132,6 +1133,7 @@ export interface ScaleData {
 }
 
 export interface Scales {
+  dev_eui: Generated<string | null>;
   hive_id: Generated<number | null>;
   id: Generated<number>;
   name: Generated<string | null>;

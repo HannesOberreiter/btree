@@ -24,11 +24,14 @@ function getLogLevel(): Level {
   return env === ENVIRONMENT.development ? 'debug' : 'info';
 }
 
-const ICAL_API_KEY_URL_PATTERN = /(\/external\/ical\/[^/?#]+\/)([^/?#]+)/;
+// API keys in the URLs of /external/ical/:source/:api,
+// /external/scale/:ident/:api and /external/ttn/:api.
+const API_KEY_URL_PATTERN =
+  /(\/external\/(?:(?:ical|scale)\/[^/?#]+|ttn)\/)([^/?#]+)/;
 
-export function redactIcalApiKeyFromUrl(url: string): string {
+export function redactApiKeyFromUrl(url: string): string {
   return url.replace(
-    ICAL_API_KEY_URL_PATTERN,
+    API_KEY_URL_PATTERN,
     (_match: string, prefix: string, apiKey: string) => {
       const fingerprint = createHash('sha256')
         .update(apiKey)
@@ -90,7 +93,7 @@ export class Logger {
           return {
             id: request.id,
             method: request.method,
-            url: redactIcalApiKeyFromUrl(request.url),
+            url: redactApiKeyFromUrl(request.url),
           };
         },
         res(response) {

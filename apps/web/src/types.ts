@@ -211,6 +211,7 @@ export declare interface FormQueen {
 
 export declare interface FormScale {
   name: string;
+  dev_eui: string | null;
   hive: any;
 }
 
@@ -221,6 +222,7 @@ export declare interface FormScaleData {
   temp2: number;
   rain: number;
   humidity: number;
+  humidity2: number;
   note: string;
   scale: any;
 }

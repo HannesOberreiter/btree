@@ -3,7 +3,10 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 import { KyselyServer } from '../../../servers/kysely.server.js';
-import { ingestExternalScaleReading } from '../../adapters/scale_data.adapter.js';
+import {
+  ingestExternalScaleReading,
+  ingestTtnUplink,
+} from '../../adapters/scale_data.adapter.js';
 import ExternalController from '../../controllers/external.controller.js';
 import { Validator } from '../../hooks/validator.hook.js';
 import {
@@ -14,6 +17,9 @@ import {
   externalCalendarParamsSchema,
   externalScaleParamsSchema,
   externalScaleQuerySchema,
+  externalTtnBodySchema,
+  externalTtnParamsSchema,
+  externalTtnResponseSchema,
   mollieWebhookBodySchema,
 } from '../../schemas/external.schema.js';
 
@@ -60,6 +66,18 @@ export default function routes(
     },
     async (request) =>
       ingestExternalScaleReading(db, request.params, request.query),
+  );
+
+  server.post(
+    '/ttn/:api',
+    {
+      schema: {
+        params: externalTtnParamsSchema,
+        body: externalTtnBodySchema,
+        response: { 200: externalTtnResponseSchema },
+      },
+    },
+    async (request) => ingestTtnUplink(db, request.params, request.body),
   );
 
   done();

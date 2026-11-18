@@ -250,6 +250,7 @@ function cleanupScaleData(state: FormScaleData) {
     temp1: state.temp1,
     temp2: state.temp2,
     humidity: state.humidity,
+    humidity2: state.humidity2,
     rain: state.rain,
     note: state.note,
     datetime: new Date(state.datetime).toISOString(),
@@ -261,6 +262,7 @@ function cleanupScaleData(state: FormScaleData) {
 function cleanupScale(state: FormScale) {
   const result = {
     name: state.name,
+    dev_eui: state.dev_eui,
     hive_id: state.hive ? state.hive.id : null
   } as any;
   return omitBy(result, isNil);

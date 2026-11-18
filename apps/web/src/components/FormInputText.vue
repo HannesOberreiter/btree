@@ -58,6 +58,10 @@ const props = defineProps({
   },
   required: {
     default: false
+  },
+  extraRules: {
+    type: Object,
+    default: () => ({})
   }
 });
 
@@ -82,14 +86,16 @@ const rules = computed(() => {
       [props.label]: {
         required: requiredField(t(props.label)),
         maxLengthValue: maxLength(props.maxValid),
-        minLengthValue: minLength(props.minValid)
+        minLengthValue: minLength(props.minValid),
+        ...props.extraRules
       }
     };
   } else {
     return {
       [props.label]: {
         maxLengthValue: maxLength(props.maxValid),
-        minLengthValue: minLength(props.minValid)
+        minLengthValue: minLength(props.minValid),
+        ...props.extraRules
       }
     };
   }

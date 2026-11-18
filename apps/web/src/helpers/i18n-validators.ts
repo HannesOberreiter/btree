@@ -54,3 +54,8 @@ export const maxValue = withI18nMessage(vMaxValue, {
 export const between = withI18nMessage(vBetween, {
   withArguments: true
 });
+
+// LoRaWAN DevEUI: 16 hex characters, optional separators between bytes
+export const devEui = withI18nMessage(
+  helpers.regex(/^[\dA-F]{2}(?:[-: ]?[\dA-F]{2}){7}$/i)
+);
