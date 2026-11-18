@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.13.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.3...btree-client-v7.13.0) (2026-11-18)
+
+
+### Features
+
+* add TTN webhook for LoRaWAN scales ([#358](https://github.com/HannesOberreiter/btree/issues/358)) ([60cdef3](https://github.com/HannesOberreiter/btree/commit/60cdef321d7b49a19145bd286da5f899ea4a9c72))
+
 ## [7.12.3](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.2...btree-client-v7.12.3) (2026-11-18)
 
 
