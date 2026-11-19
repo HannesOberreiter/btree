@@ -6,6 +6,7 @@ import { computed, ref, unref } from 'vue';
 import { useApiFetch } from '../composables/useApi';
 import { useDateFormat } from '../composables/useDate';
 import { useNotification } from '../composables/useNotification';
+import { formCheckMultipleValues } from '../helpers';
 import FormButtons from './FormButtons.vue';
 import FormDropdownEdit from './FormDropdownEdit.vue';
 import FormDropdownOption from './FormDropdownOption.vue';
@@ -46,20 +47,45 @@ const v = useVuelidate();
 const editOptions = ref([]) as any;
 const editOptionsCopy = ref([]) as any;
 
+// A scale does not have every sensor, so a value without input stays empty.
 const stateDefault = {
   datetime: useDate.isoFormat(useDate.getCurrent(), 'date-time-seconds'),
-  weight: 0,
-  temp1: 0,
-  temp2: 0,
-  humidity: 0,
-  humidity2: 0,
-  rain: 0,
+  weight: null,
+  temp1: null,
+  temp2: null,
+  humidity: null,
+  humidity2: null,
+  rain: null,
   note: ''
 };
+const sensorFields = [
+  'weight',
+  'temp1',
+  'temp2',
+  'humidity',
+  'humidity2',
+  'rain'
+] as const;
 
 const state = ref<FormScaleData>({
   scale: undefined as any,
   ...stateDefault
+});
+
+// An empty sensor field removes the stored value. The exception is a field
+// that is empty because the selected rows have different values: it keeps
+// the value of each row.
+const submitState = computed(() => {
+  const result: Partial<FormScaleData> = { ...state.value };
+  for (const field of sensorFields) {
+    if (
+      result[field] === null &&
+      formCheckMultipleValues(values.value, field)
+    ) {
+      delete result[field];
+    }
+  }
+  return result;
 });
 
 async function getEdit(id: unknown[]) {
@@ -114,6 +140,7 @@ function onReset() {
 
     <FormInputNumeric
       v-model="state.weight"
+      nullable
       label="weight"
       icon="fas fa-weight"
       numeric-valid="decimal"
@@ -123,6 +150,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp1"
+      nullable
       label="scale.temperature1"
       table-id="temp1"
       icon="fas fa-temperature-high"
@@ -133,6 +161,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.temp2"
+      nullable
       label="scale.temperature2"
       table-id="temp2"
       icon="fas fa-temperature-low"
@@ -143,6 +172,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.humidity"
+      nullable
       label="scale.humidity1"
       table-id="humidity"
       icon="fas fa-percent"
@@ -152,6 +182,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.humidity2"
+      nullable
       label="scale.humidity2"
       table-id="humidity2"
       icon="fas fa-percent"
@@ -161,6 +192,7 @@ function onReset() {
     />
     <FormInputNumeric
       v-model="state.rain"
+      nullable
       label="rain"
       icon="fas fa-cloud-rain"
       numeric-valid="decimal"
@@ -171,7 +203,7 @@ function onReset() {
   </q-form>
   <FormButtons
     class="q-pt-md"
-    :state="state"
+    :state="submitState"
     :is-edit="isEdit"
     :edit-ids="editOptions"
     :v="v"

@@ -2835,6 +2835,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            api_active?: boolean;
             api_change?: boolean;
             name?: string;
             password?: string;
@@ -3707,13 +3708,13 @@ export interface paths {
         query: {
           action: 'CREATE' | 'CREATE_DEMO';
           datetime?: string;
-          hum?: number;
-          hum2?: number;
+          hum?: number | '' | 'null' | null;
+          hum2?: number | '' | 'null' | null;
           note?: string;
-          rain?: number;
-          temp1?: number;
-          temp2?: number;
-          weight?: number;
+          rain?: number | '' | 'null' | null;
+          temp1?: number | '' | 'null' | null;
+          temp2?: number | '' | 'null' | null;
+          weight?: number | '' | 'null' | null;
         };
         header?: never;
         path: {
@@ -9192,6 +9193,7 @@ export interface paths {
             | (
                 | 'id'
                 | 'scale.name'
+                | 'scale.dev_eui'
                 | 'scale.hive.name'
                 | 'datetime'
                 | 'weight'
@@ -9205,6 +9207,7 @@ export interface paths {
             | (
                 | 'id'
                 | 'scale.name'
+                | 'scale.dev_eui'
                 | 'scale.hive.name'
                 | 'datetime'
                 | 'weight'
@@ -9238,6 +9241,7 @@ export interface paths {
                 note: string | null;
                 rain: string | number | null;
                 scale?: {
+                  dev_eui: string | null;
                   hive: {
                     bee_id: number | null;
                     created_at: string | null;
@@ -9310,6 +9314,7 @@ export interface paths {
               note: string | null;
               rain: string | number | null;
               scale?: {
+                dev_eui: string | null;
                 hive: {
                   bee_id: number | null;
                   created_at: string | null;
@@ -9463,6 +9468,7 @@ export interface paths {
               note: string | null;
               rain: string | number | null;
               scale?: {
+                dev_eui: string | null;
                 hive: {
                   bee_id: number | null;
                   created_at: string | null;

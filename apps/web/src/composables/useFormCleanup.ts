@@ -13,7 +13,7 @@ import type {
   FormTodo
 } from '../types';
 import dayjs from 'dayjs';
-import { includes, isNil, omitBy } from 'lodash-es';
+import { includes, isNil, isUndefined, omitBy } from 'lodash-es';
 import { unref } from 'vue';
 
 export function useFormCleanup(
@@ -244,19 +244,27 @@ function cleanupCharge(state: FormCharge) {
   return omitBy(result, isNil);
 }
 
-function cleanupScaleData(state: FormScaleData) {
+function cleanupScaleData(state: Partial<FormScaleData>) {
+  // A sensor value that is null removes the stored value. The form leaves
+  // out a sensor value that must stay unchanged.
+  const sensors = omitBy(
+    {
+      weight: state.weight,
+      temp1: state.temp1,
+      temp2: state.temp2,
+      humidity: state.humidity,
+      humidity2: state.humidity2,
+      rain: state.rain
+    },
+    isUndefined
+  );
   const result = {
-    weight: state.weight,
-    temp1: state.temp1,
-    temp2: state.temp2,
-    humidity: state.humidity,
-    humidity2: state.humidity2,
-    rain: state.rain,
     note: state.note,
-    datetime: new Date(state.datetime).toISOString(),
+    // The datetime is empty when the selected rows have different values.
+    datetime: state.datetime ? new Date(state.datetime).toISOString() : null,
     scale_id: state.scale ? state.scale.id : null
   } as any;
-  return omitBy(result, isNil);
+  return { ...sensors, ...omitBy(result, isNil) };
 }
 
 function cleanupScale(state: FormScale) {

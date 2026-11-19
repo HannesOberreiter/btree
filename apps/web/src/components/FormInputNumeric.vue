@@ -53,6 +53,11 @@ const props = defineProps({
   },
   numericValid: {
     default: 'numeric'
+  },
+  // An empty input gives null and not 0.
+  nullable: {
+    type: Boolean,
+    default: false
   }
 });
 const emit = defineEmits(['update:modelValue']);
@@ -120,6 +125,17 @@ function editValues(val: boolean) {
   disable.value = val;
   modelValue.value = disable.value ? null : modelValue.value;
 }
+
+// The plus and minus buttons of an empty nullable field count from 0.
+const canStep = computed(
+  () => !disable.value && (modelValue.value !== null || props.nullable)
+);
+
+function step(amount: number) {
+  if (canStep.value) {
+    modelValue.value = Number(modelValue.value ?? 0) + amount;
+  }
+}
 </script>
 
 <template>
@@ -141,7 +157,8 @@ function editValues(val: boolean) {
     :max="maxValid"
     filled
     @update:model-value="
-      val => $emit('update:modelValue', val === '' ? 0 : val)
+      val =>
+        $emit('update:modelValue', val === '' ? (nullable ? null : 0) : val)
     "
   >
     <template v-if="icon !== ''" #before>
@@ -158,24 +175,16 @@ function editValues(val: boolean) {
         flat
         dense
         icon="fas fa-plus"
-        :disable="modelValue === null || modelValue >= maxValid"
-        @click="
-          () => {
-            if (modelValue !== null) modelValue++;
-          }
-        "
+        :disable="!canStep || Number(modelValue ?? 0) >= maxValid"
+        @click="step(1)"
       />
       <BtnBase
         round
         flat
         dense
         icon="fas fa-minus"
-        :disable="modelValue === null || modelValue <= minValid"
-        @click="
-          () => {
-            if (modelValue !== null) modelValue--;
-          }
-        "
+        :disable="!canStep || Number(modelValue ?? 0) <= minValid"
+        @click="step(-1)"
       />
     </template>
     <template #after>

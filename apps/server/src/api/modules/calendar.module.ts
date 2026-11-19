@@ -393,8 +393,9 @@ export async function listCalendarScaleData(
 
   let previousWeight = 0;
   return rows.flatMap((row) => {
-    if (row.date === null) return [];
-    const average = Number(row.average ?? 0);
+    // A day with no weight in any reading has no average.
+    if (row.date === null || row.average === null) return [];
+    const average = Number(row.average);
     const difference = round(average - previousWeight, 1);
     previousWeight = average;
     const increase = difference > 0;

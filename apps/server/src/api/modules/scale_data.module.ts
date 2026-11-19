@@ -23,6 +23,7 @@ const orderColumns: Record<
   ScaleDataOrderField,
   | 'scale_data.id'
   | 'scales.name'
+  | 'scales.dev_eui'
   | 'hives.name'
   | 'scale_data.datetime'
   | 'scale_data.weight'
@@ -35,6 +36,7 @@ const orderColumns: Record<
 > = {
   id: 'scale_data.id',
   'scale.name': 'scales.name',
+  'scale.dev_eui': 'scales.dev_eui',
   'scale.hive.name': 'hives.name',
   datetime: 'scale_data.datetime',
   weight: 'scale_data.weight',
@@ -121,6 +123,7 @@ function scaleProjection() {
   return sql<{
     id: number;
     name: string | null;
+    dev_eui: string | null;
     hive_id: number | null;
     user_id: number | null;
     hive: HiveSummary | null;
@@ -128,6 +131,7 @@ function scaleProjection() {
     JSON_OBJECT(
       'id', scales.id,
       'name', scales.name,
+      'dev_eui', scales.dev_eui,
       'hive_id', scales.hive_id,
       'user_id', scales.user_id,
       'hive', CASE WHEN hives.id IS NOT NULL THEN JSON_OBJECT(
@@ -167,7 +171,14 @@ function buildScaleDataQuery(
     );
 
   const search = input.q === undefined ? '' : String(input.q).trim();
-  if (search) query = query.where('scales.name', 'like', `%${search}%`);
+  if (search) {
+    query = query.where((eb) =>
+      eb.or([
+        eb('scales.name', 'like', `%${search}%`),
+        eb('scales.dev_eui', 'like', `%${search}%`),
+      ]),
+    );
+  }
 
   for (const filter of parseFilters(input.filters)) {
     if ('date' in filter) {
@@ -347,17 +358,22 @@ export async function deleteScaleData(
   return Number(result.numDeletedRows);
 }
 
+type WarningRecipient = {
+  email: string | null;
+  username: string | null;
+  lang: string | null;
+};
+
 export interface WeightWarning {
   scaleName: string | null;
-  difference: number;
   previousWeight: number;
-  currentWeight: number;
-  recipients: Array<{
-    email: string | null;
-    username: string | null;
-    lang: string | null;
-  }>;
+  /** Null when the reading has no weight. */
+  currentWeight: number | null;
+  recipients: WarningRecipient[];
 }
+
+/** Largest weight change in kg between two readings without a warning. */
+const WEIGHT_WARNING_LIMIT = 5;
 
 /**
  * The external scale endpoints find the company by its API key. The GET
@@ -366,6 +382,44 @@ export interface WeightWarning {
 export type ExternalScaleTarget =
   | { api: string; ident: string }
   | { api: string; devEui: string };
+
+/**
+ * Gives the previous weight when the new reading needs a warning, else
+ * undefined.
+ *
+ * - A reading with a weight is compared with the latest reading that has a
+ *   weight, so readings without a weight between them do not hide a change.
+ * - A reading without a weight gets a warning only when the latest reading
+ *   has a weight, so a failed sensor gives one warning and not one for each
+ *   reading. Readings from before 2026-11 hold 0 for a missing weight, so a
+ *   latest weight of 0 gives no warning.
+ */
+async function weightToWarnAbout(
+  db: Kysely<DB>,
+  scaleId: number,
+  latestWeight: string | number | null | undefined,
+  newWeight: number | undefined,
+): Promise<number | undefined> {
+  if (newWeight === undefined) {
+    const latest = Number(latestWeight ?? 0);
+    return latest !== 0 ? latest : undefined;
+  }
+  let previous = latestWeight;
+  if (previous === null) {
+    const row = await db
+      .selectFrom('scale_data')
+      .select('weight')
+      .where('scale_id', '=', scaleId)
+      .where('weight', 'is not', null)
+      .orderBy('datetime', 'desc')
+      .executeTakeFirst();
+    previous = row?.weight;
+  }
+  if (previous === null || previous === undefined) return undefined;
+  return Math.abs(Number(previous) - newWeight) > WEIGHT_WARNING_LIMIT
+    ? Number(previous)
+    : undefined;
+}
 
 export async function ingestScaleReading(
   db: Kysely<DB>,
@@ -376,6 +430,7 @@ export async function ingestScaleReading(
     .selectFrom('companies')
     .select(['id', 'paid'])
     .where('api_key', '=', target.api)
+    .where('api_active', '=', true)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound('Company not found');
   if (!dayjs(company.paid).isAfter(dayjs())) {
@@ -410,15 +465,14 @@ export async function ingestScaleReading(
   }
 
   let warning: WeightWarning | undefined;
-  if (
-    last?.weight &&
-    Number(last.weight) !== 0 &&
-    input.weight &&
-    input.action === 'CREATE'
-  ) {
-    const previousWeight = Number(last.weight);
-    const difference = Math.abs(previousWeight - input.weight);
-    if (difference > 5) {
+  if (input.action === 'CREATE') {
+    const previousWeight = await weightToWarnAbout(
+      db,
+      scale.id,
+      last?.weight,
+      input.weight,
+    );
+    if (previousWeight !== undefined) {
       const recipients = await db
         .selectFrom('company_bee')
         .innerJoin('bees', 'bees.id', 'company_bee.bee_id')
@@ -428,9 +482,8 @@ export async function ingestScaleReading(
         .execute();
       warning = {
         scaleName: scale.name,
-        difference,
         previousWeight,
-        currentWeight: input.weight,
+        currentWeight: input.weight ?? null,
         recipients,
       };
     }
@@ -438,12 +491,12 @@ export async function ingestScaleReading(
 
   const values = {
     datetime: insertDate,
-    weight: input.weight ?? 0,
-    temp1: input.temp1 ?? 0,
-    temp2: input.temp2 ?? 0,
-    rain: input.rain ?? 0,
-    humidity: input.hum ?? 0,
-    humidity2: input.hum2 ?? 0,
+    weight: input.weight ?? null,
+    temp1: input.temp1 ?? null,
+    temp2: input.temp2 ?? null,
+    rain: input.rain ?? null,
+    humidity: input.hum ?? null,
+    humidity2: input.hum2 ?? null,
     note: input.note ?? '',
     scale_id: scale.id,
   };
@@ -463,28 +516,33 @@ export async function ingestScaleReading(
 
 /**
  * Maps the BEEP keys of a TTN payload formatter to a scale reading. The
- * index pairs temperature and humidity of the same sensor. Gives null when
- * the payload has no known key.
+ * index pairs temperature and humidity of the same sensor. A key without a
+ * number, for example null from a failed sensor, gives no value. Gives null
+ * when the payload has no known key.
  */
 export function readingFromTtnUplink(
   body: ExternalTtnBody,
 ): ExternalScaleQuery | null {
   const payload = body.uplink_message.decoded_payload ?? {};
+  const keys = {
+    weight: 'weight_kg',
+    temp1: 't',
+    hum: 'h',
+    temp2: 't_i',
+    hum2: 'h_i',
+  };
+  if (!Object.values(keys).some((key) => key in payload)) return null;
   const value = (key: string) => {
     const raw = payload[key];
     return typeof raw === 'number' && Number.isFinite(raw) ? raw : undefined;
   };
-  const values = {
-    weight: value('weight_kg'),
-    temp1: value('t'),
-    hum: value('h'),
-    temp2: value('t_i'),
-    hum2: value('h_i'),
-  };
-  if (Object.values(values).every((item) => item === undefined)) return null;
   return {
     action: 'CREATE',
     datetime: body.uplink_message.received_at,
-    ...values,
+    weight: value(keys.weight),
+    temp1: value(keys.temp1),
+    hum: value(keys.hum),
+    temp2: value(keys.temp2),
+    hum2: value(keys.hum2),
   };
 }

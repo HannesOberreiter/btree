@@ -87,9 +87,10 @@ function renderChart(data: any, year: number) {
   const axis_data = [];
   for (const scale of scales) {
     const filtered = data.filter((o: any) => o.scale.name === scale);
+    // A reading without a weight gives a gap in the line.
     const clean = filtered.map((o: any) => [
       new Date(o.datetime),
-      round(o.weight, 1)
+      o.weight === null ? null : round(o.weight, 1)
     ]);
     axis_data.push({
       name: scale,

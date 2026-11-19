@@ -29,6 +29,7 @@ export const companyCountResponseSchema = z.looseObject({
 export const companyPatchSchema = z.looseObject({
   name: z.string().min(3).max(45).trim().optional(),
   password: z.string().optional(),
+  api_active: z.boolean().optional(),
   api_change: z.boolean().optional(),
 });
 
