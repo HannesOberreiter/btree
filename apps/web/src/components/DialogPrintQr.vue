@@ -132,3 +132,20 @@ function onPrint() {
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+/* The default figure margin makes the three col-4 columns wider than the
+   scroll area and cuts off the third column. */
+#printContainer figure {
+  margin: 0;
+}
+#printContainer img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+#printContainer figcaption {
+  overflow-wrap: anywhere;
+}
+</style>

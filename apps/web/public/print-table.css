@@ -56,3 +56,18 @@ td {
 .text-center {
   text-align: center;
 }
+
+/* QR code grid (DialogPrintQr): keep the figure and image inside the
+   33.3333% column so the third column is not cut off. */
+#printContainer figure {
+  margin: 0;
+}
+#printContainer img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+#printContainer figcaption {
+  overflow-wrap: anywhere;
+}
