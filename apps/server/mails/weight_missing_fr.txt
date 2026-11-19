@@ -1,0 +1,6 @@
+<title>Poids manquant sur votre pèse-ruche</title>
+Cher apiculteur,
+
+pour votre information, la dernière transmission de votre pèse-ruche ne contenait pas de poids. La ligne ci-dessous indique la balance et le dernier poids en kg. Veuillez vérifier la balance.
+
+>> %key%

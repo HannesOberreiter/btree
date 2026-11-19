@@ -1,0 +1,6 @@
+<title>Peso mancante sulla bilancia dell'alveare</title>
+Gentile apicoltore,
+
+per tua informazione, l'ultima trasmissione della bilancia dell'alveare non conteneva il peso. La riga qui sotto mostra la bilancia e l'ultimo peso in kg. Controlla la bilancia.
+
+>> %key%

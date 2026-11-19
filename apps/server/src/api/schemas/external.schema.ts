@@ -16,15 +16,24 @@ export const mollieWebhookBodySchema = z.looseObject({
   id: z.string().min(1),
 });
 
+/**
+ * A value of a scale reading. An empty value and `null` count as not sent,
+ * so a device with a fixed URL can report a failed sensor.
+ */
+const readingValueSchema = z
+  .union([z.number(), z.literal(''), z.literal('null'), z.null()])
+  .transform((value) => (typeof value === 'number' ? value : undefined))
+  .optional();
+
 export const externalScaleQuerySchema = z.object({
   action: z.enum(['CREATE', 'CREATE_DEMO']),
   datetime: z.string().datetime().optional(),
-  weight: z.number().optional(),
-  temp1: z.number().optional(),
-  temp2: z.number().optional(),
-  hum: z.number().optional(),
-  hum2: z.number().optional(),
-  rain: z.number().optional(),
+  weight: readingValueSchema,
+  temp1: readingValueSchema,
+  temp2: readingValueSchema,
+  hum: readingValueSchema,
+  hum2: readingValueSchema,
+  rain: readingValueSchema,
   note: z.string().max(300).optional(),
 });
 
