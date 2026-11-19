@@ -21,6 +21,7 @@ export async function findCompanyByApiKey(db: Database, apiKey: string) {
     .selectFrom('companies')
     .selectAll()
     .where('api_key', '=', apiKey)
+    .where('api_active', '=', true)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound();
   return company;
@@ -162,17 +163,21 @@ export async function updateCompany(
       .where('id', '=', companyId)
       .executeTakeFirstOrThrow();
     if (
-      body.api_change !== undefined &&
+      (body.api_change === true || body.api_active === true) &&
       !(await isPremium(companyId, transaction))
     ) {
       throw httpErrors.PaymentRequired();
     }
+    const apiActive = body.api_active ?? company.api_active;
     const regenerateKey =
-      body.api_change === true || (company.api_active && !company.api_key);
+      body.api_change === true || (apiActive && !company.api_key);
     await transaction
       .updateTable('companies')
       .set({
         ...(body.name !== undefined && { name: body.name }),
+        ...(body.api_active !== undefined && {
+          api_active: body.api_active,
+        }),
         ...(regenerateKey && { api_key: randomBytes(25).toString('hex') }),
       })
       .where('id', '=', companyId)

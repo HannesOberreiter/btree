@@ -387,6 +387,7 @@ export async function ingestScaleReading(
     .selectFrom('companies')
     .select(['id', 'paid'])
     .where('api_key', '=', target.api)
+    .where('api_active', '=', true)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound('Company not found');
   if (!dayjs(company.paid).isAfter(dayjs())) {

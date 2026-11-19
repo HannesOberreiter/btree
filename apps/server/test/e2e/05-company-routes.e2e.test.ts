@@ -7,6 +7,7 @@ import type { TestAgent } from '../utils.js';
 import {
   createAgent,
   createAuthenticatedAgent,
+  demoUser,
   doQueryRequest,
   doRequest,
   expectations,
@@ -113,6 +114,92 @@ describe('company routes', () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.name, patchCompanyName);
+    });
+
+    it('patch 200 - switch the API on and off', async () => {
+      const off = await doRequest(agent, 'patch', route, null, accessToken, {
+        password: demoUser.password,
+        api_active: false,
+      });
+      expect(off.statusCode).toEqual(200);
+      expect(off.body.api_active).toBe(false);
+      await db('companies').where('id', off.body.id).update({ api_key: null });
+
+      const on = await doRequest(agent, 'patch', route, null, accessToken, {
+        password: demoUser.password,
+        api_active: true,
+      });
+      expect(on.statusCode).toEqual(200);
+      expect(on.body.api_active).toBe(true);
+      expect(on.body).not.toHaveProperty('api_key');
+
+      const key = await doQueryRequest(
+        agent,
+        `${route}/apikey`,
+        null,
+        accessToken,
+        null,
+      );
+      expect(key.statusCode).toEqual(200);
+      expect(key.body.api_key).toMatch(/^[0-9a-f]{50}$/);
+      const icalRoute = `/api/v1/external/ical/todo/${key.body.api_key}`;
+      const ical = await doQueryRequest(createAgent(), icalRoute, null, null, {
+        format: 'ics',
+      });
+      expect(ical.statusCode).toEqual(200);
+
+      const offAgain = await doRequest(
+        agent,
+        'patch',
+        route,
+        null,
+        accessToken,
+        { password: demoUser.password, api_active: false },
+      );
+      expect(offAgain.statusCode).toEqual(200);
+      expect(offAgain.body.api_active).toBe(false);
+      const icalOff = await doQueryRequest(
+        createAgent(),
+        icalRoute,
+        null,
+        null,
+        { format: 'ics' },
+      );
+      expect(icalOff.statusCode).toEqual(404);
+    });
+
+    it('patch - only switch the API off without premium', async () => {
+      const current = await doRequest(
+        agent,
+        'patch',
+        route,
+        null,
+        accessToken,
+        {
+          api_active: false,
+        },
+      );
+      const company = () => db('companies').where('id', current.body.id);
+      const { paid } = await company().first('paid');
+      await company().update({ paid: '2000-01-01' });
+      try {
+        const on = await doRequest(agent, 'patch', route, null, accessToken, {
+          api_active: true,
+        });
+        expect(on.statusCode).toEqual(402);
+        const stored = await company().first('api_active');
+        expect(Boolean(stored.api_active)).toBe(false);
+
+        await company().update({ api_active: true });
+        const off = await doRequest(agent, 'patch', route, null, accessToken, {
+          api_active: false,
+          api_change: false,
+        });
+        expect(off.statusCode).toEqual(200);
+        expect(off.body.api_active).toBe(false);
+      } finally {
+        await company().update({ paid });
+      }
     });
 
     it('post 200 - success', async () => {

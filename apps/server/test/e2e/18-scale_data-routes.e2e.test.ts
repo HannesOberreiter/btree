@@ -113,7 +113,11 @@ describe('scale Data routes', () => {
       const apiKey = `scale-data-e2e-${insertId}`;
       await db
         .updateTable('companies')
-        .set({ api_key: apiKey, paid: new Date('2099-01-01T00:00:00Z') })
+        .set({
+          api_key: apiKey,
+          api_active: true,
+          paid: new Date('2099-01-01T00:00:00Z'),
+        })
         .where('id', '=', 1)
         .executeTakeFirst();
 
