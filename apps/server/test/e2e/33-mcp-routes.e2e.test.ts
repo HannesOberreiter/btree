@@ -169,6 +169,63 @@ describe('remote MCP routes', () => {
     beeId = accessPayload.bee_id;
   });
 
+  it('serves a styled consent page in the account language', async () => {
+    const db = KyselyServer.getInstance().db;
+    const bee = await db
+      .selectFrom('bees')
+      .select(['id', 'lang'])
+      .where('email', '=', demoUser.email)
+      .executeTakeFirstOrThrow();
+
+    const authorizeQuery = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'mcp',
+      state: 'mcp-e2e-lang',
+      resource: mcpResource,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    });
+
+    try {
+      const en = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(en.statusCode).toBe(200);
+      expect(String(en.body)).toContain('<style>');
+      expect(String(en.body)).toContain('lang="en"');
+      expect(String(en.body)).toContain('>Allow<');
+
+      await db
+        .updateTable('bees')
+        .set({ lang: 'de' })
+        .where('id', '=', bee.id)
+        .execute();
+      const de = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(de.statusCode).toBe(200);
+      expect(String(de.body)).toContain('lang="de"');
+      expect(String(de.body)).toContain('>Erlauben<');
+      expect(String(de.body)).not.toContain('>Allow<');
+    } finally {
+      await db
+        .updateTable('bees')
+        .set({ lang: bee.lang ?? 'en' })
+        .where('id', '=', bee.id)
+        .execute();
+    }
+  });
+
   it('publishes protected-resource and authorization-server metadata', async () => {
     const resource = await jsonRequest(
       'GET',
