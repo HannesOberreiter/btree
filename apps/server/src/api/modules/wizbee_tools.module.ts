@@ -1043,6 +1043,14 @@ function getDefaultDateRange(): { dateStart: string; dateEnd: string } {
 }
 
 /**
+ * Start date used when the caller sets only `dateEnd` (for example a
+ * "last action" query with `dateEnd` today). The default 2-month window
+ * must not clamp those calls, otherwise tasks older than 2 months are
+ * never found.
+ */
+const UNBOUNDED_START = '1970-01-01';
+
+/**
  * Task types supported by the fetchTasks tool
  */
 const TASK_TYPES = ['feed', 'treatment', 'harvest', 'checkup', 'todo'] as const;
@@ -1067,7 +1075,9 @@ const fetchTasksInputSchema = z.object({
   dateStart: z
     .string()
     .optional()
-    .describe('Start date in YYYY-MM-DD format (default: 2 months ago)'),
+    .describe(
+      'Start date in YYYY-MM-DD format (default: 2 months ago). Not applied when dateEnd is set, so a last-action query can look back as far as needed.',
+    ),
   dateEnd: z
     .string()
     .optional()
@@ -2338,10 +2348,14 @@ export function createWizBeeTools(
         'Fetch individual task records (feed, treatment, harvest, checkup, todo) within a date range, in pages. Useful for viewing specific upcoming/recent activities. IMPORTANT: for multi-year summaries or "what did I do last N years" style questions, prefer the statistics tools (getHarvestStatistics, getFeedStatistics, getTreatmentStatistics, getHiveStatistics) which return aggregates in a fraction of the tokens. Only fetch raw tasks when the user needs concrete records. When hasMore is true, call again with cursor set to nextCursor and the same filters to get the next page. For the last action, call each task type with sort newest, limit 1 and dateEnd today.',
       inputSchema: fetchTasksInputSchema,
       execute: async (input) => {
-        const { dateStart, dateEnd } = getDefaultDateRange();
+        const defaults = getDefaultDateRange();
 
-        const startDate = input.dateStart ?? dateStart;
-        const endDate = input.dateEnd ?? dateEnd;
+        // When only dateEnd is set (last-action queries with dateEnd today),
+        // do not clamp the start to the default 2-month window.
+        const startDate =
+          input.dateStart ??
+          (input.dateEnd ? UNBOUNDED_START : defaults.dateStart);
+        const endDate = input.dateEnd ?? defaults.dateEnd;
 
         const filterArray: Record<string, unknown>[] = [
           { date: { from: startDate, to: endDate } },
