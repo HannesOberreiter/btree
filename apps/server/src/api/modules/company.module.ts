@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import httpErrors from 'http-errors';
 import { sql } from 'kysely';
 
+import { ROLES } from '../../config/constants.config.js';
 import type { Database } from '../../types/database.types.js';
 import type {
   CompanyCouponBody,
@@ -199,11 +200,14 @@ export async function deleteOwnedCompany(
 ) {
   const membership = await db
     .selectFrom('company_bee')
-    .select('id')
+    .select(['id', 'rank'])
     .where('bee_id', '=', beeId)
     .where('user_id', '=', companyId)
     .executeTakeFirst();
   if (!membership) throw httpErrors.NotFound('Company not found');
+  if (membership.rank !== ROLES.admin) {
+    throw httpErrors.Forbidden('Only an admin of the company can delete it.');
+  }
 
   const otherUser = await db
     .selectFrom('company_bee')
@@ -216,11 +220,14 @@ export async function deleteOwnedCompany(
       'Other user(s) found, please remove them first.',
     );
   }
+  // Fixed order (oldest membership first), so the company that becomes
+  // active after the deletion is predictable.
   const otherCompany = await db
     .selectFrom('company_bee')
     .select('user_id')
     .where('bee_id', '=', beeId)
     .where('user_id', '!=', companyId)
+    .orderBy('id', 'asc')
     .executeTakeFirst();
   if (!otherCompany?.user_id) {
     throw httpErrors.Forbidden(
