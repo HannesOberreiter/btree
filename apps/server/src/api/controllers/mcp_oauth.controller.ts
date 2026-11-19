@@ -89,7 +89,9 @@ async function getConsentContext(
   request: FastifyRequest,
 ): Promise<ConsentContext> {
   const supported = Object.keys(CONSENT_TRANSLATIONS) as ConsentLanguage[];
-  let lang: ConsentLanguage = 'en';
+  // null until the account language is resolved, so an account language
+  // of 'en' is not confused with a missing one.
+  let lang: ConsentLanguage | null = null;
   let email: string | null = null;
   let companyName: string | null = null;
   const db = KyselyServer.getInstance().db;
@@ -117,13 +119,13 @@ async function getConsentContext(
   } catch {
     // Fall through to the Accept-Language header.
   }
-  if (lang === 'en') {
+  if (lang === null) {
     const header = request.headers['accept-language'] ?? '';
     const first =
       header.split(',')[0]?.split('-')[0]?.trim().toLowerCase() ?? '';
-    if ((supported as string[]).includes(first)) {
-      lang = first as ConsentLanguage;
-    }
+    lang = (supported as string[]).includes(first)
+      ? (first as ConsentLanguage)
+      : 'en';
   }
   return { lang, companyName, email };
 }

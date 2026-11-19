@@ -176,16 +176,12 @@ describe('remote MCP routes', () => {
       .select(['id', 'lang'])
       .where('email', '=', demoUser.email)
       .executeTakeFirstOrThrow();
-    const membership = await db
-      .selectFrom('company_bee')
-      .select('user_id')
-      .where('bee_id', '=', bee.id)
-      .orderBy('id')
-      .executeTakeFirstOrThrow();
+    // The controller shows the session's active company (session user_id),
+    // which is the companyId of the MCP access token above.
     const company = await db
       .selectFrom('companies')
       .select('name')
-      .where('id', '=', membership.user_id)
+      .where('id', '=', companyId)
       .executeTakeFirstOrThrow();
 
     const authorizeQuery = new URLSearchParams({
@@ -214,6 +210,34 @@ describe('remote MCP routes', () => {
       // The page shows which company and login e-mail authorizes the client.
       expect(String(en.body)).toContain(company.name);
       expect(String(en.body)).toContain(demoUser.email);
+
+      // An account language of 'en' wins over a German Accept-Language
+      // header (regression: the header must only be used when the account
+      // has no supported language).
+      const login = await doRequest(
+        createAgent(),
+        'post',
+        '/api/v1/auth/login',
+        null,
+        null,
+        demoUser,
+      );
+      const cookie = ((login.header['set-cookie'] as string[]) ?? [])
+        .map((c) => c.split(';')[0])
+        .join('; ');
+      const withHeader = await fetch(
+        `http://localhost:${process.env.PORT}/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        {
+          headers: {
+            Cookie: cookie,
+            'Accept-Language': 'de',
+            Origin: process.env.ORIGIN!,
+          },
+          redirect: 'manual',
+        },
+      );
+      expect(withHeader.status).toBe(200);
+      expect(await withHeader.text()).toContain('lang="en"');
 
       await db
         .updateTable('bees')
