@@ -34,7 +34,7 @@ const CONSENT_TRANSLATIONS = {
     heading: 'Authorize {client}',
     text: 'Allow this client to use your b.tree tools and beekeeping data.',
     company: 'Company',
-    account: 'Login e-mail',
+    account: 'Login email',
     scope: 'Scope',
     redirect: 'Redirect',
     allow: 'Allow',
@@ -43,7 +43,7 @@ const CONSENT_TRANSLATIONS = {
   de: {
     heading: '{client} autorisieren',
     text: 'Erlaube diesem Client, deine b.tree-Werkzeuge und deine Imkereidaten zu verwenden.',
-    company: 'Betrieb',
+    company: 'Imkerei',
     account: 'Login-E-Mail',
     scope: 'Bereich',
     redirect: 'Weiterleitung',
@@ -53,7 +53,7 @@ const CONSENT_TRANSLATIONS = {
   fr: {
     heading: 'Autoriser {client}',
     text: 'Autorise ce client à utiliser tes outils b.tree et tes données apicoles.',
-    company: 'Exploitation',
+    company: 'Entreprise',
     account: 'E-mail de connexion',
     scope: 'Portée',
     redirect: 'Redirection',
@@ -62,7 +62,7 @@ const CONSENT_TRANSLATIONS = {
   },
   it: {
     heading: 'Autorizza {client}',
-    text: 'Consenti a questo client di usare i tuoi strumenti b.tree e i dati del tuo apiario.',
+    text: 'Consenti a questo client di usare i tuoi strumenti b.tree e i tuoi dati apistici.',
     company: 'Azienda',
     account: 'E-mail di accesso',
     scope: 'Ambito',
