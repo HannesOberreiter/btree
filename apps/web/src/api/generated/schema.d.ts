@@ -2835,6 +2835,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            api_active?: boolean;
             api_change?: boolean;
             name?: string;
             password?: string;

@@ -59,7 +59,11 @@ describe('TTN webhook', () => {
     companyId = Number(hive.user_id);
     await db
       .updateTable('companies')
-      .set({ api_key: apiKey, paid: new Date('2099-01-01T00:00:00Z') })
+      .set({
+        api_key: apiKey,
+        api_active: true,
+        paid: new Date('2099-01-01T00:00:00Z'),
+      })
       .where('id', '=', companyId)
       .executeTakeFirst();
     const res = await doRequest(agent, 'post', '/api/v1/scale', null, null, {
@@ -179,6 +183,31 @@ describe('TTN webhook', () => {
       uplink({ weight_kg: 1 }),
     );
     expect(res.statusCode).toBe(404);
+  });
+
+  it('404 - API is switched off', async () => {
+    await db
+      .updateTable('companies')
+      .set({ api_active: false })
+      .where('id', '=', companyId)
+      .executeTakeFirst();
+    try {
+      const res = await doRequest(
+        createAgent(),
+        'post',
+        route,
+        null,
+        null,
+        uplink({ weight_kg: 1 }),
+      );
+      expect(res.statusCode).toBe(404);
+    } finally {
+      await db
+        .updateTable('companies')
+        .set({ api_active: true })
+        .where('id', '=', companyId)
+        .executeTakeFirst();
+    }
   });
 
   it('400 - uplink without DevEUI', async () => {
