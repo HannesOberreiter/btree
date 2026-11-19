@@ -326,6 +326,48 @@ describe('statistic routes', () => {
     );
   });
 
+  it('returns rating statistics when one rating column is NULL for the whole group', async () => {
+    const db = KyselyServer.getInstance().db;
+    const hive = await db
+      .insertInto('hives')
+      .values({ name: 'stat-rating-null-col', user_id: 1, deleted: false })
+      .executeTakeFirstOrThrow();
+    const hiveId = Number(hive.insertId);
+    await db
+      .insertInto('checkups')
+      .values({
+        // brood stays NULL for all checkups of this hive and year
+        brood: null,
+        calm_comb: 1,
+        comb: 1,
+        pollen: 1,
+        strong: 1,
+        swarm: 1,
+        temper: 1,
+        varroa: 1,
+        date: new Date('2025-07-01'),
+        enddate: new Date('2025-07-01'),
+        deleted: false,
+        hive_id: hiveId,
+        user_id: 1,
+      })
+      .execute();
+
+    try {
+      const result = await listHiveRatingStatistics(db, 1, {
+        offset: 0,
+        limit: 100,
+        q: 'stat-rating-null-col',
+      });
+      const row = result.results.find((r) => r.hive_id === hiveId);
+      expect(row).toBeTruthy();
+      expect(row?.brood).toBeNull();
+    } finally {
+      await db.deleteFrom('checkups').where('hive_id', '=', hiveId).execute();
+      await db.deleteFrom('hives').where('id', '=', hiveId).execute();
+    }
+  });
+
   it('returns the Varroa average of decimal readings', async () => {
     const db = KyselyServer.getInstance().db;
     const hive = await db
