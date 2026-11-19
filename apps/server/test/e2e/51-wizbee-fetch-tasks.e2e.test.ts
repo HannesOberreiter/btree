@@ -20,6 +20,7 @@ interface TaskPage {
   count: number;
   hasMore: boolean;
   nextCursor: string | null;
+  dateRange?: { start: string; end: string };
   items?: Record<string, unknown>[];
   csv?: string;
 }
@@ -280,5 +281,30 @@ describe('WizBee fetchTasks pages and formats', () => {
       kind: 'treatment',
     });
     expect(result.treatment[0]).not.toHaveProperty('hive');
+  });
+
+  it('finds the last task older than 2 months when only dateEnd is set', async () => {
+    // A feed far in the past, outside the default 2-month window.
+    const past = new Date();
+    past.setFullYear(past.getFullYear() - 1);
+    const pastDate = past.toISOString().split('T')[0];
+    await post('/feed', { hive_ids: hiveIds, date: pastDate });
+
+    const today = new Date().toISOString().split('T')[0];
+    const page = await fetchTasks({
+      task: 'feed',
+      sort: 'newest',
+      limit: 1,
+      dateEnd: today,
+    });
+
+    // The start must not be clamped to 2 months ago.
+    expect(page.dateRange).toEqual({ start: '1970-01-01', end: today });
+    expect(page.total).toBeGreaterThanOrEqual(1);
+    expect(String(page.items?.[0]?.date).slice(0, 10)).toBe(pastDate);
+
+    // Without any date the default window still applies.
+    const windowed = await fetchTasks({ task: 'feed' });
+    expect(windowed.dateRange?.start).not.toBe('1970-01-01');
   });
 });
