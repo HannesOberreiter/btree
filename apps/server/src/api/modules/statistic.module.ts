@@ -656,11 +656,14 @@ export async function listHiveRatingStatistics(
       hiveProjection(),
     ])
     .groupBy(['checkup.hive_id', sql`YEAR(checkup.date)`])
+    // COALESCE each SUM: a column that is NULL for the whole group makes
+    // SUM return NULL, and NULL > 0 would drop the group from the result.
     .having(
       sql<boolean>`(
-        SUM(checkup.brood) + SUM(checkup.pollen) + SUM(checkup.comb) +
-        SUM(checkup.temper) + SUM(checkup.calm_comb) + SUM(checkup.swarm) +
-        SUM(checkup.varroa) + SUM(checkup.strong)
+        COALESCE(SUM(checkup.brood), 0) + COALESCE(SUM(checkup.pollen), 0) +
+        COALESCE(SUM(checkup.comb), 0) + COALESCE(SUM(checkup.temper), 0) +
+        COALESCE(SUM(checkup.calm_comb), 0) + COALESCE(SUM(checkup.swarm), 0) +
+        COALESCE(SUM(checkup.varroa), 0) + COALESCE(SUM(checkup.strong), 0)
       ) > 0`,
     );
   const countResult = await db
