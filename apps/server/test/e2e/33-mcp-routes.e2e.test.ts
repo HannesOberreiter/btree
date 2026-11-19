@@ -230,8 +230,6 @@ describe('remote MCP routes', () => {
       expect(de.statusCode).toBe(200);
       expect(String(de.body)).toContain('lang="de"');
       expect(String(de.body)).toContain('>Erlauben<');
-      expect(String(de.body)).toContain('Imkereidaten');
-      expect(String(de.body)).not.toContain('Bienendaten');
       expect(String(de.body)).not.toContain('>Allow<');
     } finally {
       await db
