@@ -14759,7 +14759,7 @@ export interface paths {
             cursor?: string;
             /** @description End date in YYYY-MM-DD format (default: 2 months from now). For the last done task, set it to today. */
             dateEnd?: string;
-            /** @description Start date in YYYY-MM-DD format (default: 2 months ago) */
+            /** @description Start date in YYYY-MM-DD format (default: 2 months ago). Not applied when dateEnd is set, so a last-action query can look back as far as needed. */
             dateStart?: string;
             /**
              * @description compact (default): flat records with ids and names of hive, apiary, type and creator. csv: the compact records as one CSV string with a header line (default in WizBee chat). full: records with the nested hive, type, apiary, creator and editor objects.
