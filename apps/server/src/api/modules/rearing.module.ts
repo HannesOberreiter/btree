@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
 import httpErrors from 'http-errors';
 import type { Kysely } from 'kysely';
 
@@ -18,9 +20,25 @@ import type {
   PostBody as TypePost,
 } from '../schemas/rearing_type.schema.js';
 
+dayjs.extend(utc);
+
 function page(input: CompatibilityQuery) {
   const limit = input.limit === 0 || !input.limit ? 10 : input.limit;
   return { limit, offset: (input.offset ?? 0) * limit };
+}
+
+/**
+ * The pool runs with dateStrings, so DATETIME columns come back as raw
+ * strings that mysql2 wrote in UTC (connection timezone 'Z'). Convert
+ * them to an ISO instant so clients render the correct local time, like
+ * the calendar endpoint already does. Without this, the rearing table
+ * parsed the UTC wall clock as browser-local time and showed a time one
+ * hour earlier (winter time) than the form, the schedule dialog and the
+ * calendar.
+ */
+function toIsoUtc(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  return dayjs.utc(value as string | Date).toISOString();
 }
 function direction(value: unknown): 'asc' | 'desc' {
   return String(value).toLowerCase() === 'desc' ? 'desc' : 'asc';
@@ -180,6 +198,7 @@ export async function listRearings(
         ...row
       }) => ({
         ...row,
+        date: toIsoUtc(row.date),
         type:
           type_relation_id === null
             ? null
@@ -261,7 +280,8 @@ export function getRearingsByIds(
     .selectAll()
     .where('user_id', '=', companyId)
     .where('id', 'in', ids)
-    .execute();
+    .execute()
+    .then((rows) => rows.map((row) => ({ ...row, date: toIsoUtc(row.date) })));
 }
 export async function deleteRearings(
   db: Database,
