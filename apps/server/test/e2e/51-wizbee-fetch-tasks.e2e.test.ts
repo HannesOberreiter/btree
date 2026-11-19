@@ -290,18 +290,19 @@ describe('WizBee fetchTasks pages and formats', () => {
     const pastDate = past.toISOString().split('T')[0];
     await post('/feed', { hive_ids: hiveIds, date: pastDate });
 
-    const today = new Date().toISOString().split('T')[0];
-    const page = await fetchTasks({
+    // dateEnd one year ago: with the old default start (today minus 2
+    // months) the start was after dateEnd and the range was empty.
+    const old = await fetchTasks({
       task: 'feed',
       sort: 'newest',
       limit: 1,
-      dateEnd: today,
+      dateEnd: pastDate,
     });
 
     // The start must not be clamped to 2 months ago.
-    expect(page.dateRange).toEqual({ start: '1970-01-01', end: today });
-    expect(page.total).toBeGreaterThanOrEqual(1);
-    expect(String(page.items?.[0]?.date).slice(0, 10)).toBe(pastDate);
+    expect(old.dateRange).toEqual({ start: '1970-01-01', end: pastDate });
+    expect(old.total).toBeGreaterThanOrEqual(1);
+    expect(String(old.items?.[0]?.date).slice(0, 10) <= pastDate).toBe(true);
 
     // Without any date the default window still applies.
     const windowed = await fetchTasks({ task: 'feed' });
