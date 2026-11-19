@@ -224,8 +224,166 @@ describe('company routes', () => {
         {},
       );
       expect(res3.statusCode).toEqual(200);
-      expect(res3.body.result).toBe(1);
+      // the new company is not the active one, so the active company stays
+      expect(res3.body.result).toBe(0);
       expect(res3.body.data).toBeTypeOf('object');
+    });
+  });
+
+  describe('delete /:id active company handling', () => {
+    let activeId: number;
+
+    beforeAll(async () => {
+      const user = await doQueryRequest(
+        agent,
+        '/api/v1/user',
+        null,
+        accessToken,
+        null,
+      );
+      expect(user.statusCode).toEqual(200);
+      activeId = user.body.company[0].id;
+      // persist the active company, so the tests can assert on saved_company
+      const patch = await doRequest(
+        agent,
+        'patch',
+        '/api/v1/user/company',
+        null,
+        accessToken,
+        { saved_company: activeId },
+      );
+      expect(patch.statusCode).toEqual(200);
+    });
+
+    it('200 - deleting a non-active company keeps the active company', async () => {
+      const temp = await doRequest(agent, 'post', route, null, accessToken, {
+        name: `TempDelete${Date.now()}`,
+      });
+      expect(temp.statusCode).toEqual(200);
+      const res = await doRequest(
+        agent,
+        'delete',
+        route,
+        temp.body.id,
+        accessToken,
+        {},
+      );
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.result).toBe(0);
+      expect(res.body.data.saved_company).toBe(activeId);
+      const gone = await db('companies').where('id', temp.body.id).first();
+      expect(gone).toBeUndefined();
+    });
+
+    it('200 - repairs saved_company when it pointed at the deleted company', async () => {
+      const temp = await doRequest(agent, 'post', route, null, accessToken, {
+        name: `TempSaved${Date.now()}`,
+      });
+      expect(temp.statusCode).toEqual(200);
+      const bee = await db('bees').where('email', demoUser.email).first('id');
+      // another session moved saved_company to the temp company
+      await db('bees')
+        .where('id', bee.id)
+        .update({ saved_company: temp.body.id });
+      try {
+        const res = await doRequest(
+          agent,
+          'delete',
+          route,
+          temp.body.id,
+          accessToken,
+          {},
+        );
+        expect(res.statusCode).toEqual(200);
+        // the session still has the active company, but saved_company is
+        // repaired instead of dangling (the FK set it to null)
+        expect(res.body.result).toBe(1);
+        expect(res.body.data.saved_company).toBe(activeId);
+        const stored = await db('bees')
+          .where('id', bee.id)
+          .first('saved_company');
+        expect(stored.saved_company).toBe(activeId);
+      } finally {
+        await db('bees')
+          .where('id', bee.id)
+          .update({ saved_company: activeId });
+      }
+    });
+
+    it('200 - deleting the active company switches to the next company', async () => {
+      const alpha = await doRequest(agent, 'post', route, null, accessToken, {
+        name: `Alpha${Date.now()}`,
+      });
+      const mike = await doRequest(agent, 'post', route, null, accessToken, {
+        name: `Mike${Date.now()}`,
+      });
+      expect(alpha.statusCode).toEqual(200);
+      expect(mike.statusCode).toEqual(200);
+      // Alpha was created first, so its membership is the older one
+      expect(alpha.body.id).toBeLessThan(mike.body.id);
+      const switchRes = await doRequest(
+        agent,
+        'patch',
+        '/api/v1/user/company',
+        null,
+        accessToken,
+        { saved_company: alpha.body.id },
+      );
+      expect(switchRes.statusCode).toEqual(200);
+      const res = await doRequest(
+        agent,
+        'delete',
+        route,
+        alpha.body.id,
+        accessToken,
+        {},
+      );
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.result).toBe(1);
+      // the oldest remaining membership is the original active company
+      expect(res.body.data.saved_company).toBe(activeId);
+      // cleanup: remove the helper company, the active company stays
+      const del = await doRequest(
+        agent,
+        'delete',
+        route,
+        mike.body.id,
+        accessToken,
+        {},
+      );
+      expect(del.statusCode).toEqual(200);
+      expect(del.body.result).toBe(0);
+      expect(del.body.data.saved_company).toBe(activeId);
+    });
+
+    it('403 - not admin in the deleted company', async () => {
+      const bee = await db('bees').where('email', demoUser.email).first('id');
+      const insert = await db('companies').insert({
+        name: `ReadOnly${Date.now()}`,
+      });
+      const companyId = insert[0];
+      await db('company_bee').insert({
+        bee_id: bee.id,
+        user_id: companyId,
+        rank: 3,
+      });
+      try {
+        const res = await doRequest(
+          agent,
+          'delete',
+          route,
+          companyId,
+          accessToken,
+          {},
+        );
+        expect(res.statusCode).toEqual(403);
+      } finally {
+        await db('company_bee')
+          .where('user_id', companyId)
+          .where('bee_id', bee.id)
+          .del();
+        await db('companies').where('id', companyId).del();
+      }
     });
   });
 });
