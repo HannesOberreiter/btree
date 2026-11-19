@@ -33,6 +33,8 @@ const CONSENT_TRANSLATIONS = {
   en: {
     heading: 'Authorize {client}',
     text: 'Allow this client to use your b.tree tools and beekeeping data.',
+    company: 'Company',
+    account: 'Login e-mail',
     scope: 'Scope',
     redirect: 'Redirect',
     allow: 'Allow',
@@ -40,7 +42,9 @@ const CONSENT_TRANSLATIONS = {
   },
   de: {
     heading: '{client} autorisieren',
-    text: 'Erlaube diesem Client, deine b.tree-Werkzeuge und deine Bienendaten zu verwenden.',
+    text: 'Erlaube diesem Client, deine b.tree-Werkzeuge und deine Imkereidaten zu verwenden.',
+    company: 'Betrieb',
+    account: 'Login-E-Mail',
     scope: 'Bereich',
     redirect: 'Weiterleitung',
     allow: 'Erlauben',
@@ -49,6 +53,8 @@ const CONSENT_TRANSLATIONS = {
   fr: {
     heading: 'Autoriser {client}',
     text: 'Autorise ce client à utiliser tes outils b.tree et tes données apicoles.',
+    company: 'Exploitation',
+    account: 'E-mail de connexion',
     scope: 'Portée',
     redirect: 'Redirection',
     allow: 'Autoriser',
@@ -57,6 +63,8 @@ const CONSENT_TRANSLATIONS = {
   it: {
     heading: 'Autorizza {client}',
     text: 'Consenti a questo client di usare i tuoi strumenti b.tree e i dati del tuo apiario.',
+    company: 'Azienda',
+    account: 'E-mail di accesso',
     scope: 'Ambito',
     redirect: 'Reindirizzamento',
     allow: 'Consenti',
@@ -66,31 +74,58 @@ const CONSENT_TRANSLATIONS = {
 
 type ConsentLanguage = keyof typeof CONSENT_TRANSLATIONS;
 
-/** Pick the consent page language: the account language, then Accept-Language, then English. */
-async function getConsentLanguage(
+interface ConsentContext {
+  lang: ConsentLanguage;
+  companyName: string | null;
+  email: string | null;
+}
+
+/**
+ * Resolve the consent page context from the session: the account language,
+ * login e-mail and the active company (operation) name. Language falls back
+ * to the Accept-Language header, then English.
+ */
+async function getConsentContext(
   request: FastifyRequest,
-): Promise<ConsentLanguage> {
+): Promise<ConsentContext> {
   const supported = Object.keys(CONSENT_TRANSLATIONS) as ConsentLanguage[];
+  let lang: ConsentLanguage = 'en';
+  let email: string | null = null;
+  let companyName: string | null = null;
+  const db = KyselyServer.getInstance().db;
   try {
-    const beeId = request.session?.user?.bee_id;
-    if (beeId) {
-      const bee = await KyselyServer.getInstance()
-        .db.selectFrom('bees')
-        .select('lang')
-        .where('id', '=', beeId)
+    const sessionUser = request.session?.user;
+    if (sessionUser) {
+      const bee = await db
+        .selectFrom('bees')
+        .select(['lang', 'email'])
+        .where('id', '=', sessionUser.bee_id)
         .executeTakeFirst();
-      if (bee?.lang && (supported as string[]).includes(bee.lang)) {
-        return bee.lang as ConsentLanguage;
+      if (bee) {
+        email = bee.email;
+        if (bee.lang && (supported as string[]).includes(bee.lang)) {
+          lang = bee.lang as ConsentLanguage;
+        }
       }
+      const company = await db
+        .selectFrom('companies')
+        .select('name')
+        .where('id', '=', sessionUser.user_id)
+        .executeTakeFirst();
+      companyName = company?.name ?? null;
     }
   } catch {
     // Fall through to the Accept-Language header.
   }
-  const header = request.headers['accept-language'] ?? '';
-  const first = header.split(',')[0]?.split('-')[0]?.trim().toLowerCase() ?? '';
-  return (supported as string[]).includes(first)
-    ? (first as ConsentLanguage)
-    : 'en';
+  if (lang === 'en') {
+    const header = request.headers['accept-language'] ?? '';
+    const first =
+      header.split(',')[0]?.split('-')[0]?.trim().toLowerCase() ?? '';
+    if ((supported as string[]).includes(first)) {
+      lang = first as ConsentLanguage;
+    }
+  }
+  return { lang, companyName, email };
 }
 
 function consentPage(
@@ -98,8 +133,9 @@ function consentPage(
   redirectUri: string,
   scope: string,
   token: string,
-  lang: ConsentLanguage,
+  context: ConsentContext,
 ) {
+  const { lang } = context;
   const t = CONSENT_TRANSLATIONS[lang];
   // Replacer function so $-sequences in the client name are not treated
   // as replacement patterns.
@@ -172,6 +208,8 @@ function consentPage(
     <h1>${heading}</h1>
     <p>${t.text}</p>
     <dl>
+      <dt>${t.company}</dt><dd>${escapeHtml(context.companyName ?? '')}</dd>
+      <dt>${t.account}</dt><dd>${escapeHtml(context.email ?? '')}</dd>
       <dt>${t.scope}</dt><dd>${escapeHtml(scope)}</dd>
       <dt>${t.redirect}</dt><dd>${escapeHtml(redirectUri)}</dd>
     </dl>
@@ -336,7 +374,7 @@ export default class McpOAuthController {
         authorization,
         sessionUser,
       );
-      const lang = await getConsentLanguage(request);
+      const context = await getConsentContext(request);
       return reply
         .header(
           'Content-Security-Policy',
@@ -349,7 +387,7 @@ export default class McpOAuthController {
             consent.pending.redirectUri,
             consent.pending.scope,
             consent.token,
-            lang,
+            context,
           ),
         );
     } catch (error) {

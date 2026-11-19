@@ -176,6 +176,17 @@ describe('remote MCP routes', () => {
       .select(['id', 'lang'])
       .where('email', '=', demoUser.email)
       .executeTakeFirstOrThrow();
+    const membership = await db
+      .selectFrom('company_bee')
+      .select('user_id')
+      .where('bee_id', '=', bee.id)
+      .orderBy('id')
+      .executeTakeFirstOrThrow();
+    const company = await db
+      .selectFrom('companies')
+      .select('name')
+      .where('id', '=', membership.user_id)
+      .executeTakeFirstOrThrow();
 
     const authorizeQuery = new URLSearchParams({
       response_type: 'code',
@@ -200,6 +211,9 @@ describe('remote MCP routes', () => {
       expect(String(en.body)).toContain('<style>');
       expect(String(en.body)).toContain('lang="en"');
       expect(String(en.body)).toContain('>Allow<');
+      // The page shows which company and login e-mail authorizes the client.
+      expect(String(en.body)).toContain(company.name);
+      expect(String(en.body)).toContain(demoUser.email);
 
       await db
         .updateTable('bees')
@@ -216,6 +230,8 @@ describe('remote MCP routes', () => {
       expect(de.statusCode).toBe(200);
       expect(String(de.body)).toContain('lang="de"');
       expect(String(de.body)).toContain('>Erlauben<');
+      expect(String(de.body)).toContain('Imkereidaten');
+      expect(String(de.body)).not.toContain('Bienendaten');
       expect(String(de.body)).not.toContain('>Allow<');
     } finally {
       await db
