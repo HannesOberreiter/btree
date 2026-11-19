@@ -1,5 +1,17 @@
 # Changelog
 
+## [7.14.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.13.0...btree-client-v7.14.0) (2026-11-19)
+
+
+### Features
+
+* show the DevEUI of the scale in the scale data table ([#361](https://github.com/HannesOberreiter/btree/issues/361)) ([a27cfdc](https://github.com/HannesOberreiter/btree/commit/a27cfdcd14bf37edd24bf9604dde881862290544))
+
+
+### Bug Fixes
+
+* store a missing scale value as null and not as 0 ([#363](https://github.com/HannesOberreiter/btree/issues/363)) ([8c93149](https://github.com/HannesOberreiter/btree/commit/8c93149498fa984385635c7e058cfd7a87830cd7))
+
 ## [7.13.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.12.3...btree-client-v7.13.0) (2026-11-18)
 
 
