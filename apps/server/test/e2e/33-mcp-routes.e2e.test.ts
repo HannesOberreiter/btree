@@ -255,11 +255,33 @@ describe('remote MCP routes', () => {
       expect(String(de.body)).toContain('lang="de"');
       expect(String(de.body)).toContain('>Erlauben<');
       expect(String(de.body)).not.toContain('>Allow<');
+
+      // Company name and e-mail are HTML-escaped on the page.
+      await db
+        .updateTable('companies')
+        .set({ name: 'Evil<b>' })
+        .where('id', '=', companyId)
+        .execute();
+      const escaped = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(escaped.statusCode).toBe(200);
+      expect(String(escaped.body)).toContain('Evil&lt;b&gt;');
+      expect(String(escaped.body)).not.toContain('Evil<b>');
     } finally {
       await db
         .updateTable('bees')
         .set({ lang: bee.lang ?? 'en' })
         .where('id', '=', bee.id)
+        .execute();
+      await db
+        .updateTable('companies')
+        .set({ name: company.name })
+        .where('id', '=', companyId)
         .execute();
     }
   });
