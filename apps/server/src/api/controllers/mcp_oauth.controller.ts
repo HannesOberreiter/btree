@@ -101,7 +101,9 @@ function consentPage(
   lang: ConsentLanguage,
 ) {
   const t = CONSENT_TRANSLATIONS[lang];
-  const heading = t.heading.replace('{client}', escapeHtml(clientName));
+  // Replacer function so $-sequences in the client name are not treated
+  // as replacement patterns.
+  const heading = t.heading.replace('{client}', () => escapeHtml(clientName));
   return `<!doctype html>
 <html lang="${lang}">
 <head>
