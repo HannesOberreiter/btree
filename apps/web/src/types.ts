@@ -217,12 +217,12 @@ export declare interface FormScale {
 
 export declare interface FormScaleData {
   datetime: string;
-  weight: number;
-  temp1: number;
-  temp2: number;
-  rain: number;
-  humidity: number;
-  humidity2: number;
+  weight: number | null;
+  temp1: number | null;
+  temp2: number | null;
+  rain: number | null;
+  humidity: number | null;
+  humidity2: number | null;
   note: string;
   scale: any;
 }

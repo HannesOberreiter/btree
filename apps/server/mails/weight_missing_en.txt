@@ -1,0 +1,6 @@
+<title>Missing weight on your hive scale</title>
+Dear Beekeeper,
+
+For your information, the last data transfer of your hive scale had no weight. The line below shows the scale and the last weight in kg. Please check the scale.
+
+>> %key%

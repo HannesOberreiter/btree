@@ -3708,13 +3708,13 @@ export interface paths {
         query: {
           action: 'CREATE' | 'CREATE_DEMO';
           datetime?: string;
-          hum?: number;
-          hum2?: number;
+          hum?: number | '' | 'null' | null;
+          hum2?: number | '' | 'null' | null;
           note?: string;
-          rain?: number;
-          temp1?: number;
-          temp2?: number;
-          weight?: number;
+          rain?: number | '' | 'null' | null;
+          temp1?: number | '' | 'null' | null;
+          temp2?: number | '' | 'null' | null;
+          weight?: number | '' | 'null' | null;
         };
         header?: never;
         path: {

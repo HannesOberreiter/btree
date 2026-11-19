@@ -1,0 +1,6 @@
+<title>Fehlendes Gewicht bei einer Bienenstockwaage</title>
+Liebe/r Imker/in,
+
+zu deiner Information: Die letzte Datenübertragung von deiner Bienenstockwaage enthielt kein Gewicht. Die Zeile unten zeigt die Waage und das letzte Gewicht in kg. Bitte überprüfe die Waage.
+
+>> %key%

@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { listCalendarScaleData } from '../../src/api/modules/calendar.module.js';
+import { ingestScaleReading } from '../../src/api/modules/scale_data.module.js';
 import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
 import {
@@ -303,6 +305,158 @@ describe('TTN webhook', () => {
         null,
       );
     }
+  });
+
+  describe('readings without values', () => {
+    const name = 'emptyValues';
+    const eui = 'A0B1C2D3E4F50001';
+    const start = new Date('2026-03-01T00:00:00Z');
+    const at = (hours: number) =>
+      new Date(start.getTime() + hours * 60 * 60 * 1000);
+    let emptyScaleId: number;
+
+    async function latest() {
+      return db
+        .selectFrom('scale_data')
+        .selectAll()
+        .where('scale_id', '=', emptyScaleId)
+        .orderBy('datetime', 'desc')
+        .executeTakeFirstOrThrow();
+    }
+
+    async function warningFor(hours: number, weight?: number) {
+      const { warning } = await ingestScaleReading(
+        db,
+        { api: apiKey, ident: name },
+        { action: 'CREATE', datetime: at(hours).toISOString(), weight },
+      );
+      return warning;
+    }
+
+    beforeAll(async () => {
+      const res = await doRequest(agent, 'post', '/api/v1/scale', null, null, {
+        name,
+        hive_id: 1,
+        dev_eui: eui,
+      });
+      expect(res.statusCode).toBe(200);
+      emptyScaleId = res.body.id;
+    });
+
+    afterAll(async () => {
+      await doRequest(
+        agent,
+        'delete',
+        '/api/v1/scale',
+        emptyScaleId,
+        null,
+        null,
+      );
+    });
+
+    it('200 - stores null for a key without a number', async () => {
+      for (const [hours, payload, temp1] of [
+        [0, { weight_kg: null, t: 5 }, '5.00'],
+        [2, { weight_kg: null, t: null }, null],
+      ] as const) {
+        const res = await doRequest(
+          createAgent(),
+          'post',
+          route,
+          null,
+          null,
+          uplink(payload, at(hours), eui),
+        );
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toMatchObject({ stored: true });
+        expect(await latest()).toMatchObject({
+          id: res.body.id,
+          weight: null,
+          temp1,
+          temp2: null,
+          humidity: null,
+          humidity2: null,
+          rain: null,
+        });
+      }
+    });
+
+    it('scale 200 - stores null for a value that is empty or not sent', async () => {
+      const res = await doQueryRequest(
+        createAgent(),
+        `/api/v1/external/scale/${name}/${apiKey}`,
+        null,
+        null,
+        {
+          action: 'CREATE',
+          datetime: at(4).toISOString(),
+          weight: '',
+          temp1: 'null',
+          hum: 40,
+        },
+      );
+      expect(res.statusCode).toBe(200);
+      const expected = {
+        weight: null,
+        temp1: null,
+        temp2: null,
+        humidity2: null,
+        rain: null,
+      };
+      expect(res.body).toMatchObject({ ...expected, humidity: 40 });
+      expect(await latest()).toMatchObject({
+        ...expected,
+        id: res.body.id,
+        humidity: '40.00',
+      });
+    });
+
+    it('warns about a weight change and about the first missing weight', async () => {
+      // The readings before this test have no weight.
+      expect(await warningFor(6, 40)).toBeUndefined();
+      expect(await warningFor(8)).toMatchObject({
+        scaleName: name,
+        previousWeight: 40,
+        currentWeight: null,
+      });
+      expect(await warningFor(10)).toBeUndefined();
+      // Compares with the latest reading that has a weight.
+      expect(await warningFor(12, 30)).toMatchObject({
+        previousWeight: 40,
+        currentWeight: 30,
+      });
+      expect(await warningFor(14, 27)).toBeUndefined();
+      expect(await warningFor(16, 0)).toMatchObject({
+        previousWeight: 27,
+        currentWeight: 0,
+      });
+      // Old readings hold 0 for a missing weight.
+      expect(await warningFor(18)).toBeUndefined();
+      expect(await warningFor(20, 6)).toMatchObject({
+        previousWeight: 0,
+        currentWeight: 6,
+      });
+    });
+
+    it('calendar - skips a day without a weight', async () => {
+      await db
+        .insertInto('scale_data')
+        .values([
+          { datetime: at(48), weight: null, scale_id: emptyScaleId },
+          { datetime: at(72), weight: null, scale_id: emptyScaleId },
+          { datetime: at(74), weight: 20, scale_id: emptyScaleId },
+        ])
+        .execute();
+      const days = await listCalendarScaleData(db, companyId, {
+        start: at(24).toISOString(),
+        end: at(96).toISOString(),
+      });
+      expect(
+        days
+          .filter((day) => day.scale_id === emptyScaleId)
+          .map((day) => [day.start, Number(day.average)]),
+      ).toEqual([['2026-03-04', 20]]);
+    });
   });
 
   it('scale 200 - removes the DevEUI with an empty value', async () => {

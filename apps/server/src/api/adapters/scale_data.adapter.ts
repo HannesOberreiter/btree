@@ -24,7 +24,19 @@ function mailLanguage(value: string | null): MailLang {
   return MailLangs.includes(value as MailLang) ? (value as MailLang) : 'en';
 }
 
+/**
+ * Sends the mail about a big weight change, or about a missing weight when
+ * the reading has no weight.
+ */
 async function sendWeightWarning(warning: WeightWarning) {
+  const { scaleName, previousWeight, currentWeight } = warning;
+  const mail =
+    currentWeight === null
+      ? { subject: 'weight_missing', key: `${scaleName}: ${previousWeight}` }
+      : {
+          subject: 'weight_warning',
+          key: `${scaleName}: ${Math.abs(previousWeight - currentWeight)} (${previousWeight} - ${currentWeight})`,
+        };
   await Promise.allSettled(
     warning.recipients
       .filter((recipient) => recipient.email)
@@ -32,8 +44,7 @@ async function sendWeightWarning(warning: WeightWarning) {
         MailService.getInstance().sendMail({
           to: recipient.email!,
           lang: mailLanguage(recipient.lang),
-          subject: 'weight_warning',
-          key: `${warning.scaleName}: ${warning.difference} (${warning.previousWeight} - ${warning.currentWeight})`,
+          ...mail,
           name: recipient.username ?? undefined,
         }),
       ),
