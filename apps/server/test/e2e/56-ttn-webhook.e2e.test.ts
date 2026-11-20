@@ -146,6 +146,30 @@ describe('TTN webhook', () => {
     expect(await readings()).toHaveLength(1);
   });
 
+  it('429 - applies the 1-hour limit outside UTC', async () => {
+    const timeZone = process.env.TZ;
+    process.env.TZ = 'Europe/Vienna';
+    try {
+      await expect(
+        ingestScaleReading(
+          db,
+          { api: apiKey, devEui },
+          {
+            action: 'CREATE',
+            datetime: new Date(
+              receivedAt.getTime() + 20 * 60 * 1000,
+            ).toISOString(),
+            weight: 43,
+          },
+        ),
+      ).rejects.toMatchObject({ statusCode: 429 });
+      expect(await readings()).toHaveLength(1);
+    } finally {
+      if (timeZone === undefined) delete process.env.TZ;
+      else process.env.TZ = timeZone;
+    }
+  });
+
   it('200 - drops an uplink without known keys', async () => {
     const later = new Date(receivedAt.getTime() + 2 * 60 * 60 * 1000);
     for (const payload of [undefined, { bv: 3.7, foo: 'bar' }]) {
