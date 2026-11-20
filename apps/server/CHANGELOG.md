@@ -1,5 +1,17 @@
 # Changelog
 
+## [7.16.1](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.16.0...btree-server-v7.16.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* **server:** keep rating statistics when one rating column is NULL ([#370](https://github.com/HannesOberreiter/btree/issues/370)) ([c9febaf](https://github.com/HannesOberreiter/btree/commit/c9febaff12b4286139c484484ebce09e6a58307d))
+* **server:** keep the active company when deleting a non-active one ([#366](https://github.com/HannesOberreiter/btree/issues/366)) ([5146d38](https://github.com/HannesOberreiter/btree/commit/5146d38a6c3e7fe85b05f7aaf9a13e1c28ef3d5d))
+* **server:** let fetchTasks last-action queries look back past 2 months ([#367](https://github.com/HannesOberreiter/btree/issues/367)) ([deb7577](https://github.com/HannesOberreiter/btree/commit/deb757720f3e499ed8c217b68201a7d5ba3453a3))
+* **server:** return the rearing date as a UTC ISO instant ([#372](https://github.com/HannesOberreiter/btree/issues/372)) ([c586fc5](https://github.com/HannesOberreiter/btree/commit/c586fc5fed4fe804f5c70289106a6d372922f8f3))
+* **server:** show company and login e-mail on the MCP consent page ([#374](https://github.com/HannesOberreiter/btree/issues/374)) ([6358783](https://github.com/HannesOberreiter/btree/commit/63587832e7744d145d011aaa98ff4face9605648))
+* **server:** style and localize the MCP consent page ([#369](https://github.com/HannesOberreiter/btree/issues/369)) ([ced9d35](https://github.com/HannesOberreiter/btree/commit/ced9d35640d57532023d672ebacc04e1c14c307b))
+
 ## [7.16.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.15.0...btree-server-v7.16.0) (2026-11-19)
 
 
