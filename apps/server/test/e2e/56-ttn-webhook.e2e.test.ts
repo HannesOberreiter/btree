@@ -9,6 +9,7 @@ import {
   createAuthenticatedAgent,
   doQueryRequest,
   doRequest,
+  withTimeZone,
 } from '../utils.js';
 
 const devEui = '70B3D57ED0012345';
@@ -147,9 +148,7 @@ describe('TTN webhook', () => {
   });
 
   it('429 - applies the 1-hour limit outside UTC', async () => {
-    const timeZone = process.env.TZ;
-    process.env.TZ = 'Europe/Vienna';
-    try {
+    await withTimeZone('Europe/Vienna', async () => {
       await expect(
         ingestScaleReading(
           db,
@@ -163,11 +162,8 @@ describe('TTN webhook', () => {
           },
         ),
       ).rejects.toMatchObject({ statusCode: 429 });
-      expect(await readings()).toHaveLength(1);
-    } finally {
-      if (timeZone === undefined) delete process.env.TZ;
-      else process.env.TZ = timeZone;
-    }
+    });
+    expect(await readings()).toHaveLength(1);
   });
 
   it('200 - drops an uplink without known keys', async () => {

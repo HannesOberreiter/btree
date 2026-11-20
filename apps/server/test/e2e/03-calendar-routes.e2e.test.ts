@@ -14,6 +14,7 @@ import {
   createAuthenticatedAgent,
   doQueryRequest,
   doRequest,
+  withTimeZone,
 } from '../utils.js';
 
 describe('calendar routes', () => {
@@ -155,17 +156,15 @@ describe('calendar routes', () => {
         })
         .executeTakeFirstOrThrow();
       const id = Number(insert.insertId);
-      const timeZone = process.env.TZ;
-      process.env.TZ = 'Europe/Vienna';
       try {
-        const events = await listCalendarRearings(db, companyId, { id });
+        const events = await withTimeZone('Europe/Vienna', () =>
+          listCalendarRearings(db, companyId, { id }),
+        );
         const start = events.find(
           (event) => event.currentStep.key === event.startKey,
         );
         expect(start?.start).toBe('2020-06-01T10:00:00.000Z');
       } finally {
-        if (timeZone === undefined) delete process.env.TZ;
-        else process.env.TZ = timeZone;
         await db.deleteFrom('rearings').where('id', '=', id).execute();
       }
     });
