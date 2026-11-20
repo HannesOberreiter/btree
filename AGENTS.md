@@ -23,6 +23,16 @@ Monorepo of the b.tree beekeeping app. Each app is a separate pnpm project with 
 - After an HTTP contract change in `apps/server`, run `pnpm api:update` in `apps/web` against the server of the branch, and commit `apps/web/src/api/generated/schema.d.ts` in the same PR. The `server` job fails when the file differs.
 - `ai-review` reviews a PR against `beta` once when it opens. Add the label `ai-review` for another review. The workflow reads `.github/ai-review/` from the PR base, so a change to it takes effect after the merge.
 
+## Documentation and videos
+
+The documentation, the app screenshots and the tutorial videos of the app are in the repository `HannesOberreiter/btree_sites`. After a change to the visible UI, to UI texts or to the HTTP API, check in that repository which of these show or describe the changed part:
+
+- documentation pages in `packages/btree_info/src/pages`, English and German,
+- screenshots from `scripts/screenshots/take.mjs`,
+- videos, one episode per file in `scripts/videos/episodes`. `scripts/videos/record.mjs` renders them.
+
+Report each page, screenshot and episode that needs an update, or report that none does.
+
 ## Quasar MCP
 
 The `quasar` MCP server is configured in `.mcp.json` at the repository root. Start the agent from the repository root to load it. Usage is in `apps/web/AGENTS.md`.
