@@ -136,6 +136,39 @@ describe('calendar routes', () => {
       ]);
       expect(results.every((result) => result.length === 0)).toBe(true);
     });
+
+    it('/rearing returns the UTC time of the rearing outside UTC', async () => {
+      const db = KyselyServer.getInstance().db;
+      const type = await db
+        .selectFrom('rearing_types')
+        .select('user_id')
+        .where('id', '=', 1)
+        .executeTakeFirstOrThrow();
+      const companyId = Number(type.user_id);
+      const insert = await db
+        .insertInto('rearings')
+        .values({
+          user_id: companyId,
+          date: new Date('2020-06-01T10:00:00.000Z'),
+          detail_id: 1,
+          type_id: 1,
+        })
+        .executeTakeFirstOrThrow();
+      const id = Number(insert.insertId);
+      const timeZone = process.env.TZ;
+      process.env.TZ = 'Europe/Vienna';
+      try {
+        const events = await listCalendarRearings(db, companyId, { id });
+        const start = events.find(
+          (event) => event.currentStep.key === event.startKey,
+        );
+        expect(start?.start).toBe('2020-06-01T10:00:00.000Z');
+      } finally {
+        if (timeZone === undefined) delete process.env.TZ;
+        else process.env.TZ = timeZone;
+        await db.deleteFrom('rearings').where('id', '=', id).execute();
+      }
+    });
   });
 });
 

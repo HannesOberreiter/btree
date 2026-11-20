@@ -551,9 +551,11 @@ export async function fetchArtenfinderNet(taxa: Taxa) {
         external_uuid: observation.guid,
         external_service: 'Artenfinder.net',
         observed_at: new Date(
-          observed_at[2],
-          observed_at[1] - 1,
-          observed_at[0],
+          Date.UTC(
+            Number(observed_at[2]),
+            Number(observed_at[1]) - 1,
+            Number(observed_at[0]),
+          ),
         ).toISOString(),
         location: {
           lat: coordinates[1],

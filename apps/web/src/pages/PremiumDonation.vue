@@ -53,9 +53,7 @@ const pricePageUrl = computed(() =>
     : 'https://www.btree.at/price/'
 );
 
-const isPremiumActive = computed(
-  () => dayjs(storeUser.getPaidStatus.date) >= dayjs()
-);
+const isPremiumActive = computed(() => storeUser.getPaidStatus.status);
 
 const getPaidStatus = computed(() => {
   if (!isPremiumActive.value) {

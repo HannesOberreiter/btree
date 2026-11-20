@@ -11,6 +11,7 @@ import yauzl from 'yauzl-promise';
 
 import type { Database } from '../../types/database.types.js';
 import type { DB } from '../../types/db.types.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 
 const NEWLINE_QUOTE_REGEX = /(\r\n|[\n\r"])/g;
 const MAX_ARCHIVE_ENTRIES = 64;
@@ -901,7 +902,7 @@ export async function importCompanyArchive(
           .set({
             reversal_of_id: reversalOfId,
             ...(row.updated_at && {
-              updated_at: new Date(String(row.updated_at)),
+              updated_at: parseDbDateTime(String(row.updated_at)),
             }),
           })
           .where('id', '=', operationId)

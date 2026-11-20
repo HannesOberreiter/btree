@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
 import httpErrors from 'http-errors';
 import type { Kysely } from 'kysely';
 import { sql } from 'kysely';
@@ -18,9 +17,8 @@ import type {
   ScaleDataListQuery,
   ScaleDataOrderField,
 } from '../schemas/scale_data.schema.js';
+import { isPaidDayValid, parseDbDateTime } from '../utils/date.util.js';
 import { requireScaleOwnership } from './ownership.module.js';
-
-dayjs.extend(utc);
 
 const orderColumns: Record<
   ScaleDataOrderField,
@@ -436,7 +434,7 @@ export async function ingestScaleReading(
     .where('api_active', '=', true)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound('Company not found');
-  if (!dayjs(company.paid).isAfter(dayjs())) {
+  if (!isPaidDayValid(company.paid)) {
     throw httpErrors.PaymentRequired();
   }
 
@@ -459,12 +457,12 @@ export async function ingestScaleReading(
     .orderBy('datetime', 'desc')
     .executeTakeFirst();
 
-  // The database returns datetime as UTC text without a zone, so parse it
-  // as UTC. Local parsing shifts it by the offset of the process time zone.
   if (
     last?.datetime &&
     input.action === 'CREATE' &&
-    dayjs.utc(last.datetime).isAfter(dayjs(insertDate).subtract(1, 'hour'))
+    dayjs(parseDbDateTime(last.datetime)).isAfter(
+      dayjs(insertDate).subtract(1, 'hour'),
+    )
   ) {
     throw httpErrors.TooManyRequests();
   }

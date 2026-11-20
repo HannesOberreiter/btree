@@ -43,10 +43,8 @@ export const useAuthUserStore = defineStore('auth/user', {
       if (!date.isValid()) {
         return false;
       }
-      if (date < dayjs()) {
-        return false;
-      }
-      return true;
+      // The paid day itself is still valid.
+      return !date.isBefore(dayjs(), 'day');
     },
     /*
      * Reads Company Object and returns helpful object
@@ -66,7 +64,7 @@ export const useAuthUserStore = defineStore('auth/user', {
       const date = dayjs(company.paid);
       if (date.isValid()) {
         result.date = date.format('YYYY-MM-DD');
-        if (date >= dayjs()) {
+        if (!date.isBefore(dayjs(), 'day')) {
           result.name = 'Premium';
           result.status = true;
           result.icon = 'far fa-thumbs-up';
