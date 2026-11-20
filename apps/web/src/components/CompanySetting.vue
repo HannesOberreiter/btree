@@ -66,7 +66,7 @@ function changeCompany(value: any) {
 function removeAccess() {
   $q.dialog({
     title: `${t('remove')} ${model.value.name}`,
-    class: 'bg-lime-12',
+    color: 'negative',
     message: t('company.removeAccess'),
     prompt: {
       model: '',
@@ -146,7 +146,7 @@ function newCompany() {
 function deleteCompany() {
   $q.dialog({
     title: `${t('delete')} ${model.value.name}`,
-    class: 'bg-lime-12',
+    color: 'negative',
     message: t('company.delete'),
     prompt: {
       model: '',
