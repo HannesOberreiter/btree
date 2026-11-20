@@ -169,6 +169,123 @@ describe('remote MCP routes', () => {
     beeId = accessPayload.bee_id;
   });
 
+  it('serves a styled consent page in the account language', async () => {
+    const db = KyselyServer.getInstance().db;
+    const bee = await db
+      .selectFrom('bees')
+      .select(['id', 'lang'])
+      .where('email', '=', demoUser.email)
+      .executeTakeFirstOrThrow();
+    // The controller shows the session's active company (session user_id),
+    // which is the companyId of the MCP access token above.
+    const company = await db
+      .selectFrom('companies')
+      .select('name')
+      .where('id', '=', companyId)
+      .executeTakeFirstOrThrow();
+
+    const authorizeQuery = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'mcp',
+      state: 'mcp-e2e-lang',
+      resource: mcpResource,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+    });
+
+    try {
+      const en = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(en.statusCode).toBe(200);
+      expect(String(en.body)).toContain('<style>');
+      expect(String(en.body)).toContain('lang="en"');
+      expect(String(en.body)).toContain('>Allow<');
+      // The page shows which company and login e-mail authorizes the client.
+      expect(String(en.body)).toContain(company.name);
+      expect(String(en.body)).toContain(demoUser.email);
+
+      // An account language of 'en' wins over a German Accept-Language
+      // header (regression: the header must only be used when the account
+      // has no supported language).
+      const login = await doRequest(
+        createAgent(),
+        'post',
+        '/api/v1/auth/login',
+        null,
+        null,
+        demoUser,
+      );
+      const cookie = ((login.header['set-cookie'] as string[]) ?? [])
+        .map((c) => c.split(';')[0])
+        .join('; ');
+      const withHeader = await fetch(
+        `http://localhost:${process.env.PORT}/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        {
+          headers: {
+            Cookie: cookie,
+            'Accept-Language': 'de',
+            Origin: process.env.ORIGIN!,
+          },
+          redirect: 'manual',
+        },
+      );
+      expect(withHeader.status).toBe(200);
+      expect(await withHeader.text()).toContain('lang="en"');
+
+      await db
+        .updateTable('bees')
+        .set({ lang: 'de' })
+        .where('id', '=', bee.id)
+        .execute();
+      const de = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(de.statusCode).toBe(200);
+      expect(String(de.body)).toContain('lang="de"');
+      expect(String(de.body)).toContain('>Erlauben<');
+      expect(String(de.body)).not.toContain('>Allow<');
+
+      // Company name and e-mail are HTML-escaped on the page.
+      await db
+        .updateTable('companies')
+        .set({ name: 'Evil<b>' })
+        .where('id', '=', companyId)
+        .execute();
+      const escaped = await agent.request(
+        'GET',
+        `/api/v1/mcp/oauth/authorize?${authorizeQuery.toString()}`,
+        undefined,
+        undefined,
+        'manual',
+      );
+      expect(escaped.statusCode).toBe(200);
+      expect(String(escaped.body)).toContain('Evil&lt;b&gt;');
+      expect(String(escaped.body)).not.toContain('Evil<b>');
+    } finally {
+      await db
+        .updateTable('bees')
+        .set({ lang: bee.lang ?? 'en' })
+        .where('id', '=', bee.id)
+        .execute();
+      await db
+        .updateTable('companies')
+        .set({ name: company.name })
+        .where('id', '=', companyId)
+        .execute();
+    }
+  });
+
   it('publishes protected-resource and authorization-server metadata', async () => {
     const resource = await jsonRequest(
       'GET',

@@ -242,7 +242,9 @@ function handleEventsChange(changeInfo: EventChangeInfo) {
   api.patch(`/v1/${sourceName}/date`, data).then(
     (_response: any) => {
       notification.open('positive', '');
-      useQuery.invalidate(sourceName);
+      // Refetch the source, otherwise the event objects keep the dates
+      // from before the drag and the schedule dialog shows old dates.
+      refetchSource(sourceName);
     },
     error => {
       notification.open('negative', error);

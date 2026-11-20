@@ -47,7 +47,8 @@ export function useServiceDropbox() {
       const res = await dbx.usersGetCurrentAccount();
       state.isLoading = false;
       LoadingBar.stop();
-      return res;
+      // The SDK wraps the account data in DropboxResponse.result.
+      return res.result;
     } catch (e: any) {
       state.isLoading = false;
       if (isRetry) {

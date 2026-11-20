@@ -75,6 +75,29 @@ describe('rearing routes', () => {
       expect(res.body.total).toBeTypeOf('number');
     });
 
+    it('get 200 - date is an ISO UTC instant, not the raw DB string', async () => {
+      const db = KyselyServer.getInstance().db;
+      // dateStrings returns the raw DATETIME string that mysql2 wrote in UTC.
+      const raw = await db
+        .selectFrom('rearings')
+        .select('date')
+        .where('id', '=', insertId)
+        .executeTakeFirstOrThrow();
+      const expected = new Date(
+        `${String(raw.date).replace(' ', 'T')}Z`,
+      ).toISOString();
+
+      const rows = await getRearingsByIds(db, 1, [insertId]);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].date).toBe(expected);
+
+      const res = await doQueryRequest(agent, route, null, accessToken, {
+        limit: 10_000,
+      });
+      const row = res.body.results.find((r: any) => r.id === insertId);
+      expect(row.date).toBe(expected);
+    });
+
     it.each([
       'symbol',
       'type.name',

@@ -28,6 +28,7 @@ import {
   downloadCompanyData,
   importCompanyArchive,
 } from '../../modules/company_transfer.module.js';
+import { fetchUser } from '../../modules/login.module.js';
 import { addPremium } from '../../modules/premium.module.js';
 import {
   companyApiKeyResponseSchema,
@@ -229,15 +230,41 @@ export default function routes(
       preHandler: Guard.authorize([ROLES.admin]),
     },
     async (request, reply) => {
-      const companyId = await deleteOwnedCompany(
-        db,
-        request.session.user.bee_id,
-        Number(request.params.id),
+      const beeId = request.session.user.bee_id;
+      const deletedId = Number(request.params.id);
+      const bee = await db
+        .selectFrom('bees')
+        .select('saved_company')
+        .where('id', '=', beeId)
+        .executeTakeFirstOrThrow();
+      const nextCompanyId = await deleteOwnedCompany(db, beeId, deletedId);
+      if (deletedId === request.session.user.user_id) {
+        // The active company was deleted, switch to the next one.
+        (request as FastifyRequest & { body: ChangeCompanyBody }).body = {
+          saved_company: nextCompanyId,
+        };
+        return UserController.changeCompany(request, reply);
+      }
+      // The deleted company was not the active one, keep the active company.
+      const data = await fetchUser(db, '', beeId);
+      if (!data) throw httpErrors.NotFound();
+      let result = 0;
+      if (bee.saved_company === deletedId) {
+        // saved_company referenced the deleted company (the foreign key set
+        // it to null): point it back at the active company of this session.
+        await db
+          .updateTable('bees')
+          .set({ saved_company: request.session.user.user_id })
+          .where('id', '=', beeId)
+          .execute();
+        data.saved_company = request.session.user.user_id;
+        result = 1;
+      }
+      return parseResponse(
+        companyChangeResponseSchema,
+        { result, data },
+        request,
       );
-      (request as FastifyRequest & { body: ChangeCompanyBody }).body = {
-        saved_company: companyId,
-      };
-      return UserController.changeCompany(request, reply);
     },
   );
 
