@@ -252,6 +252,24 @@ describe('task stock bookings', () => {
       expect(res.statusCode).toEqual(400);
     });
 
+    it('400 - treatment recipe needs per_amount', async () => {
+      const res = await agent.request(
+        'PATCH',
+        `/api/v1/option/treatment_types/${oxalicId}/recipe`,
+        {
+          lines: [
+            {
+              charge_type_id: acidId,
+              kind: 'out',
+              mode: 'per_hive',
+              factor: 1,
+            },
+          ],
+        },
+      );
+      expect(res.statusCode).toEqual(400);
+    });
+
     it('400 - table without recipes', async () => {
       const res = await agent.request(
         'GET',
