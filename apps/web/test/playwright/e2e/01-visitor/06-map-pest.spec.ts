@@ -160,7 +160,10 @@ test.describe('visitor - credential-free public pest datasets', () => {
 test.describe('visitor - pest map UTC timestamps', () => {
   test.use({ timezoneId: 'Europe/Lisbon', locale: 'en-GB' });
 
-  test('uses explicit UTC response timestamps for local dates and seven-day markers', async ({
+  // The map shows the UTC day of observed_at. Many sources give only a day,
+  // stored as 00:00 UTC, and the browser time zone would move it to another
+  // day. A timed observation between local and UTC midnight shows the UTC day.
+  test('shows the UTC day of the observation and the seven-day marker', async ({
     page
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-20T23:00:00Z'));
@@ -185,7 +188,7 @@ test.describe('visitor - pest map UTC timestamps', () => {
     await expect(marker).toHaveAttribute('stroke', 'red');
     await marker.click({ force: true });
     await expect(page.locator('.leaflet-popup-content')).toContainText(
-      '14/09/2026'
+      '13/09/2026'
     );
   });
 });

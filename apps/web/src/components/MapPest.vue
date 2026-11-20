@@ -148,7 +148,11 @@ function onMapReady() {
     response.forEach((item: any) => {
       const obs = {
         ...item,
-        localDate: new Date(item.observed_at).toLocaleDateString(),
+        // Show the stored UTC day. Many sources give only a day, stored as
+        // 00:00 UTC; the browser time zone would move it to another day.
+        localDate: new Date(item.observed_at).toLocaleDateString(undefined, {
+          timeZone: 'UTC'
+        }),
         isRecentObservation:
           new Date(item.observed_at) >
           new Date(Date.now() - 1000 * 60 * 60 * 24 * daysRecent)
