@@ -75,6 +75,8 @@ jobs:
         run: pnpm lint:check
       - name: Typecheck
         run: pnpm typecheck
+      - name: Test the Bunny upload script
+        run: node --test scripts/upload-bunny.test.mjs
       - name: Build PWA
         run: pnpm build:pwa
 
