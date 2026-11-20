@@ -23,9 +23,9 @@ describe('database date helpers outside UTC', () => {
     vienna(() => {
       const date = new Date('2026-01-10T08:00:00.000Z');
       expect(parseDbDateTime(date).toISOString()).toBe(date.toISOString());
-      expect(
-        parseDbDateTime('2026-01-10T09:00:00+01:00').toISOString(),
-      ).toBe('2026-01-10T08:00:00.000Z');
+      expect(parseDbDateTime('2026-01-10T09:00:00+01:00').toISOString()).toBe(
+        '2026-01-10T08:00:00.000Z',
+      );
     }));
 
   it('counts the paid day as valid', () =>
