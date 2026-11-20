@@ -150,9 +150,9 @@ export async function leaveCompany(
     .where('bee_id', '!=', beeId)
     .executeTakeFirst();
   if (!otherUser) {
-    throw httpErrors.Forbidden(
-      'No other users found, cannot remove your access.',
-    );
+    throw httpErrors(403, 'No other users found, cannot remove your access.', {
+      code: 'COMPANY_HAS_NO_OTHER_USERS',
+    });
   }
 
   const otherCompany = await db
@@ -162,8 +162,10 @@ export async function leaveCompany(
     .where('user_id', '!=', companyId)
     .executeTakeFirst();
   if (!otherCompany?.user_id) {
-    throw httpErrors.Forbidden(
+    throw httpErrors(
+      403,
       'This is your last company, you cannot remove access to it.',
+      { code: 'LAST_COMPANY' },
     );
   }
 

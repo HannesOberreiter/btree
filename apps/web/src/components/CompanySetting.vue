@@ -63,7 +63,24 @@ function changeCompany(value: any) {
   );
 }
 
+// The server refuses to delete or leave the last company. Explain how to
+// close the account instead.
+function showLastCompany() {
+  $q.dialog({
+    title: model.value.name,
+    message: t('company.lastCompany'),
+    ok: { label: t('company.openProfile'), color: 'primary' },
+    cancel: true
+  }).onOk(() => {
+    void router.push({ name: 'setting-profile', params: { tab: 'user' } });
+  });
+}
+
 function removeAccess() {
+  if (options.value.length <= 1) {
+    showLastCompany();
+    return;
+  }
   $q.dialog({
     title: `${t('remove')} ${model.value.name}`,
     color: 'negative',
@@ -144,6 +161,10 @@ function newCompany() {
 }
 
 function deleteCompany() {
+  if (options.value.length <= 1) {
+    showLastCompany();
+    return;
+  }
   $q.dialog({
     title: `${t('delete')} ${model.value.name}`,
     color: 'negative',
