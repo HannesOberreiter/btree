@@ -1,5 +1,14 @@
 # Changelog
 
+## [7.14.1](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.14.0...btree-client-v7.14.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* **web:** keep QR codes inside their column in the print dialog ([#373](https://github.com/HannesOberreiter/btree/issues/373)) ([fb7ba45](https://github.com/HannesOberreiter/btree/commit/fb7ba45073d91a63d2e946d94c1d236971e0d808))
+* **web:** refetch calendar source after a successful drag ([#371](https://github.com/HannesOberreiter/btree/issues/371)) ([cd9b846](https://github.com/HannesOberreiter/btree/commit/cd9b84656de6b3dca1220bb00e5e0083757d4896))
+* **web:** return the Dropbox account data from getAccount ([#368](https://github.com/HannesOberreiter/btree/issues/368)) ([a985371](https://github.com/HannesOberreiter/btree/commit/a9853718f856c3519f182ea779ae31398ac3d0eb))
+
 ## [7.14.0](https://github.com/HannesOberreiter/btree/compare/btree-client-v7.13.0...btree-client-v7.14.0) (2026-11-19)
 
 
