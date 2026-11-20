@@ -64,6 +64,7 @@ jobs:
           AWS_DEFAULT_REGION: de
           BUNNY_S3_ENDPOINT: https://de-s3.storage.bunnycdn.com
           BUNNY_STORAGE_ZONE: beta-btree-at
+          PUBLIC_URL: https://beta.btree.at
         run: bash scripts/upload-bunny.sh dist/pwa
 
       - name: Purge BunnyCDN
