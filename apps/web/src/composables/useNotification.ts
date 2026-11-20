@@ -76,6 +76,12 @@ function useNotification(t?: ComposerTranslation) {
     } else if (statusCode === 403) {
       if (errorField === 'lastMovement') {
         displayMessage = $t('error.lastMovement');
+      } else if (errorCode === 'LAST_COMPANY') {
+        displayMessage = $t('company.lastCompany');
+      } else if (errorCode === 'COMPANY_HAS_OTHER_USERS') {
+        displayMessage = $t('error.companyHasOtherUsers');
+      } else if (errorCode === 'COMPANY_HAS_NO_OTHER_USERS') {
+        displayMessage = $t('error.companyHasNoOtherUsers');
       } else {
         displayMessage = $t('error.forbidden');
       }
