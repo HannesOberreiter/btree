@@ -37,6 +37,16 @@ const options = computed(() => {
   return sortBy(user.value.company, [sortCompanyName]);
 });
 
+// Shows the loading state on the company buttons while a request runs.
+async function withLoading(request: () => Promise<unknown>) {
+  isSubmitting.value = true;
+  try {
+    await request();
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+
 function checkCompanyName(val: string) {
   return (
     val.length >= 5 &&
@@ -93,18 +103,20 @@ function removeAccess() {
     },
     cancel: true,
     persistent: true
-  }).onOk(() => {
-    api.remove(`/v1/company_user/${model.value.id}`).then(
-      async (_response: any) => {
-        invalidateQueries.invalidate();
-        await storeRefresh.refresh();
-        notification.open('positive', '');
-      },
-      error => {
-        notification.open('negative', error);
-      }
-    );
-  });
+  }).onOk(() =>
+    withLoading(() =>
+      api.remove(`/v1/company_user/${model.value.id}`).then(
+        async (_response: any) => {
+          invalidateQueries.invalidate();
+          await storeRefresh.refresh();
+          notification.open('positive', '');
+        },
+        error => {
+          notification.open('negative', error);
+        }
+      )
+    )
+  );
 }
 
 function editCompany() {
@@ -119,20 +131,24 @@ function editCompany() {
     },
     cancel: true,
     persistent: false
-  }).onOk(data => {
-    (
-      api.patch('/v1/company', { name: data }) as Promise<CompanyPatchResponse>
-    ).then(
-      async _response => {
-        invalidateQueries.invalidate();
-        await storeRefresh.refresh();
-        notification.open('positive', '');
-      },
-      error => {
-        notification.open('negative', error);
-      }
-    );
-  });
+  }).onOk(data =>
+    withLoading(() =>
+      (
+        api.patch('/v1/company', {
+          name: data
+        }) as Promise<CompanyPatchResponse>
+      ).then(
+        async _response => {
+          invalidateQueries.invalidate();
+          await storeRefresh.refresh();
+          notification.open('positive', '');
+        },
+        error => {
+          notification.open('negative', error);
+        }
+      )
+    )
+  );
 }
 
 function newCompany() {
@@ -146,18 +162,22 @@ function newCompany() {
     },
     cancel: true,
     persistent: true
-  }).onOk(data => {
-    (api.post('/v1/company', { name: data }) as Promise<CompanyResponse>).then(
-      async _response => {
-        invalidateQueries.invalidate();
-        await storeRefresh.refresh();
-        notification.open('positive', '');
-      },
-      error => {
-        notification.open('negative', error);
-      }
-    );
-  });
+  }).onOk(data =>
+    withLoading(() =>
+      (
+        api.post('/v1/company', { name: data }) as Promise<CompanyResponse>
+      ).then(
+        async _response => {
+          invalidateQueries.invalidate();
+          await storeRefresh.refresh();
+          notification.open('positive', '');
+        },
+        error => {
+          notification.open('negative', error);
+        }
+      )
+    )
+  );
 }
 
 function deleteCompany() {
@@ -177,18 +197,20 @@ function deleteCompany() {
     },
     cancel: true,
     persistent: true
-  }).onOk(() => {
-    api.remove(`/v1/company/${model.value.id}`).then(
-      async (_response: any) => {
-        invalidateQueries.invalidate();
-        await storeRefresh.refresh();
-        notification.open('positive', '');
-      },
-      error => {
-        notification.open('negative', error);
-      }
-    );
-  });
+  }).onOk(() =>
+    withLoading(() =>
+      api.remove(`/v1/company/${model.value.id}`).then(
+        async (_response: any) => {
+          invalidateQueries.invalidate();
+          await storeRefresh.refresh();
+          notification.open('positive', '');
+        },
+        error => {
+          notification.open('negative', error);
+        }
+      )
+    )
+  );
 }
 
 async function downloadContent() {
@@ -218,18 +240,20 @@ async function importData() {
     },
     cancel: true,
     persistent: false
-  }).onOk((data: FileList) => {
-    api.postMultiPart('/v1/company/import', { upload: data[0] }).then(
-      async data => {
-        invalidateQueries.invalidate();
-        await storeRefresh.refresh();
-        notification.open('positive', data.name, true);
-      },
-      error => {
-        notification.open('negative', error);
-      }
-    );
-  });
+  }).onOk((data: FileList) =>
+    withLoading(() =>
+      api.postMultiPart('/v1/company/import', { upload: data[0] }).then(
+        async data => {
+          invalidateQueries.invalidate();
+          await storeRefresh.refresh();
+          notification.open('positive', data.name, true);
+        },
+        error => {
+          notification.open('negative', error);
+        }
+      )
+    )
+  );
 }
 </script>
 

@@ -43,7 +43,7 @@ const v = useVuelidate(rules, state, { $autoDirty: true });
     name="email"
     type="email"
     autocapitalize="off"
-    autofill="username"
+    autocomplete="username"
     required
     filled
     :readonly="fieldStatus"

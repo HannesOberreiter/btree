@@ -28,6 +28,14 @@ test.describe('visitor - Register', () => {
     await addDemoMail(true);
     newMail = await page.locator('[name=email]').inputValue();
 
+    // Password managers use these values to save a new password.
+    for (const name of ['password', 'confirmPassword']) {
+      await expect(page.locator(`[name=${name}]`)).toHaveAttribute(
+        'autocomplete',
+        'new-password'
+      );
+    }
+
     await page.locator('[name=password]').fill('shor');
     await expect(page.locator('[role=alert]').first()).toBeVisible();
 
