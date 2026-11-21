@@ -14,6 +14,15 @@ test.describe('visitor - Login', () => {
   test('assert form', async ({ page }) => {
     await expect(page.locator('[name=email]')).toBeAttached();
     await expect(page.locator('[name=password]')).toBeAttached();
+    // Password managers use these values to fill the login form.
+    await expect(page.locator('[name=email]')).toHaveAttribute(
+      'autocomplete',
+      'username'
+    );
+    await expect(page.locator('[name=password]')).toHaveAttribute(
+      'autocomplete',
+      'current-password'
+    );
 
     await page.locator('[name=email]').fill('noEmail');
     await expect(page.locator('[role=alert]').first()).toBeVisible();

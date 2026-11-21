@@ -195,6 +195,37 @@ test.describe('user - Setting Company', () => {
     await expect(dataCy('notification')).toContainText(message);
   });
 
+  test('shows the loading state while the company is renamed', async ({
+    page,
+    dataCy
+  }) => {
+    let release = () => {};
+    const released = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    await page.route('**/api/v1/company', async route => {
+      if (route.request().method() !== 'PATCH') {
+        await route.continue();
+        return;
+      }
+      await released;
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: '' })
+      });
+    });
+
+    await dataCy('btn-company-edit').click();
+    await submitPrompt(page, `E2E rename ${Date.now()}`);
+    const spinner = dataCy('btn-company-edit').locator('.q-spinner');
+    await expect(spinner).toBeVisible();
+
+    release();
+    await expect(dataCy('notification')).toContainText(t('error.unknown'));
+    await expect(spinner).toHaveCount(0);
+  });
+
   test('explains the last company and links to the profile', async ({
     page,
     dataCy

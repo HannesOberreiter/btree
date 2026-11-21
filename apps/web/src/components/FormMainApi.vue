@@ -66,58 +66,61 @@ const state = reactive({
 const rules = {};
 const v = useVuelidate(rules, state, { $autoDirty: true });
 
+// Returns false and shows a message if the password is missing or invalid.
+async function checkPasswordInput() {
+  const isFormCorrect = await v.value.$validate();
+  if (!isFormCorrect || state.password === '') {
+    notification.open(
+      'negative',
+      t('validations.required', { field: t('password') }),
+      true
+    );
+    return false;
+  }
+  return true;
+}
+
 async function changeApiStatus(value = true, change = false) {
   isSubmitting.value = true;
-  const isFormCorrect = await v.value.$validate();
-  if (!isFormCorrect) {
-    return;
-  }
-  if (state.password === '') {
-    return;
-  }
-  await (
-    api.patch('/v1/company', {
-      password: state.password,
-      api_active: value,
-      api_change: change
-    }) as Promise<CompanyPatchResponse>
-  ).then(
-    async response => {
-      storeUser.$state.company.api_active = response.api_active;
-      map(storeUser.$state.user.company, value => {
-        if (response.id === value.id) {
-          value.api_active = response.api_active;
-        }
-      });
-      if (change) {
-        await loadApiValue();
-      }
-    },
-    error => {
-      notification.open('negative', error);
+  try {
+    if (!(await checkPasswordInput())) {
+      return;
     }
-  );
-  isSubmitting.value = false;
+    await (
+      api.patch('/v1/company', {
+        password: state.password,
+        api_active: value,
+        api_change: change
+      }) as Promise<CompanyPatchResponse>
+    ).then(
+      async response => {
+        storeUser.$state.company.api_active = response.api_active;
+        map(storeUser.$state.user.company, value => {
+          if (response.id === value.id) {
+            value.api_active = response.api_active;
+          }
+        });
+        if (change) {
+          await loadApiValue();
+        }
+      },
+      error => {
+        notification.open('negative', error);
+      }
+    );
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 
 async function loadApiValue() {
   isSubmitting.value = true;
-  if (apiField.value === 'password') {
-    const isFormCorrect = await v.value.$validate();
-    if (!isFormCorrect) {
-      notification.open(
-        'negative',
-        t('validations.required', { field: t('password') }),
-        true
-      );
+  try {
+    if (apiField.value !== 'password') {
+      apiField.value = 'password';
       return;
     }
-    if (state.password === '') {
-      notification.open(
-        'negative',
-        t('validations.required', { field: t('password') }),
-        true
-      );
+    if (!(await checkPasswordInput())) {
       return;
     }
 
@@ -142,7 +145,7 @@ async function loadApiValue() {
       api.get('/v1/company/apikey') as Promise<CompanyApiKeyResponse>
     ).then(
       response => {
-        apiField.value = apiField.value === 'text' ? 'password' : 'text';
+        apiField.value = 'text';
         apiValue.value = response.api_key ?? '';
         notification.open('positive', '');
       },
@@ -150,10 +153,9 @@ async function loadApiValue() {
         notification.open('negative', error);
       }
     );
-  } else {
-    apiField.value = apiField.value === 'text' ? 'password' : 'text';
+  } finally {
+    isSubmitting.value = false;
   }
-  isSubmitting.value = false;
 }
 
 async function scaleTest() {
@@ -189,6 +191,8 @@ async function scaleTest() {
         :no-caps="true"
         :label="$t('unlockAPI')"
         icon="fas fa-key"
+        :loading="isSubmitting"
+        :disable="isSubmitting"
         @click="loadApiValue"
       />
     </div>
@@ -199,7 +203,13 @@ async function scaleTest() {
       :readonly="true"
     >
       <template #prepend>
-        <BtnBase flat icon="fas fa-eye" @click="loadApiValue" />
+        <BtnBase
+          flat
+          icon="fas fa-eye"
+          :loading="isSubmitting"
+          :disable="isSubmitting"
+          @click="loadApiValue"
+        />
       </template>
       <template #append>
         <BtnBase
@@ -329,6 +339,8 @@ async function scaleTest() {
         v-if="!storeUser.company.api_active"
         size="md"
         color="secondary"
+        :loading="isSubmitting"
+        :disable="isSubmitting"
         @click.prevent.stop="changeApiStatus(true)"
       >
         {{ $t('activate') }}
@@ -337,6 +349,8 @@ async function scaleTest() {
         v-if="storeUser.company.api_active"
         size="md"
         color="negative"
+        :loading="isSubmitting"
+        :disable="isSubmitting"
         @click.prevent.stop="changeApiStatus(false)"
       >
         {{ $t('deactivate') }}
@@ -345,6 +359,8 @@ async function scaleTest() {
         v-if="storeUser.company.api_active"
         size="md"
         color="secondary"
+        :loading="isSubmitting"
+        :disable="isSubmitting"
         @click.prevent.stop="changeApiStatus(true, true)"
       >
         {{ $t('generateNewKey') }}
