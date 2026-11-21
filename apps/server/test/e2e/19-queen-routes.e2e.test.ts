@@ -16,9 +16,10 @@ import {
   withTimeZone,
 } from '../utils.js';
 
+// Ten queens cannot move into one hive in one request, so no hive here.
 const testInsert = {
   name: 'testQueen',
-  hive_id: 1,
+  hive_id: null,
   date: new Date().toISOString().slice(0, 10),
   race_id: 1,
   mating_id: 1,

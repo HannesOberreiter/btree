@@ -12,6 +12,15 @@ import yauzl from 'yauzl-promise';
 import type { Database } from '../../types/database.types.js';
 import type { DB } from '../../types/db.types.js';
 import { parseDbDateTime } from '../utils/date.util.js';
+import type { PlacementPeriod } from '../utils/queen_placement.util.js';
+import {
+  buildQueenPlacements,
+  isOpen,
+  OPEN_END,
+  toDay,
+  validatePlacements,
+} from '../utils/queen_placement.util.js';
+import { syncQueen } from './queen_placement.module.js';
 
 const NEWLINE_QUOTE_REGEX = /(\r\n|[\n\r"])/g;
 const MAX_ARCHIVE_ENTRIES = 64;
@@ -45,6 +54,7 @@ type TransferKey =
   | 'wax_operation_lines'
   | 'wax_inventory_counts'
   | 'queens'
+  | 'queen_placements'
   | 'queen_matings'
   | 'queen_races'
   | 'todos';
@@ -84,6 +94,7 @@ const transferKeys: TransferKey[] = [
   'wax_operation_lines',
   'wax_inventory_counts',
   'queens',
+  'queen_placements',
   'queen_matings',
   'queen_races',
   'todos',
@@ -394,6 +405,15 @@ const columns: Record<TransferKey, readonly string[]> = {
     'created_at',
     'updated_at',
   ],
+  queen_placements: [
+    'queen_id',
+    'hive_id',
+    'from_date',
+    'to_date',
+    'user_id',
+    'created_at',
+    'updated_at',
+  ],
   queen_matings: [
     'name',
     'modus',
@@ -700,6 +720,61 @@ function validateWaxArchive(data: TransferData) {
   }
 }
 
+/**
+ * Inserts the placements of the imported queens. An archive from before the
+ * table `queen_placements` gets placements from `queens.hive_id` and
+ * `queens.move_date`, with the same rules as the migration.
+ */
+async function importQueenPlacements(
+  db: Transaction<DB>,
+  data: TransferData,
+  companyId: number,
+  queens: Record<string, number>,
+  hives: Record<string, number>,
+  newQueens: CsvRecord[],
+) {
+  let rows: PlacementPeriod[];
+  if (data.queen_placements.length) {
+    rows = data.queen_placements
+      .map((row) => ({
+        queen_id: mapped(queens, row.queen_id),
+        hive_id: mapped(hives, row.hive_id),
+        from_date: toDay(row.from_date),
+        to_date: toDay(row.to_date) ?? OPEN_END,
+      }))
+      .filter(
+        (row): row is PlacementPeriod =>
+          row.queen_id !== null && row.hive_id !== null && !!row.from_date,
+      );
+  } else {
+    rows = buildQueenPlacements(
+      newQueens.map((row) => ({
+        id: Number(row.id),
+        hive_id: row.hive_id === undefined ? null : Number(row.hive_id),
+        user_id: companyId,
+        move_date: row.move_date,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        modus: row.modus === undefined ? true : row.modus === true,
+        modus_date: row.modus_date,
+      })),
+    ).rows;
+  }
+  try {
+    validatePlacements(rows);
+  } catch {
+    throw httpErrors.BadRequest('Archive contains invalid queen placements');
+  }
+  // Closed placements first, so an open one never meets a newer open one.
+  rows.sort((a, b) => Number(isOpen(a)) - Number(isOpen(b)));
+  await insertRows(
+    db,
+    'queen_placements',
+    rows.map((row) => ({ ...row, user_id: companyId })),
+  );
+  for (const id of Object.values(queens)) await syncQueen(db, id);
+}
+
 export async function importCompanyArchive(
   db: Database,
   beeId: number,
@@ -732,6 +807,7 @@ export async function importCompanyArchive(
     wax_operation_lines: [],
     wax_inventory_counts: [],
     queens: [],
+    queen_placements: [],
     queen_matings: [],
     queen_races: [],
     todos: [],
@@ -1091,18 +1167,23 @@ export async function importCompanyArchive(
       data.queen_matings,
       companyId,
     );
-    await insertRows(
+    const queenRows = data.queens.map((row) =>
+      clean('queens', row, {
+        user_id: companyId,
+        hive_id: mapped(hives, row.hive_id),
+        race_id: mapped(races, row.race_id),
+        mating_id: mapped(matings, row.mating_id),
+        mother_id: null,
+      }),
+    );
+    const queenIds = await insertRows(trx, 'queens', queenRows);
+    await importQueenPlacements(
       trx,
-      'queens',
-      data.queens.map((row) =>
-        clean('queens', row, {
-          user_id: companyId,
-          hive_id: mapped(hives, row.hive_id),
-          race_id: mapped(races, row.race_id),
-          mating_id: mapped(matings, row.mating_id),
-          mother_id: null,
-        }),
-      ),
+      data,
+      companyId,
+      idMap(data.queens, queenIds),
+      hives,
+      queenRows.map((row, index) => ({ ...row, id: queenIds[index] })),
     );
   });
   return { name };

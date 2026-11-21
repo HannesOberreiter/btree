@@ -54,7 +54,7 @@ const columns = [
     name: 'queens.name',
     label: t('name'),
     align: 'left',
-    field: (row: any) => (row.queens ? row.queens.name : ''),
+    field: (row: any) => (row.queen ? row.queen.name : ''),
     sortable: true
   },
   {
@@ -256,7 +256,7 @@ function orderLocalData(o: any) {
         :dense="true"
         :rows-per-page-options="[10, 50, 100, 500, 10000]"
         separator="vertical"
-        row-key="id"
+        row-key="placement_id"
         selection="multiple"
         binary-state-sort
         flat

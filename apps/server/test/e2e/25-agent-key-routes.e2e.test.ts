@@ -2,6 +2,11 @@ import process from 'node:process';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import {
+  asDate,
+  syncQueen,
+} from '../../src/api/modules/queen_placement.module.js';
+import { buildQueenPlacements } from '../../src/api/utils/queen_placement.util.js';
 import { ROLES } from '../../src/config/constants.config.js';
 import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
@@ -601,6 +606,24 @@ describe('agent key & agent API routes', () => {
         hiveId: other,
         date: '2024-05-01',
       });
+      // Placements as the migration builds them from the old columns.
+      const queens = await db
+        .selectFrom('queens')
+        .selectAll()
+        .where('id', 'in', Object.values(queenIds))
+        .execute();
+      const { rows } = buildQueenPlacements(queens);
+      await db
+        .insertInto('queen_placements')
+        .values(
+          rows.map((row) => ({
+            ...row,
+            from_date: asDate(row.from_date),
+            to_date: asDate(row.to_date),
+          })),
+        )
+        .execute();
+      for (const id of Object.values(queenIds)) await syncQueen(db, id);
     });
 
     afterAll(async () => {
@@ -704,7 +727,10 @@ describe('agent key & agent API routes', () => {
         bornFrom: '2024-01-01',
         bornTo: '2024-12-31',
       });
-      expect(seededIds(ids)).toEqual(expectedIds('noHive'));
+      // The active queen "replaced" has no open placement, so no hive.
+      expect(seededIds(ids).sort((a, b) => a - b)).toEqual(
+        expectedIds('noHive', 'replaced'),
+      );
     });
 
     it('200 - filters by hiveId and q', async () => {
@@ -712,9 +738,7 @@ describe('agent key & agent API routes', () => {
         location: 'all',
         hiveId: hiveIds[3],
       });
-      expect(byHive.ids.sort((a, b) => a - b)).toEqual(
-        expectedIds('replaced', 'successor'),
-      );
+      expect(byHive.ids).toEqual(expectedIds('successor'));
 
       const bySearch = await callListQueens({
         location: 'all',

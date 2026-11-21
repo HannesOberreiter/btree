@@ -943,15 +943,6 @@ export interface Promos {
   user_id: Generated<number | null>;
 }
 
-export interface QueenDurations {
-  duration: Generated<number | null>;
-  hive_id: Generated<number | null>;
-  id: Generated<number>;
-  last_date: Generated<Date>;
-  move_date: Generated<Date | null>;
-  user_id: Generated<number | null>;
-}
-
 export interface QueenMatings {
   created_at: Generated<Date | null>;
   favorite: Generated<ColumnType<
@@ -968,6 +959,28 @@ export interface QueenMatings {
   name: Generated<string | null>;
   updated_at: Generated<Date | null>;
   user_id: Generated<number | null>;
+}
+
+export interface QueenPlacements {
+  /**
+   * Creator
+   */
+  bee_id: Generated<number | null>;
+  created_at: Generated<Date>;
+  /**
+   * Editor
+   */
+  edit_id: Generated<number | null>;
+  from_date: Date;
+  hive_id: number;
+  id: Generated<number>;
+  queen_id: number;
+  to_date: Generated<Date>;
+  updated_at: Generated<Date>;
+  /**
+   * Company
+   */
+  user_id: number;
 }
 
 export interface QueenRaces {
@@ -1035,7 +1048,7 @@ export interface Queens {
 export interface QueensLocations {
   hive_id: Generated<number>;
   hive_name: Generated<string | null>;
-  queen_id: Generated<number | null>;
+  queen_id: Generated<number>;
   queen_mark_colour: Generated<string | null>;
   queen_modus: Generated<ColumnType<
     boolean,
@@ -1497,8 +1510,8 @@ export interface DB {
   observations: Observations;
   payments: Payments;
   promos: Promos;
-  queen_durations: QueenDurations;
   queen_matings: QueenMatings;
+  queen_placements: QueenPlacements;
   queen_races: QueenRaces;
   queens: Queens;
   queens_locations: QueensLocations;

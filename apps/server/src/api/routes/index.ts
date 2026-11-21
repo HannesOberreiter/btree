@@ -25,6 +25,7 @@ import v1Movedate from './v1/movedate.route.js';
 import v1Option from './v1/option.route.js';
 import v1Public from './v1/public.route.js';
 import v1Queen from './v1/queen.route.js';
+import v1QueenPlacement from './v1/queen_placement.route.js';
 import v1Rearing from './v1/rearing.route.js';
 import v1RearingDetail from './v1/rearing_detail.route.js';
 import v1RearingStep from './v1/rearing_step.route.js';
@@ -73,6 +74,7 @@ async function coreRoutes(instance: FastifyInstance) {
   instance.register(v1Harvest, { prefix: '/v1/harvest' });
   instance.register(v1Hive, { prefix: '/v1/hive' });
   instance.register(v1Queen, { prefix: '/v1/queen' });
+  instance.register(v1QueenPlacement, { prefix: '/v1/queen_placement' });
   instance.register(v1Movedate, { prefix: '/v1/movedate' });
   instance.register(v1Option, { prefix: '/v1/option' });
   instance.register(v1Rearing, { prefix: '/v1/rearing' });
