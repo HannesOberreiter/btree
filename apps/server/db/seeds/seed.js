@@ -85,6 +85,7 @@ async function seedQueenPlacements(knex) {
       'updated_at',
       'modus',
       'modus_date',
+      'deleted',
     )
     .whereNotNull('hive_id');
   const { rows } = buildQueenPlacements(queens);

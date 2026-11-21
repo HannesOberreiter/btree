@@ -943,6 +943,15 @@ export interface Promos {
   user_id: Generated<number | null>;
 }
 
+export interface QueenDurations {
+  duration: Generated<number | null>;
+  hive_id: Generated<number | null>;
+  id: Generated<number>;
+  last_date: Generated<Date>;
+  move_date: Generated<Date | null>;
+  user_id: Generated<number | null>;
+}
+
 export interface QueenMatings {
   created_at: Generated<Date | null>;
   favorite: Generated<ColumnType<
@@ -1510,6 +1519,7 @@ export interface DB {
   observations: Observations;
   payments: Payments;
   promos: Promos;
+  queen_durations: QueenDurations;
   queen_matings: QueenMatings;
   queen_placements: QueenPlacements;
   queen_races: QueenRaces;

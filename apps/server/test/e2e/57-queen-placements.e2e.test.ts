@@ -126,6 +126,27 @@ describe('queen placement backfill rules', () => {
     ]);
   });
 
+  it('a deleted queen does not end a queen that is not deleted', () => {
+    const { rows, skipped } = buildQueenPlacements([
+      queen({ id: 1, move_date: '2024-01-01', deleted: true }),
+      queen({ id: 2, move_date: '2024-02-01' }),
+      queen({ id: 3, move_date: '2024-03-01', deleted: 1 }),
+      queen({ id: 4, hive_id: 2, move_date: '2024-01-01' }),
+      queen({ id: 5, hive_id: 2, move_date: '2024-01-01', deleted: true }),
+    ]);
+    expect(
+      rows.map((row) => [row.queen_id, row.from_date, row.to_date]),
+    ).toEqual([
+      [1, '2024-01-01', '2024-02-01'],
+      [2, '2024-02-01', OPEN_END],
+      [4, '2024-01-01', OPEN_END],
+    ]);
+    expect(skipped.map((skip) => [skip.queen_id, skip.reason])).toEqual([
+      [3, 'deleted_overlap'],
+      [5, 'same_start'],
+    ]);
+  });
+
   it('validates overlaps per queen and per hive', () => {
     const row = { queen_id: 1, hive_id: 1 };
     expect(() =>
@@ -245,7 +266,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 6; index++) {
+    for (let index = 0; index < 8; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -451,6 +472,40 @@ describe('queen placements', () => {
     expect(current.queen_id).toBe(g);
   });
 
+  it('inactive on the day of the move deletes the placement', async () => {
+    const u = hives[6];
+    const day = new Date().toISOString().slice(0, 10);
+    const h = await create({ hive_id: u, move_date: day });
+    const res = await agent.request('PATCH', '/api/v1/queen/status', {
+      ids: [h],
+      status: false,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(await placements(h)).toEqual([]);
+    expect(await state(h)).toMatchObject({ hive_id: null, modus: false });
+  });
+
+  it('a new move_date of a queen without hive is saved', async () => {
+    const t = hives[7];
+    const i = await create({ move_date: '2025-01-01' });
+    expect((await state(i)).move_date).toBe('2025-01-01');
+    expect((await patch([i], { move_date: '2025-01-05' })).statusCode).toBe(
+      200,
+    );
+    expect((await state(i)).move_date).toBe('2025-01-05');
+    // Moved out of her last hive: the date is the end of that placement.
+    await patch([i], { hive_id: t, move_date: '2025-02-01' });
+    await patch([i], { hive_id: 'empty', move_date: '2025-03-01' });
+    expect((await patch([i], { move_date: '2025-03-10' })).statusCode).toBe(
+      200,
+    );
+    expect(await placements(i)).toEqual([[t, '2025-02-01', '2025-03-10']]);
+    expect((await state(i)).move_date).toBe('2025-03-10');
+    const res = await patch([i], { move_date: '2025-01-10' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.code).toBe('QUEEN_PLACEMENT_RANGE');
+  });
+
   describe('/api/v1/queen_placement', () => {
     const route = '/api/v1/queen_placement';
 
@@ -522,11 +577,61 @@ describe('queen placements', () => {
     });
 
     it('ignores placements of another company', async () => {
-      const res = await agent.request('POST', `${route}/batchGet`, {
-        ids: [999_999],
-      });
-      expect(res.statusCode).toBe(200);
-      expect(res.body).toEqual([]);
+      const company = await db
+        .insertInto('companies')
+        .values({ name: `Placement foreign ${Date.now()}` })
+        .executeTakeFirstOrThrow();
+      const foreignCompany = Number(company.insertId);
+      const hive = await db
+        .insertInto('hives')
+        .values({ name: 'Foreign hive', user_id: foreignCompany, modus: true })
+        .executeTakeFirstOrThrow();
+      const foreignQueen = await db
+        .insertInto('queens')
+        .values({ name: 'Foreign', user_id: foreignCompany, date: new Date() })
+        .executeTakeFirstOrThrow();
+      const placement = await db
+        .insertInto('queen_placements')
+        .values({
+          queen_id: Number(foreignQueen.insertId),
+          hive_id: Number(hive.insertId),
+          user_id: foreignCompany,
+          from_date: new Date('2025-01-01'),
+          to_date: new Date(`${OPEN_END}T00:00:00Z`),
+        })
+        .executeTakeFirstOrThrow();
+      const id = Number(placement.insertId);
+      try {
+        const get = await agent.request('POST', `${route}/batchGet`, {
+          ids: [id],
+        });
+        expect(get.statusCode).toBe(200);
+        expect(get.body).toEqual([]);
+        await agent.request('PATCH', route, {
+          ids: [id],
+          data: { from_date: '2025-01-02' },
+        });
+        await agent.request('PATCH', `${route}/batchDelete`, { ids: [id] });
+        const row = await db
+          .selectFrom('queen_placements')
+          .select('from_date')
+          .where('id', '=', id)
+          .executeTakeFirst();
+        expect(String(row?.from_date)).toBe('2025-01-01');
+      } finally {
+        await db
+          .deleteFrom('queens')
+          .where('id', '=', Number(foreignQueen.insertId))
+          .execute();
+        await db
+          .deleteFrom('hives')
+          .where('id', '=', Number(hive.insertId))
+          .execute();
+        await db
+          .deleteFrom('companies')
+          .where('id', '=', foreignCompany)
+          .execute();
+      }
     });
   });
 
@@ -601,14 +706,27 @@ describe('queen placements', () => {
       beeId.bee_id as number,
       await oldContents,
     );
-    const oldId = await newCompany(fromOld.name);
-    const open = await db
-      .selectFrom('queen_placements')
-      .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
-      .select(['queens.name', 'queen_placements.hive_id'])
-      .where('queen_placements.user_id', '=', oldId)
-      .where('queen_placements.to_date', '=', new Date(`${OPEN_END}T00:00:00Z`))
-      .execute();
-    expect(open.length).toBeGreaterThan(0);
+    // The old archive has only the last hive of each queen, so compare the
+    // open placements by queen name, hive name and start.
+    const openRows = async (userId: number) =>
+      (
+        await db
+          .selectFrom('queen_placements')
+          .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
+          .innerJoin('hives', 'hives.id', 'queen_placements.hive_id')
+          .select(['queens.name as queen', 'hives.name as hive', 'from_date'])
+          .where('queen_placements.user_id', '=', userId)
+          .where(
+            'queen_placements.to_date',
+            '=',
+            new Date(`${OPEN_END}T00:00:00Z`),
+          )
+          .execute()
+      )
+        .map((row) => `${row.queen}|${row.hive}|${String(row.from_date)}`)
+        .sort();
+    const expected = await openRows(companyId);
+    expect(expected.length).toBeGreaterThan(0);
+    expect(await openRows(await newCompany(fromOld.name))).toEqual(expected);
   });
 });

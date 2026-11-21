@@ -142,6 +142,7 @@ class TimestampPlugin implements KyselyPlugin {
     'movedates_previous_apiary',
     'payments',
     'promos',
+    'queen_durations',
     'queens_locations',
     'rearing_details',
     'rearing_steps',

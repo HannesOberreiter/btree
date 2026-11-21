@@ -275,7 +275,11 @@ export async function moveQueen(
     .execute();
 }
 
-/** Ends the open placement when the queen becomes inactive on a day. */
+/**
+ * Ends the open placement when the queen becomes inactive on a day. On the
+ * same day as its start, the placement has no days and is deleted, the same
+ * as in `moveQueen`.
+ */
 export async function endOnInactive(
   db: Database,
   ctx: PlacementContext,
@@ -284,8 +288,10 @@ export async function endOnInactive(
 ) {
   const open = (await queenPeriods(db, queenId)).find(isOpen);
   if (!open) return;
-  if (day <= open.from_date) throw rangeError();
-  await setPeriod(db, ctx, open.id, { to_date: day });
+  if (day < open.from_date) throw rangeError();
+  if (day === open.from_date)
+    await db.deleteFrom('queen_placements').where('id', '=', open.id).execute();
+  else await setPeriod(db, ctx, open.id, { to_date: day });
 }
 
 /**
@@ -352,6 +358,37 @@ export async function editCurrent(
 }
 
 /**
+ * Changes the `move_date` of a queen whose hive stays the same.
+ * - Queen in a hive: the start of the current placement.
+ * - Active queen moved out of her last hive: the end of that placement.
+ * - Queen without placements: `queens.move_date`.
+ */
+async function editDate(
+  db: Database,
+  ctx: PlacementContext,
+  queenId: number,
+  current: PlacementPeriod | undefined,
+  day: Day,
+) {
+  if (current) {
+    await editCurrent(db, ctx, current, { from_date: day });
+    return;
+  }
+  const last = (await queenPeriods(db, queenId)).at(-1);
+  if (!last) {
+    await db
+      .updateTable('queens')
+      .set({ move_date: asDate(day) })
+      .where('id', '=', queenId)
+      .execute();
+    return;
+  }
+  if (!last.id) return;
+  await assertFree(db, { ...last, to_date: day }, last.id);
+  await setPeriod(db, ctx, last.id, { to_date: day });
+}
+
+/**
  * Applies `modus`, `modus_date`, `hive_id` and `move_date` of a queen write
  * to the placements. The web app sends these fields with every save, so the
  * values are compared with the current state first:
@@ -414,8 +451,8 @@ export async function applyQueenWrite(
     const day =
       data.move_date === undefined ? undefined : toDay(data.move_date);
     if (target === derived.hive_id) {
-      if (target !== null && derived.row && day && day !== derived.move_date)
-        await editCurrent(db, ctx, derived.row, { from_date: day });
+      if (day && day !== derived.move_date)
+        await editDate(db, ctx, queenId, derived.row, day);
     } else if (!modus) {
       if (derived.row)
         await editCurrent(db, ctx, derived.row, {

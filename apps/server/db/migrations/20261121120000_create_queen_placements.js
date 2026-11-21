@@ -28,8 +28,10 @@ async function insertChunks(knex, rows) {
  * Moves before this migration are lost. The rules are in
  * `src/api/utils/queen_placement.util.ts`.
  *
- * The view `queens_locations` now reads the placements. The view
- * `queen_durations` is dropped; the queen statistics read the placements.
+ * The view `queens_locations` now reads the placements. The queen statistics
+ * read the placements. The view `queen_durations` stays for a rollback of the
+ * server, because it reads `queens.hive_id` and `queens.move_date`, which the
+ * server still writes. The cleanup release drops it.
  *
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
@@ -85,6 +87,7 @@ export async function up(knex) {
       'updated_at',
       'modus',
       'modus_date',
+      'deleted',
     )
     .whereNotNull('hive_id');
   const { rows, skipped } = buildQueenPlacements(queens);
@@ -103,6 +106,13 @@ export async function up(knex) {
     reasons,
     `in ${companies.size} companies`,
   );
+  if (skipped.length)
+    console.log('queen_placements skipped:', JSON.stringify(skipped));
+
+  // Replace the view before the UPDATE below. The UPDATE sets
+  // queens.hive_id to NULL for skipped queens, and the backfill reads only
+  // queens with a hive. So a failure before the UPDATE is safe to run again.
+  await knex.raw(readSql('./20261121120000_create_queen_placements.sql'));
 
   // The API derives queens.hive_id and queens.move_date from the placements.
   // Write the derived values now, so that both stay the same from the start.
@@ -121,15 +131,12 @@ export async function up(knex) {
         ELSE NULL
       END,
       q.move_date = CASE
-        WHEN p.id IS NULL THEN NULL
+        WHEN p.id IS NULL THEN q.move_date
         WHEN p.to_date = '${OPEN_END}' OR q.modus = 0 THEN p.from_date
         ELSE p.to_date
       END
     WHERE q.hive_id IS NOT NULL
   `);
-
-  await knex.raw('DROP VIEW IF EXISTS queen_durations');
-  await knex.raw(readSql('./20261121120000_create_queen_placements.sql'));
 }
 
 /**
@@ -139,6 +146,5 @@ export async function up(knex) {
 export async function down(knex) {
   await knex.raw('DROP VIEW IF EXISTS queens_locations');
   await knex.raw(readSql('./20220125124845_view_queens_locations.sql'));
-  await knex.raw(readSql('./20220906075842_view_queen_durations.sql'));
   await knex.schema.dropTableIfExists('queen_placements');
 }

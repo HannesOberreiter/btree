@@ -47,14 +47,6 @@ export function isOpen(row: { to_date: Day }) {
   return row.to_date === OPEN_END;
 }
 
-/** Tells if two half-open periods have at least one day in common. */
-export function overlaps(
-  a: { from_date: Day; to_date: Day },
-  b: { from_date: Day; to_date: Day },
-) {
-  return a.from_date < b.to_date && b.from_date < a.to_date;
-}
-
 /**
  * The values that the API shows as `queens.hive_id` and `queens.move_date`.
  * - Open placement: its hive and start.
@@ -91,6 +83,7 @@ export interface BackfillQueen {
   updated_at: unknown;
   modus: boolean | number | null;
   modus_date: unknown;
+  deleted?: boolean | number | null;
 }
 
 export interface BackfillRow extends PlacementPeriod {
@@ -100,7 +93,12 @@ export interface BackfillRow extends PlacementPeriod {
 export interface BackfillSkip {
   queen_id: number;
   user_id: number | null;
-  reason: 'no_company' | 'no_start' | 'same_start' | 'empty_period';
+  reason:
+    | 'no_company'
+    | 'no_start'
+    | 'same_start'
+    | 'empty_period'
+    | 'deleted_overlap';
 }
 
 /**
@@ -110,18 +108,24 @@ export interface BackfillSkip {
  * Rules:
  * - Start: `move_date`, else `created_at`.
  * - Rows of one hive are sorted by start, then id. Of two rows with the same
- *   start, only the row with the higher id stays.
- * - End: the start of the next row in the hive. An inactive queen ends at
- *   `modus_date` when it is earlier. The last active queen stays open. The
- *   last inactive queen without `modus_date` ends at `updated_at`.
+ *   start, only one row stays: a queen that is not deleted, else the higher
+ *   id.
+ * - End: the start of the next row in the hive. A soft-deleted queen does not
+ *   end a queen that is not deleted, the same as in the old view
+ *   `queens_locations`. An inactive queen ends at `modus_date` when it is
+ *   earlier. The last active queen stays open. The last inactive queen
+ *   without `modus_date` ends at `updated_at`.
  * - A row whose end is not after its start is skipped.
+ * - A row of a deleted queen that overlaps a row of a queen that is not
+ *   deleted is skipped.
  */
 export function buildQueenPlacements(queens: BackfillQueen[]): {
   rows: BackfillRow[];
   skipped: BackfillSkip[];
 } {
   const skipped: BackfillSkip[] = [];
-  const byHive = new Map<number, (BackfillQueen & { start: Day })[]>();
+  type Entry = BackfillQueen & { start: Day; isDeleted: boolean };
+  const byHive = new Map<number, Entry[]>();
   for (const queen of queens) {
     if (queen.hive_id === null || queen.hive_id === undefined) continue;
     if (!queen.user_id) {
@@ -138,7 +142,11 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
       continue;
     }
     const list = byHive.get(queen.hive_id) ?? [];
-    list.push({ ...queen, start });
+    list.push({
+      ...queen,
+      start,
+      isDeleted: queen.deleted === true || queen.deleted === 1,
+    });
     byHive.set(queen.hive_id, list);
   }
 
@@ -147,20 +155,25 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
     list.sort((a, b) =>
       a.start !== b.start ? (a.start < b.start ? -1 : 1) : a.id - b.id,
     );
-    const kept: (BackfillQueen & { start: Day })[] = [];
+    const kept: Entry[] = [];
     for (const queen of list) {
       const previous = kept.at(-1);
       if (previous && previous.start === queen.start) {
+        const keepPrevious = queen.isDeleted && !previous.isDeleted;
+        const lost = keepPrevious ? queen : previous;
         skipped.push({
-          queen_id: previous.id,
-          user_id: previous.user_id,
+          queen_id: lost.id,
+          user_id: lost.user_id,
           reason: 'same_start',
         });
-        kept[kept.length - 1] = queen;
+        if (!keepPrevious) kept[kept.length - 1] = queen;
       } else kept.push(queen);
     }
+    const hiveRows: (BackfillRow & { isDeleted: boolean })[] = [];
     kept.forEach((queen, index) => {
-      const next = kept[index + 1];
+      const next = kept
+        .slice(index + 1)
+        .find((other) => queen.isDeleted || !other.isDeleted);
       const inactive = queen.modus === false || queen.modus === 0;
       const modusDay = inactive ? toDay(queen.modus_date) : null;
       let end: Day;
@@ -175,14 +188,33 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
         });
         return;
       }
-      rows.push({
+      hiveRows.push({
         queen_id: queen.id,
         hive_id: hiveId,
         user_id: queen.user_id as number,
         from_date: queen.start,
         to_date: end,
+        isDeleted: queen.isDeleted,
       });
     });
+    const live = hiveRows.filter((row) => !row.isDeleted);
+    for (const { isDeleted, ...row } of hiveRows) {
+      if (
+        isDeleted &&
+        live.some(
+          (other) =>
+            row.from_date < other.to_date && other.from_date < row.to_date,
+        )
+      ) {
+        skipped.push({
+          queen_id: row.queen_id,
+          user_id: row.user_id,
+          reason: 'deleted_overlap',
+        });
+        continue;
+      }
+      rows.push(row);
+    }
   }
   validatePlacements(rows);
   return { rows, skipped };
