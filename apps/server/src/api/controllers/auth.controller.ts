@@ -40,6 +40,7 @@ import type {
   RegisterBody,
   ResetPasswordBody,
 } from '../schemas/auth.schema.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 
 export default class AuthController {
   static async confirmMail(req: FastifyRequest, _reply: FastifyReply) {
@@ -119,7 +120,10 @@ export default class AuthController {
     if (!u) {
       return httpErrors.NotFound('Reset key not found!');
     }
-    if (dayjs().diff(u.reset_timestamp, 'hours') > 24) {
+    if (
+      u.reset_timestamp &&
+      dayjs().diff(parseDbDateTime(u.reset_timestamp), 'hour') > 24
+    ) {
       return httpErrors.Forbidden('Reset key too old!');
     }
     const result = await resetPassword(

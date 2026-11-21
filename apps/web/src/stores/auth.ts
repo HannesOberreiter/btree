@@ -8,6 +8,11 @@ import { useTrackEvent } from '../composables/useTrackEvent';
 import { Router } from '../router';
 import AuthService from '../services/auth.service';
 
+// The paid day itself is still valid.
+function isPaidDayValid(date: dayjs.Dayjs) {
+  return date.isValid() && !date.isBefore(dayjs(), 'day');
+}
+
 export const useAuthUserStore = defineStore('auth/user', {
   state: () => ({
     user: useStorage<User | Record<string, never>>('user', {}),
@@ -37,17 +42,7 @@ export const useAuthUserStore = defineStore('auth/user', {
     getDateFormat: state => state.user.format,
     isReadOnly: state => state.company.rank === 3,
     isAdmin: state => state.company.rank === 1,
-    isPremium: state => {
-      const company = state.company;
-      const date = dayjs(company.paid);
-      if (!date.isValid()) {
-        return false;
-      }
-      if (date < dayjs()) {
-        return false;
-      }
-      return true;
-    },
+    isPremium: state => isPaidDayValid(dayjs(state.company.paid)),
     /*
      * Reads Company Object and returns helpful object
      */
@@ -66,7 +61,7 @@ export const useAuthUserStore = defineStore('auth/user', {
       const date = dayjs(company.paid);
       if (date.isValid()) {
         result.date = date.format('YYYY-MM-DD');
-        if (date >= dayjs()) {
+        if (isPaidDayValid(date)) {
           result.name = 'Premium';
           result.status = true;
           result.icon = 'far fa-thumbs-up';

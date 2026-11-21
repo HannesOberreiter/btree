@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { listCalendarMovements } from '../../src/api/modules/calendar.module.js';
 import {
   getMovedatesByIds,
   listMovedates,
@@ -305,6 +306,30 @@ describe('movedate routes', () => {
         { ids: [newestId] },
       );
       expect(last.statusCode).toEqual(403);
+    });
+  });
+
+  describe('calendar', () => {
+    it('/movedate keeps the first day of the range', async () => {
+      const db = KyselyServer.getInstance().db;
+      const hive = await db
+        .selectFrom('hives')
+        .select('user_id')
+        .where('id', '=', 1)
+        .executeTakeFirstOrThrow();
+      const companyId = Number(hive.user_id);
+      const movement = await db
+        .selectFrom('calendar_movements')
+        .select('date')
+        .where('user_id', '=', companyId)
+        .executeTakeFirstOrThrow();
+      const day = String(movement.date);
+      const start = new Date(`${day}T00:00:00.000Z`);
+      const events = await listCalendarMovements(db, companyId, {
+        start: start.toISOString(),
+        end: new Date(start.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+      expect(events.map((event) => event.start)).toContain(day);
     });
   });
 });

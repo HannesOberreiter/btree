@@ -8,6 +8,7 @@ import type {
   StatisticTask,
   VarroaStatisticQuery,
 } from '../schemas/statistic.schema.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 
 type TaskSummaryMode = 'year' | 'apiary' | 'type';
 
@@ -508,7 +509,7 @@ export async function listHiveCountTotal(db: Database, companyId: number) {
   const changes = new Map<string, Change>();
   const years: number[] = [];
   const addChange = (date: Date | string, field: 'increase' | 'decrease') => {
-    const value = new Date(date);
+    const value = parseDbDateTime(date);
     const year = value.getUTCFullYear();
     const quarter = Math.floor(value.getUTCMonth() / 3) + 1;
     const ident = `${year}${quarter}`;

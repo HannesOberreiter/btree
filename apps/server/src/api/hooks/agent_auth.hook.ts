@@ -8,6 +8,7 @@ import {
   updateAgentKeyLastUsed,
   verifyAgentKey,
 } from '../modules/agent_key.module.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 
 /**
  * Fastify preHandler hook that authenticates requests using an Agent API key.
@@ -51,7 +52,10 @@ export async function agentAuthHook(
   for (const candidate of candidates) {
     if (verifyAgentKey(plaintextKey, candidate.key_hash, candidate.salt)) {
       // Check expiry
-      if (candidate.valid_to && new Date(candidate.valid_to) < new Date()) {
+      if (
+        candidate.valid_to &&
+        parseDbDateTime(candidate.valid_to) < new Date()
+      ) {
         throw httpErrors.Unauthorized('API key has expired');
       }
 

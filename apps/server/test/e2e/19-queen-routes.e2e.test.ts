@@ -1,5 +1,3 @@
-import process from 'node:process';
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
@@ -15,6 +13,7 @@ import {
   doQueryRequest,
   doRequest,
   expectations,
+  withTimeZone,
 } from '../utils.js';
 
 const testInsert = {
@@ -340,9 +339,7 @@ describe('queen routes', () => {
         .select(['user_id', 'bee_id'])
         .where('id', '=', 1)
         .executeTakeFirstOrThrow();
-      const timeZone = process.env.TZ;
-      process.env.TZ = 'Europe/Vienna';
-      try {
+      await withTimeZone('Europe/Vienna', async () => {
         const create = (name: string, moveDate: string) =>
           createQueens(db, hive.user_id, hive.bee_id!, {
             name,
@@ -360,10 +357,7 @@ describe('queen routes', () => {
           .deleteFrom('queens')
           .where('id', 'in', [oldId, newId])
           .execute();
-      } finally {
-        if (timeZone === undefined) delete process.env.TZ;
-        else process.env.TZ = timeZone;
-      }
+      });
     });
   });
 

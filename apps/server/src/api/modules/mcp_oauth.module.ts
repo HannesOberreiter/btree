@@ -20,6 +20,7 @@ import {
   mcpOAuthRegistrationRequestSchema,
   mcpOAuthTokenRequestSchema,
 } from '../schemas/mcp_oauth.schema.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 import { redisValueToString } from '../utils/redis.util.js';
 import { isPremium } from './premium.module.js';
 
@@ -416,9 +417,11 @@ export async function listMcpConnections(
   for (const row of rows) {
     if (!row.token_family) continue;
     const existing = connections.get(row.token_family);
-    const createdAt = new Date(row.created_at);
-    const lastUsedAt = row.last_used_at ? new Date(row.last_used_at) : null;
-    const expiresAt = new Date(row.expires_at);
+    const createdAt = parseDbDateTime(row.created_at);
+    const lastUsedAt = row.last_used_at
+      ? parseDbDateTime(row.last_used_at)
+      : null;
+    const expiresAt = parseDbDateTime(row.expires_at);
     const active = !row.revoked_at && expiresAt.getTime() >= now;
     if (!existing) {
       connections.set(row.token_family, {
@@ -761,7 +764,7 @@ export async function refreshMcpAccessToken(
     await revokeMcpRefreshFamily(db, family);
     throw new McpOAuthError('invalid_grant', 'Invalid refresh token');
   }
-  if (new Date(stored.expires_at) < new Date()) {
+  if (parseDbDateTime(stored.expires_at) < new Date()) {
     throw new McpOAuthError('invalid_grant', 'Invalid refresh token');
   }
 

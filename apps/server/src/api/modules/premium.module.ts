@@ -1,9 +1,9 @@
-import dayjs from 'dayjs';
 import httpErrors from 'http-errors';
 import { sql } from 'kysely';
 
 import { basicLimit, totalLimit } from '../../config/environment.config.js';
 import type { Database } from '../../types/database.types.js';
+import { isPaidDayValid } from '../utils/date.util.js';
 
 export async function isPremium(id: number, db: Database) {
   const company = await db
@@ -12,7 +12,7 @@ export async function isPremium(id: number, db: Database) {
     .where('id', '=', id)
     .executeTakeFirst();
   if (!company) throw httpErrors.NotFound('Company not found');
-  return dayjs(company.paid).isAfter(dayjs());
+  return isPaidDayValid(company.paid);
 }
 
 async function countRows(

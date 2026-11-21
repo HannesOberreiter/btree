@@ -9,6 +9,7 @@ import {
   createAuthenticatedAgent,
   doQueryRequest,
   doRequest,
+  withTimeZone,
 } from '../utils.js';
 
 const devEui = '70B3D57ED0012345';
@@ -143,6 +144,25 @@ describe('TTN webhook', () => {
     );
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ stored: false, reason: 'rate_limit' });
+    expect(await readings()).toHaveLength(1);
+  });
+
+  it('429 - applies the 1-hour limit outside UTC', async () => {
+    await withTimeZone('Europe/Vienna', async () => {
+      await expect(
+        ingestScaleReading(
+          db,
+          { api: apiKey, devEui },
+          {
+            action: 'CREATE',
+            datetime: new Date(
+              receivedAt.getTime() + 20 * 60 * 1000,
+            ).toISOString(),
+            weight: 43,
+          },
+        ),
+      ).rejects.toMatchObject({ statusCode: 429 });
+    });
     expect(await readings()).toHaveLength(1);
   });
 
