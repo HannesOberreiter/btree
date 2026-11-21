@@ -63,7 +63,7 @@ test.describe('user - Setting API', () => {
       await fulfillError(route, 500);
     });
 
-    await page.locator('input[name="password"]').fill('password');
+    await dataCy('api-password').locator('input').fill('password');
     await statusButton(page).click();
 
     await expect(statusButton(page)).toBeDisabled();
@@ -91,7 +91,7 @@ test.describe('user - Setting API', () => {
     await page.route('**/api/v1/user/checkpassword', route =>
       fulfillError(route, 402)
     );
-    await page.locator('input[name="password"]').fill('password');
+    await dataCy('api-password').locator('input').fill('password');
     if (!(await unlockButton(page).isVisible())) {
       await statusButton(page).click();
     }

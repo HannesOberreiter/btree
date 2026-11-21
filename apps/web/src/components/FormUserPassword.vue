@@ -123,6 +123,7 @@ const v = useVuelidate(rules, state, { $autoDirty: true });
       :no-error-icon="true"
       :label="t('confirmPassword')"
       name="confirmPassword"
+      autocomplete="new-password"
       required
       filled
     >

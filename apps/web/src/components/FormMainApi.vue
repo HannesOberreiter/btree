@@ -180,6 +180,7 @@ async function scaleTest() {
   <q-form @submit.prevent.stop="">
     <FormUserPassword
       v-model:model-password="state.password"
+      data-cy="api-password"
       :confirm="false"
     />
   </q-form>

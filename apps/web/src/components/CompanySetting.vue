@@ -38,7 +38,7 @@ const options = computed(() => {
 });
 
 // Shows the loading state on the company buttons while a request runs.
-async function submit(request: () => Promise<unknown>) {
+async function withLoading(request: () => Promise<unknown>) {
   isSubmitting.value = true;
   try {
     await request();
@@ -104,7 +104,7 @@ function removeAccess() {
     cancel: true,
     persistent: true
   }).onOk(() =>
-    submit(() =>
+    withLoading(() =>
       api.remove(`/v1/company_user/${model.value.id}`).then(
         async (_response: any) => {
           invalidateQueries.invalidate();
@@ -132,7 +132,7 @@ function editCompany() {
     cancel: true,
     persistent: false
   }).onOk(data =>
-    submit(() =>
+    withLoading(() =>
       (
         api.patch('/v1/company', {
           name: data
@@ -163,7 +163,7 @@ function newCompany() {
     cancel: true,
     persistent: true
   }).onOk(data =>
-    submit(() =>
+    withLoading(() =>
       (
         api.post('/v1/company', { name: data }) as Promise<CompanyResponse>
       ).then(
@@ -198,7 +198,7 @@ function deleteCompany() {
     cancel: true,
     persistent: true
   }).onOk(() =>
-    submit(() =>
+    withLoading(() =>
       api.remove(`/v1/company/${model.value.id}`).then(
         async (_response: any) => {
           invalidateQueries.invalidate();
@@ -241,7 +241,7 @@ async function importData() {
     cancel: true,
     persistent: false
   }).onOk((data: FileList) =>
-    submit(() =>
+    withLoading(() =>
       api.postMultiPart('/v1/company/import', { upload: data[0] }).then(
         async data => {
           invalidateQueries.invalidate();
