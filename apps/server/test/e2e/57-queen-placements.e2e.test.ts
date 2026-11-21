@@ -35,7 +35,7 @@ function queen(values: Partial<BackfillQueen> & { id: number }): BackfillQueen {
 
 describe('queen placement backfill rules', () => {
   it('keeps the last active queen open and ends the others', () => {
-    const { rows, skipped } = buildQueenPlacements([
+    const { rows, skipped, inactivate } = buildQueenPlacements([
       queen({ id: 1, move_date: '2024-01-01 08:00:00' }),
       queen({ id: 2, move_date: '2024-05-01 00:00:00' }),
     ]);
@@ -56,10 +56,12 @@ describe('queen placement backfill rules', () => {
         to_date: OPEN_END,
       },
     ]);
+    // The replaced queen is still active: the migration sets her inactive.
+    expect(inactivate).toEqual([{ queen_id: 1, modus_date: '2024-05-01' }]);
   });
 
   it('ends an inactive queen at the earlier of modus_date and the next start', () => {
-    const { rows } = buildQueenPlacements([
+    const { rows, inactivate } = buildQueenPlacements([
       // modus_date is the day of the click, after the next queen moved in.
       queen({
         id: 1,
@@ -79,6 +81,7 @@ describe('queen placement backfill rules', () => {
     const byQueen = Object.fromEntries(rows.map((row) => [row.queen_id, row]));
     expect(byQueen[1].to_date).toBe('2024-05-01');
     expect(byQueen[3].to_date).toBe('2024-03-01');
+    expect(inactivate).toEqual([]);
   });
 
   it('ends the last inactive queen without modus_date at updated_at', () => {
@@ -94,7 +97,7 @@ describe('queen placement backfill rules', () => {
   });
 
   it('keeps the higher id of two queens with the same start', () => {
-    const { rows, skipped } = buildQueenPlacements([
+    const { rows, skipped, inactivate } = buildQueenPlacements([
       queen({ id: 7, move_date: '2024-01-01' }),
       queen({ id: 3, move_date: '2024-01-01 15:00:00' }),
     ]);
@@ -102,6 +105,8 @@ describe('queen placement backfill rules', () => {
     expect(skipped).toEqual([
       { queen_id: 3, user_id: 1, reason: 'same_start' },
     ]);
+    // A skipped queen stays active, without a hive.
+    expect(inactivate).toEqual([]);
   });
 
   it('skips empty periods, queens without hive and without company', () => {

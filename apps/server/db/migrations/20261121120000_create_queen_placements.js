@@ -89,8 +89,8 @@ export async function up(knex) {
       'modus_date',
       'deleted',
     )
-    .whereNotNull('hive_id');
-  const { rows, skipped } = buildQueenPlacements(queens);
+    .whereIn('hive_id', knex('hives').select('id'));
+  const { rows, skipped, inactivate } = buildQueenPlacements(queens);
   await insertChunks(
     knex,
     rows.map((row) => ({ ...row, bee_id: null, edit_id: null })),
@@ -104,7 +104,8 @@ export async function up(knex) {
   console.log(
     `queen_placements: ${rows.length} rows, ${skipped.length} queens skipped`,
     reasons,
-    `in ${companies.size} companies`,
+    `in ${companies.size} companies,`,
+    `${inactivate.length} replaced queens set inactive`,
   );
   if (skipped.length)
     console.log('queen_placements skipped:', JSON.stringify(skipped));
@@ -116,6 +117,33 @@ export async function up(knex) {
 
   // The API derives queens.hive_id and queens.move_date from the placements.
   // Write the derived values now, so that both stay the same from the start.
+  // Replaced queens that are still active: set them inactive, the same as a
+  // move does today. Else they would count as queens without a hive.
+  const byDay = new Map();
+  for (const { queen_id, modus_date } of inactivate)
+    byDay.set(modus_date, [...(byDay.get(modus_date) ?? []), queen_id]);
+  for (const [day, ids] of byDay)
+    for (let index = 0; index < ids.length; index += 1000)
+      await knex('queens')
+        .whereIn('id', ids.slice(index, index + 1000))
+        .where('modus', true)
+        .update({ modus: false, modus_date: day });
+
+  // Queens whose hive does not exist (old data, also hive_id 0): no hive,
+  // and inactive, because these queens are old. modus_date is set first,
+  // because MariaDB assigns from left to right.
+  const orphans = await knex.raw(`
+    UPDATE queens
+    SET
+      modus_date = IF(modus = 1, COALESCE(DATE(updated_at), CURDATE()), modus_date),
+      modus = 0,
+      hive_id = NULL
+    WHERE hive_id IS NOT NULL AND hive_id NOT IN (SELECT id FROM hives)
+  `);
+  console.log(
+    `queen_placements: ${orphans[0]?.affectedRows ?? 0} queens without an existing hive set inactive`,
+  );
+
   await knex.raw(`
     UPDATE queens q
     LEFT JOIN queen_placements p ON p.id = (

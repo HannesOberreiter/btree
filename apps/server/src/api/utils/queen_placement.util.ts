@@ -118,12 +118,18 @@ export interface BackfillSkip {
  * - A row whose end is not after its start is skipped.
  * - A row of a deleted queen that overlaps a row of a queen that is not
  *   deleted is skipped.
+ * - An active queen whose row ends at the start of the next queen is
+ *   returned in `inactivate`, with the end of her row as `modus_date`. The
+ *   server sets such a queen inactive on a move today, but old data has
+ *   many of them.
  */
 export function buildQueenPlacements(queens: BackfillQueen[]): {
   rows: BackfillRow[];
   skipped: BackfillSkip[];
+  inactivate: { queen_id: number; modus_date: Day }[];
 } {
   const skipped: BackfillSkip[] = [];
+  const inactivate: { queen_id: number; modus_date: Day }[] = [];
   type Entry = BackfillQueen & { start: Day; isDeleted: boolean };
   const byHive = new Map<number, Entry[]>();
   for (const queen of queens) {
@@ -188,6 +194,8 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
         });
         return;
       }
+      if (!inactive && end !== OPEN_END)
+        inactivate.push({ queen_id: queen.id, modus_date: end });
       hiveRows.push({
         queen_id: queen.id,
         hive_id: hiveId,
@@ -217,7 +225,12 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
     }
   }
   validatePlacements(rows);
-  return { rows, skipped };
+  const kept = new Set(rows.map((row) => row.queen_id));
+  return {
+    rows,
+    skipped,
+    inactivate: inactivate.filter((entry) => kept.has(entry.queen_id)),
+  };
 }
 
 /**

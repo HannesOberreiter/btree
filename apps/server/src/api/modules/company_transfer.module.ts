@@ -723,7 +723,8 @@ function validateWaxArchive(data: TransferData) {
 /**
  * Inserts the placements of the imported queens. An archive from before the
  * table `queen_placements` gets placements from `queens.hive_id` and
- * `queens.move_date`, with the same rules as the migration.
+ * `queens.move_date`, with the same rules as the migration. Replaced queens
+ * that are still active become inactive, also the same as the migration.
  */
 async function importQueenPlacements(
   db: Transaction<DB>,
@@ -747,7 +748,7 @@ async function importQueenPlacements(
           row.queen_id !== null && row.hive_id !== null && !!row.from_date,
       );
   } else {
-    rows = buildQueenPlacements(
+    const built = buildQueenPlacements(
       newQueens.map((row) => ({
         id: Number(row.id),
         hive_id: row.hive_id === undefined ? null : Number(row.hive_id),
@@ -758,7 +759,14 @@ async function importQueenPlacements(
         modus: row.modus === undefined ? true : row.modus === true,
         modus_date: row.modus_date,
       })),
-    ).rows;
+    );
+    rows = built.rows;
+    for (const { queen_id, modus_date } of built.inactivate)
+      await db
+        .updateTable('queens')
+        .set({ modus: false, modus_date: new Date(`${modus_date}T00:00:00Z`) })
+        .where('id', '=', queen_id)
+        .execute();
   }
   try {
     validatePlacements(rows);
