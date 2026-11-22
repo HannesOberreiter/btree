@@ -215,7 +215,9 @@ export async function syncQueen(db: Database, queenId: number) {
  * `hiveId` is null.
  * - The open placement of the queen ends on the day. On the same day as its
  *   start, the move changes that placement instead.
- * - Other queens in the target hive end on the day and become inactive.
+ * - Other queens in the target hive end on the day and become inactive. A
+ *   placement of another queen that starts on the same day has no days
+ *   left, so it is deleted.
  * - The move must not overlap a later placement of the queen or the hive.
  */
 export async function moveQueen(
@@ -247,8 +249,13 @@ export async function moveQueen(
   if (others.some((row) => !isOpen(row) && row.to_date > day))
     throw overlapError();
   for (const row of others.filter(isOpen)) {
-    if (row.from_date >= day) throw overlapError();
-    await setPeriod(db, ctx, row.id, { to_date: day });
+    if (row.from_date > day) throw overlapError();
+    if (row.from_date === day)
+      await db
+        .deleteFrom('queen_placements')
+        .where('id', '=', row.id)
+        .execute();
+    else await setPeriod(db, ctx, row.id, { to_date: day });
     await db
       .updateTable('queens')
       .set({ modus: false, modus_date: asDate(day), edit_id: ctx.beeId })

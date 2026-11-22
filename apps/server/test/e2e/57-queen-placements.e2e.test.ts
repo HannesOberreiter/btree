@@ -306,7 +306,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 8; index++) {
+    for (let index = 0; index < 9; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -399,8 +399,20 @@ describe('queen placements', () => {
     expect(res.statusCode).toBe(400);
     expect(res.body.code).toBe('QUEEN_PLACEMENT_OVERLAP');
     expect(queens.length).toBe(count);
-    const sameDay = await post({ hive_id: x, move_date: '2025-03-01' });
-    expect(sameDay.statusCode).toBe(400);
+  });
+
+  it('a new queen on the start day of the old queen replaces her', async () => {
+    const s8 = hives[8];
+    const k = await create({ hive_id: s8, move_date: '2025-05-01' });
+    const l = await create({ hive_id: s8, move_date: '2025-05-01' });
+    expect(await placements(k)).toEqual([]);
+    expect(await placements(l)).toEqual([[s8, '2025-05-01', OPEN_END]]);
+    expect(await state(k)).toEqual({
+      hive_id: null,
+      move_date: '2025-05-01',
+      modus: false,
+      modus_date: '2025-05-01',
+    });
   });
 
   it('rejects several queens into one hive in one request', async () => {
