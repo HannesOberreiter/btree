@@ -129,9 +129,9 @@ export interface BackfillSkip {
  *   - An inactive queen without a valid `modus_date`. Then the view
  *     `queens_locations` shows her as the last queen of the hive.
  *   - An active queen that lost against another queen with the same start
- *     day, with that day as `modus_date`. She keeps `queens.hive_id`, but
- *     gets no placement. The old view never showed her as the current
- *     queen of the hive.
+ *     day, with that day as `modus_date`. She gets no placement, so the
+ *     migration also removes her hive. The old view never showed her as
+ *     the current queen of the hive.
  */
 export function buildQueenPlacements(queens: BackfillQueen[]): {
   rows: BackfillRow[];
