@@ -310,7 +310,7 @@ export async function moveQueen(
 /**
  * Ends the open placement when the queen becomes inactive on a day. On the
  * same day as its start, the placement has no days and is deleted, the same
- * as in `moveQueen`.
+ * as in `moveQueen`. Returns true if it deleted the placement.
  */
 export async function endOnInactive(
   db: Database,
@@ -319,11 +319,14 @@ export async function endOnInactive(
   day: Day,
 ) {
   const open = (await queenPeriods(db, queenId)).find(isOpen);
-  if (!open) return;
+  if (!open) return false;
   if (day < open.from_date) throw rangeError();
-  if (day === open.from_date)
+  if (day === open.from_date) {
     await db.deleteFrom('queen_placements').where('id', '=', open.id).execute();
-  else await setPeriod(db, ctx, open.id, { to_date: day });
+    return true;
+  }
+  await setPeriod(db, ctx, open.id, { to_date: day });
+  return false;
 }
 
 /**
@@ -453,9 +456,12 @@ export async function applyQueenWrite(
     data.modus_date === undefined ? undefined : toDay(data.modus_date);
 
   let modusDay: Day | null = sentModusDay ?? oldModusDay;
+  // The web form resends the hive and move date of the deleted placement.
+  // They belong to no placement now, so the hive and date step is skipped.
+  let deletedOpen = false;
   if (oldModus && !modus) {
     modusDay = sentModusDay ?? (await defaultDay(db, queenId, null, today));
-    await endOnInactive(db, ctx, queenId, modusDay);
+    deletedOpen = await endOnInactive(db, ctx, queenId, modusDay);
   } else if (!oldModus && modus) {
     await reopenOnActive(db, ctx, queenId, oldModusDay);
     modusDay = sentModusDay === undefined ? oldModusDay : sentModusDay;
@@ -472,7 +478,10 @@ export async function applyQueenWrite(
       .where('id', '=', queenId)
       .execute();
 
-  if (data.hive_id !== undefined || data.move_date !== undefined) {
+  if (
+    !deletedOpen &&
+    (data.hive_id !== undefined || data.move_date !== undefined)
+  ) {
     const derived = derivePlacement(modus, await queenPeriods(db, queenId));
     const target =
       data.hive_id === undefined

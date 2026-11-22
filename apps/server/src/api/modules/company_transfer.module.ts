@@ -20,7 +20,7 @@ import {
   toDay,
   validatePlacements,
 } from '../utils/queen_placement.util.js';
-import { syncQueen } from './queen_placement.module.js';
+import { asDate, syncQueen } from './queen_placement.module.js';
 
 const NEWLINE_QUOTE_REGEX = /(\r\n|[\n\r"])/g;
 const MAX_ARCHIVE_ENTRIES = 64;
@@ -758,13 +758,14 @@ async function importQueenPlacements(
         updated_at: row.updated_at,
         modus: row.modus === undefined ? true : row.modus === true,
         modus_date: row.modus_date,
+        deleted: row.deleted === true,
       })),
     );
     rows = built.rows;
     for (const { queen_id, modus_date } of built.inactivate)
       await db
         .updateTable('queens')
-        .set({ modus: false, modus_date: new Date(`${modus_date}T00:00:00Z`) })
+        .set({ modus: false, modus_date: asDate(modus_date) })
         .where('id', '=', queen_id)
         .execute();
   }

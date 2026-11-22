@@ -88,9 +88,21 @@ async function seedQueenPlacements(knex) {
       'deleted',
     )
     .whereNotNull('hive_id');
-  const { rows } = buildQueenPlacements(queens);
+  const { rows, skipped, inactivate } = buildQueenPlacements(queens);
   await knex('queen_placements').del();
   await knex.batchInsert('queen_placements', rows, 1000);
+  // Same as the migration: skipped and replaced queens are inactive, and
+  // skipped queens have no hive.
+  for (const { queen_id, modus_date } of inactivate)
+    await knex('queens')
+      .where('id', queen_id)
+      .update({ modus: false, modus_date });
+  await knex('queens')
+    .whereIn(
+      'id',
+      skipped.map((skip) => skip.queen_id),
+    )
+    .update({ hive_id: null });
   console.log(`Insert queen_placements: ${rows.length} rows`);
 }
 

@@ -306,7 +306,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 11; index++) {
+    for (let index = 0; index < 13; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -535,6 +535,25 @@ describe('queen placements', () => {
     expect(res.statusCode).toBe(200);
     expect(await placements(h)).toEqual([]);
     expect(await state(h)).toMatchObject({ hive_id: null, modus: false });
+  });
+
+  it('inactive on the day of the move with the resent form values', async () => {
+    const [a, b] = [hives[11], hives[12]];
+    const day = new Date().toISOString().slice(0, 10);
+    const q = await create({ hive_id: b, move_date: '2025-01-01' });
+    expect((await patch([q], { hive_id: a, move_date: day })).statusCode).toBe(
+      200,
+    );
+    // The form sends the old hive and move date again with the new status.
+    const res = await patch([q], {
+      modus: false,
+      modus_date: day,
+      hive_id: a,
+      move_date: day,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(await placements(q)).toEqual([[b, '2025-01-01', day]]);
+    expect(await state(q)).toMatchObject({ hive_id: b, modus: false });
   });
 
   it('a new move_date of a queen without hive is saved', async () => {
