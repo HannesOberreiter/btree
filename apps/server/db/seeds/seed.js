@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import { cloneDeep, map, omit } from 'lodash-es';
 
 // eslint-disable-next-line antfu/no-import-dist
+import { buildQueenPlacements } from '../../dist/api/utils/queen_placement.util.js';
+// eslint-disable-next-line antfu/no-import-dist
 import * as env from '../../dist/config/environment.config.js';
 
 const dirname = new URL('./', import.meta.url).pathname;
@@ -67,7 +69,41 @@ export async function seed(knex) {
         ); */
     }
   }
+  await seedQueenPlacements(knex);
   return Promise.all(promises);
+}
+
+/** Placements for the seeded queens, with the rules of the migration. */
+async function seedQueenPlacements(knex) {
+  const queens = await knex('queens')
+    .select(
+      'id',
+      'hive_id',
+      'user_id',
+      'move_date',
+      'created_at',
+      'updated_at',
+      'modus',
+      'modus_date',
+      'deleted',
+    )
+    .whereNotNull('hive_id');
+  const { rows, skipped, inactivate } = buildQueenPlacements(queens);
+  await knex('queen_placements').del();
+  await knex.batchInsert('queen_placements', rows, 1000);
+  // Same as the migration: skipped and replaced queens are inactive, and
+  // skipped queens have no hive.
+  for (const { queen_id, modus_date } of inactivate)
+    await knex('queens')
+      .where('id', queen_id)
+      .update({ modus: false, modus_date });
+  await knex('queens')
+    .whereIn(
+      'id',
+      skipped.map((skip) => skip.queen_id),
+    )
+    .update({ hive_id: null });
+  console.log(`Insert queen_placements: ${rows.length} rows`);
 }
 
 async function transactionMigration(table, data, knex) {

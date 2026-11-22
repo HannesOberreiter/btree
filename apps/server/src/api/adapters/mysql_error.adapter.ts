@@ -29,6 +29,17 @@ export function checkMySQLError(error: unknown): MappedDatabaseError {
     return mapped;
   }
   if (
+    databaseError.code === 'ER_LOCK_DEADLOCK' ||
+    databaseError.code === 'ER_LOCK_WAIT_TIMEOUT'
+  ) {
+    // Two requests changed the same rows at the same time. A retry works.
+    const mapped = httpErrors.Conflict(
+      'concurrentUpdate',
+    ) as MappedDatabaseError;
+    mapped.code = 'CONCURRENT_UPDATE';
+    return mapped;
+  }
+  if (
     databaseError.code === 'ER_NO_REFERENCED_ROW_2' ||
     databaseError.code === 'ER_ROW_IS_REFERENCED_2'
   ) {

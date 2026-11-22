@@ -6,7 +6,17 @@ import type { Database } from '../../types/database.types.js';
 import type { DB } from '../../types/db.types.js';
 import type { CompatibilityQuery } from '../schemas/common.schema.js';
 import type { PatchBody, PostBody } from '../schemas/queen.schema.js';
+import { OPEN_END, toDay, today } from '../utils/queen_placement.util.js';
 import { actorProjection } from './actor_projection.module.js';
+import {
+  applyQueenWrite,
+  asDate,
+  defaultDay,
+  hiveTwiceError,
+  lockRows,
+  moveQueen,
+  syncQueen,
+} from './queen_placement.module.js';
 
 const queenBaseOrderFields: Record<string, string> = {
   id: 'queens.id',
@@ -34,10 +44,10 @@ const queenDetailOrderFields: Record<string, string> = {
   'race.name': 'queen_races.name',
 };
 const queenStatsOrderFields: Record<string, string> = {
-  id: 'queen_durations.id',
+  id: 'queens.id',
   'queens.name': 'queens.name',
   'hive_location.hive_name': 'hives_locations.hive_name',
-  move_date: 'queen_durations.move_date',
+  move_date: 'queen_placements.from_date',
 };
 function direction(value: unknown): 'asc' | 'desc' {
   return String(value).toLowerCase() === 'desc' ? 'desc' : 'asc';
@@ -262,6 +272,23 @@ export async function getQueenPedigree(
   ) SELECT * FROM mothers`.execute(db);
   return result.rows;
 }
+function statsPlacements(db: Database, companyId: number) {
+  return db
+    .selectFrom('queen_placements')
+    .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
+    .leftJoin(
+      'hives_locations',
+      'hives_locations.hive_id',
+      'queen_placements.hive_id',
+    )
+    .where('queen_placements.user_id', '=', companyId)
+    .where('queens.deleted', '=', false);
+}
+/**
+ * One row per placement of a queen, with the mean checkup ratings and the
+ * harvest sums of the hive in the placement period `[move_date, to_date)`.
+ * `id` is the queen id, `placement_id` is unique per row.
+ */
 export async function listQueenStats(
   db: Database,
   companyId: number,
@@ -269,34 +296,33 @@ export async function listQueenStats(
 ) {
   const limit = input.limit === 0 || !input.limit ? 10 : input.limit;
   const offset = input.offset ?? 0;
-  let query = db
-    .selectFrom('queen_durations')
-    .innerJoin('queens', 'queens.id', 'queen_durations.id')
-    .leftJoin(
-      'hives_locations',
-      'hives_locations.hive_id',
-      'queen_durations.hive_id',
-    )
-    .selectAll('queen_durations')
-    .select([
-      sql<
-        Record<string, unknown>
-      >`JSON_OBJECT('id', queens.id, 'name', queens.name, 'date', queens.date, 'move_date', queens.move_date, 'hive_id', queens.hive_id)`.as(
-        'queen',
-      ),
-      hiveLocationProjection(),
-    ])
-    .where('queen_durations.user_id', '=', companyId);
-  let count = db
-    .selectFrom('queen_durations')
-    .innerJoin('queens', 'queens.id', 'queen_durations.id')
-    .leftJoin(
-      'hives_locations',
-      'hives_locations.hive_id',
-      'queen_durations.hive_id',
-    )
-    .select(db.fn.countAll<number>().as('total'))
-    .where('queen_durations.user_id', '=', companyId);
+  let query = statsPlacements(db, companyId).select([
+    'queens.id as id',
+    'queen_placements.id as placement_id',
+    'queen_placements.hive_id',
+    'queen_placements.user_id',
+    'queen_placements.from_date as move_date',
+    sql<string | null>`NULLIF(queen_placements.to_date, ${OPEN_END})`.as(
+      'to_date',
+    ),
+    sql<
+      number | null
+    >`IF(queen_placements.to_date = ${OPEN_END}, NULL, DATEDIFF(queen_placements.to_date, queen_placements.from_date))`.as(
+      'duration',
+    ),
+    sql<string>`IF(queen_placements.to_date = ${OPEN_END}, CURDATE(), queen_placements.to_date)`.as(
+      'last_date',
+    ),
+    sql<
+      Record<string, unknown>
+    >`JSON_OBJECT('id', queens.id, 'name', queens.name, 'date', queens.date, 'move_date', queens.move_date, 'hive_id', queens.hive_id)`.as(
+      'queen',
+    ),
+    hiveLocationProjection(),
+  ]);
+  let count = statsPlacements(db, companyId).select(
+    db.fn.countAll<number>().as('total'),
+  );
   if (input.filters) {
     try {
       const filters: unknown = JSON.parse(input.filters);
@@ -308,11 +334,11 @@ export async function listQueenStats(
           if (typeof moveDate === 'object' && moveDate !== null) {
             const range = moveDate as Record<string, string>;
             query = query
-              .where('queen_durations.move_date', '>=', new Date(range.from))
-              .where('queen_durations.move_date', '<=', new Date(range.to));
+              .where('queen_placements.from_date', '>=', new Date(range.from))
+              .where('queen_placements.from_date', '<=', new Date(range.to));
             count = count
-              .where('queen_durations.move_date', '>=', new Date(range.from))
-              .where('queen_durations.move_date', '<=', new Date(range.to));
+              .where('queen_placements.from_date', '>=', new Date(range.from))
+              .where('queen_placements.from_date', '<=', new Date(range.to));
           }
           const matingId = Number(value['queens.mating_id']);
           if (Number.isFinite(matingId)) {
@@ -334,8 +360,8 @@ export async function listQueenStats(
             query = query.where('hives_locations.hive_id', 'is', null);
             count = count.where('hives_locations.hive_id', 'is', null);
           } else if (Number.isFinite(Number(hive))) {
-            query = query.where('queen_durations.hive_id', '=', Number(hive));
-            count = count.where('queen_durations.hive_id', '=', Number(hive));
+            query = query.where('queen_placements.hive_id', '=', Number(hive));
+            count = count.where('queen_placements.hive_id', '=', Number(hive));
           }
         }
       }
@@ -366,42 +392,45 @@ export async function listQueenStats(
   );
   const [rows, total] = await Promise.all([
     query
-      .orderBy('queen_durations.id')
+      .orderBy('queen_placements.id')
       .limit(limit)
       .offset(offset * limit)
       .execute(),
     count.executeTakeFirstOrThrow(),
   ]);
   const results = await Promise.all(
-    rows.map(async (row) => ({
-      ...row,
-      checkup: await db
-        .selectFrom('checkups')
-        .select([
-          sql<string | null>`AVG(NULLIF(brood,0))`.as('brood'),
-          sql<string | null>`AVG(NULLIF(pollen,0))`.as('pollen'),
-          sql<string | null>`AVG(NULLIF(comb,0))`.as('comb'),
-          sql<string | null>`AVG(NULLIF(temper,0))`.as('temper'),
-          sql<string | null>`AVG(NULLIF(calm_comb,0))`.as('calm_comb'),
-          sql<string | null>`AVG(NULLIF(swarm,0))`.as('swarm'),
-          sql<string | null>`AVG(NULLIF(varroa,0))`.as('varroa'),
-          sql<string | null>`AVG(NULLIF(strong,0))`.as('strong'),
-        ])
-        .where('hive_id', '=', row.hive_id)
-        .where('date', '>=', row.move_date ?? new Date(0))
-        .where('date', '<=', row.last_date)
-        .executeTakeFirst(),
-      harvest: await db
-        .selectFrom('harvests')
-        .select([
-          db.fn.sum('frames').as('frames'),
-          db.fn.sum('amount').as('amount'),
-        ])
-        .where('hive_id', '=', row.hive_id)
-        .where('date', '>=', row.move_date ?? new Date(0))
-        .where('date', '<=', row.last_date)
-        .executeTakeFirst(),
-    })),
+    rows.map(async (row) => {
+      const end = asDate(toDay(row.to_date) ?? OPEN_END);
+      return {
+        ...row,
+        checkup: await db
+          .selectFrom('checkups')
+          .select([
+            sql<string | null>`AVG(NULLIF(brood,0))`.as('brood'),
+            sql<string | null>`AVG(NULLIF(pollen,0))`.as('pollen'),
+            sql<string | null>`AVG(NULLIF(comb,0))`.as('comb'),
+            sql<string | null>`AVG(NULLIF(temper,0))`.as('temper'),
+            sql<string | null>`AVG(NULLIF(calm_comb,0))`.as('calm_comb'),
+            sql<string | null>`AVG(NULLIF(swarm,0))`.as('swarm'),
+            sql<string | null>`AVG(NULLIF(varroa,0))`.as('varroa'),
+            sql<string | null>`AVG(NULLIF(strong,0))`.as('strong'),
+          ])
+          .where('hive_id', '=', row.hive_id)
+          .where('date', '>=', row.move_date)
+          .where('date', '<', end)
+          .executeTakeFirst(),
+        harvest: await db
+          .selectFrom('harvests')
+          .select([
+            db.fn.sum('frames').as('frames'),
+            db.fn.sum('amount').as('amount'),
+          ])
+          .where('hive_id', '=', row.hive_id)
+          .where('date', '>=', row.move_date)
+          .where('date', '<', end)
+          .executeTakeFirst(),
+      };
+    }),
   );
   return { results, total: total.total };
 }
@@ -419,51 +448,15 @@ async function requireOwned(
     .executeTakeFirst();
   if (!row) throw httpErrors.NotFound();
 }
-async function inactivateOtherQueens(
-  db: Database,
-  hiveId: number,
-  moveDate: string,
-) {
-  let last = new Date(moveDate);
-  const rows = await db
-    .selectFrom('queens')
-    .select(['id', 'move_date', 'modus'])
-    .where('hive_id', '=', hiveId)
-    .orderBy('move_date', 'desc')
-    .execute();
-  for (const row of rows) {
-    if (!row.move_date) continue;
-    // The pool uses dateStrings and timezone Z, so move_date is a UTC
-    // "YYYY-MM-DD HH:MM:SS" string at runtime. Without the Z, new Date()
-    // reads it as local time.
-    const current = new Date(`${String(row.move_date).replace(' ', 'T')}Z`);
-    if (row.modus && current < last)
-      await db
-        .updateTable('queens')
-        .set({ modus: false, modus_date: last })
-        .where('id', '=', row.id)
-        .execute();
-    if (current < last) last = current;
-  }
-}
+/** Fields of a queen write that are not about the placement. */
 function queenValues(data: PatchBody['data']) {
   return {
     ...(data.name !== undefined && { name: data.name }),
     ...(data.mark_colour !== undefined && { mark_colour: data.mark_colour }),
     ...(data.mother !== undefined && { mother: data.mother }),
     ...(data.date && { date: new Date(data.date) }),
-    ...(data.move_date !== undefined && {
-      move_date: data.move_date ? new Date(data.move_date) : null,
-    }),
     ...(data.url !== undefined && { url: data.url }),
     ...(data.note !== undefined && { note: data.note }),
-    ...(data.modus !== undefined && { modus: data.modus }),
-    ...(data.modus_date !== undefined && {
-      modus_date: data.modus_date ? new Date(data.modus_date) : null,
-    }),
-    ...(data.hive_id !== undefined && {
-      hive_id: data.hive_id === 'empty' ? null : data.hive_id,
-    }),
     ...(data.race_id !== undefined && { race_id: data.race_id }),
     ...(data.mating_id !== undefined && { mating_id: data.mating_id }),
     ...(data.mother_id !== undefined && { mother_id: data.mother_id }),
@@ -483,30 +476,72 @@ export async function createQueens(
     if (body.mother_id)
       await requireOwned(trx, 'queens', body.mother_id, companyId);
     const repeat = body.repeat && body.repeat > 1 ? body.repeat : 1;
+    const hiveIds = Array.isArray(body.hive_id)
+      ? body.hive_id
+      : body.hive_id
+        ? [body.hive_id]
+        : [];
+    for (const hiveId of new Set(hiveIds))
+      await requireOwned(trx, 'hives', hiveId, companyId);
+    await lockRows(trx, hiveIds, []);
+    const ctx = { companyId, beeId };
+    const sentDay = toDay(body.move_date);
+    const movedInto = new Set<number>();
     const ids: number[] = [];
     for (let index = 0; index < repeat; index++) {
       const hiveId = Array.isArray(body.hive_id)
         ? (body.hive_id[index] ?? null)
         : (body.hive_id ?? null);
-      if (hiveId) await requireOwned(trx, 'hives', hiveId, companyId);
       const result = await trx
         .insertInto('queens')
         .values({
-          ...queenValues({ ...body, date: undefined, hive_id: hiveId }),
+          ...queenValues({ ...body, date: undefined, hive_id: undefined }),
           // Old clients can send no birth date, the queen then gets today.
           date: body.date ? new Date(body.date) : new Date(),
+          // Kept for a queen without placement; else syncQueen writes it.
+          ...(body.move_date && { move_date: new Date(body.move_date) }),
           name:
             repeat > 1 ? `${body.name}${(body.start ?? 0) + index}` : body.name,
           user_id: companyId,
           bee_id: beeId,
         })
         .executeTakeFirstOrThrow();
-      ids.push(Number(result.insertId));
-      if (hiveId && body.move_date)
-        await inactivateOtherQueens(trx, hiveId, body.move_date);
+      const id = Number(result.insertId);
+      ids.push(id);
+      if (hiveId) {
+        if (movedInto.has(hiveId)) throw hiveTwiceError();
+        movedInto.add(hiveId);
+        await moveQueen(
+          trx,
+          ctx,
+          id,
+          hiveId,
+          sentDay ?? (await defaultDay(trx, null, hiveId, today())),
+        );
+      }
+      if (body.modus === false || body.modus_date !== undefined)
+        await applyQueenWrite(
+          trx,
+          ctx,
+          id,
+          { modus: body.modus, modus_date: body.modus_date },
+          movedInto,
+          today(),
+        );
+      else await syncQueen(trx, id);
     }
     return ids;
   });
+}
+async function ownedQueenIds(db: Database, companyId: number, ids: number[]) {
+  const rows = await db
+    .selectFrom('queens')
+    .select('id')
+    .where('user_id', '=', companyId)
+    .where('id', 'in', ids)
+    .orderBy('id')
+    .execute();
+  return rows.map((row) => row.id);
 }
 export async function updateQueens(
   db: Kysely<DB>,
@@ -523,31 +558,63 @@ export async function updateQueens(
       await requireOwned(trx, 'queens', body.data.mother_id, companyId);
     const hiveId = body.data.hive_id === 'empty' ? null : body.data.hive_id;
     if (hiveId) await requireOwned(trx, 'hives', hiveId, companyId);
+    const ids = await ownedQueenIds(trx, companyId, body.ids);
+    if (!ids.length) return 0;
+    await lockRows(trx, hiveId ? [hiveId] : [], ids);
     const result = await trx
       .updateTable('queens')
       .set({ ...queenValues(body.data), edit_id: beeId })
-      .where('user_id', '=', companyId)
-      .where('id', 'in', body.ids)
+      .where('id', 'in', ids)
       .executeTakeFirst();
-    if (hiveId && body.data.move_date)
-      await inactivateOtherQueens(trx, hiveId, body.data.move_date);
+    const ctx = { companyId, beeId };
+    const movedInto = new Set<number>();
+    for (const id of ids)
+      await applyQueenWrite(trx, ctx, id, body.data, movedInto, today());
     return Number(result.numUpdatedRows);
   });
 }
+/**
+ * Sets queens active or inactive with today as `modus_date`. A queen that
+ * has the status already does not change.
+ */
 export async function updateQueenStatus(
-  db: Database,
+  db: Kysely<DB>,
   companyId: number,
   beeId: number,
   ids: number[],
   status: boolean,
 ) {
-  const result = await db
-    .updateTable('queens')
-    .set({ edit_id: beeId, modus: status, modus_date: new Date() })
-    .where('user_id', '=', companyId)
-    .where('id', 'in', ids)
-    .executeTakeFirst();
-  return Number(result.numUpdatedRows);
+  return db.transaction().execute(async (trx) => {
+    const owned = await ownedQueenIds(trx, companyId, ids);
+    if (!owned.length) return 0;
+    await lockRows(trx, [], owned);
+    await trx
+      .updateTable('queens')
+      .set({ edit_id: beeId })
+      .where('id', 'in', owned)
+      .execute();
+    const ctx = { companyId, beeId };
+    const day = today();
+    for (const id of owned) {
+      const queen = await trx
+        .selectFrom('queens')
+        .select('modus')
+        .where('id', '=', id)
+        .executeTakeFirstOrThrow();
+      if ((queen.modus !== false) === status) continue;
+      // Without a day for inactive, so that the server can use the start
+      // of the placement after local midnight (see defaultDay).
+      await applyQueenWrite(
+        trx,
+        ctx,
+        id,
+        status ? { modus: status, modus_date: day } : { modus: status },
+        new Set(),
+        day,
+      );
+    }
+    return owned.length;
+  });
 }
 export function getQueensByIds(db: Database, companyId: number, ids: number[]) {
   return db

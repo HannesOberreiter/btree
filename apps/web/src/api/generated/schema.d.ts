@@ -7661,6 +7661,279 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/queen_placement/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: {
+          action?: string | null;
+          apiary?: number | null;
+          date?: string | null;
+          datetime?: string | null;
+          deleted?: boolean | null;
+          details?: boolean | null;
+          direction?: (('asc' | 'desc') | ('asc' | 'desc')[]) | null;
+          done?: boolean | null;
+          end?: string | null;
+          end_date?: string | null;
+          filters?: string | null;
+          from?: string | null;
+          hard?: boolean | null;
+          hum?: string | null;
+          latest?: boolean | null;
+          latitude?: string | null;
+          limit?: number | null;
+          longitude?: string | null;
+          modus?: boolean | null;
+          note?: string | null;
+          offset?: number | null;
+          order?: (string | string[]) | null;
+          q?: string | null;
+          rain?: string | null;
+          restore?: boolean | null;
+          start?: string | null;
+          start_date?: string | null;
+          temp1?: string | null;
+          temp2?: string | null;
+          to?: string | null;
+          type?: number | null;
+          weight?: string | null;
+          year?: number | null;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              results: ({
+                bee_id?: number | null;
+                created_at?: string | null;
+                creator?:
+                  | ({
+                      email: string | null;
+                      id: number;
+                      username: string | null;
+                    } & {
+                      [key: string]: unknown;
+                    })
+                  | null;
+                edit_id?: number | null;
+                editor?:
+                  | ({
+                      email: string | null;
+                      id: number;
+                      username: string | null;
+                    } & {
+                      [key: string]: unknown;
+                    })
+                  | null;
+                from_date: string;
+                hive?:
+                  | ({
+                      id: number;
+                    } & {
+                      [key: string]: unknown;
+                    })
+                  | null;
+                hive_id: number;
+                id: number;
+                queen?:
+                  | ({
+                      id: number;
+                    } & {
+                      [key: string]: unknown;
+                    })
+                  | null;
+                queen_id: number;
+                to_date?: string | null;
+                updated_at?: string | null;
+                user_id?: number | null;
+              } & {
+                [key: string]: unknown;
+              })[];
+              total: number;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            data: {
+              from_date?: string;
+              to_date?: string | null;
+            };
+            ids: number[];
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': number;
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  '/v1/queen_placement/batchDelete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            ids: number[];
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': number;
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  '/v1/queen_placement/batchGet': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            ids: number[];
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': ({
+              bee_id?: number | null;
+              created_at?: string | null;
+              creator?:
+                | ({
+                    email: string | null;
+                    id: number;
+                    username: string | null;
+                  } & {
+                    [key: string]: unknown;
+                  })
+                | null;
+              edit_id?: number | null;
+              editor?:
+                | ({
+                    email: string | null;
+                    id: number;
+                    username: string | null;
+                  } & {
+                    [key: string]: unknown;
+                  })
+                | null;
+              from_date: string;
+              hive?:
+                | ({
+                    id: number;
+                  } & {
+                    [key: string]: unknown;
+                  })
+                | null;
+              hive_id: number;
+              id: number;
+              queen?:
+                | ({
+                    id: number;
+                  } & {
+                    [key: string]: unknown;
+                  })
+                | null;
+              queen_id: number;
+              to_date?: string | null;
+              updated_at?: string | null;
+              user_id?: number | null;
+            } & {
+              [key: string]: unknown;
+            })[];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/queen/': {
     parameters: {
       query?: never;
