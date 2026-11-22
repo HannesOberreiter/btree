@@ -24,6 +24,7 @@ export interface PlacementPeriod {
 /**
  * Converts a DATE, DATETIME, ISO text or Date to a day. The time zone is
  * ignored: the result is the UTC day, the same as `DATE()` on a stored value.
+ * The MariaDB zero date `0000-00-00` of old rows gives null.
  */
 export function toDay(value: unknown): Day | null {
   if (value === null || value === undefined || value === '') return null;
@@ -33,6 +34,7 @@ export function toDay(value: unknown): Day | null {
       : value.toISOString().slice(0, 10);
   if (typeof value !== 'string' && typeof value !== 'number') return null;
   const text = String(value);
+  if (text.startsWith('0000-00-00')) return null;
   if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
   const date = new Date(text);
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
@@ -108,8 +110,9 @@ export interface BackfillSkip {
  * Rules:
  * - Start: `move_date`, else `created_at`.
  * - Rows of one hive are sorted by start, then id. Of two rows with the same
- *   start, only one row stays: a queen that is not deleted, else the higher
- *   id.
+ *   start day, only one row stays: a queen that is not deleted, then the
+ *   later `move_date` with time, then an active queen, then the higher id.
+ *   This is the same queen that the old view `queens_locations` showed.
  * - End: the start of the next row in the hive. A soft-deleted queen does not
  *   end a queen that is not deleted, the same as in the old view
  *   `queens_locations`. An inactive queen ends at `modus_date` when it is
@@ -118,10 +121,13 @@ export interface BackfillSkip {
  * - A row whose end is not after its start is skipped.
  * - A row of a deleted queen that overlaps a row of a queen that is not
  *   deleted is skipped.
- * - An active queen whose row ends at the start of the next queen is
- *   returned in `inactivate`, with the end of her row as `modus_date`. The
- *   server sets such a queen inactive on a move today, but old data has
- *   many of them.
+ * - `inactivate` lists the queens that the migration sets inactive, with
+ *   the end of their row as `modus_date`:
+ *   - An active queen whose row ends at the start of the next queen. The
+ *     server sets such a queen inactive on a move today, but old data has
+ *     many of them.
+ *   - An inactive queen without a valid `modus_date`. Then the view
+ *     `queens_locations` shows her as the last queen of the hive.
  */
 export function buildQueenPlacements(queens: BackfillQueen[]): {
   rows: BackfillRow[];
@@ -165,7 +171,7 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
     for (const queen of list) {
       const previous = kept.at(-1);
       if (previous && previous.start === queen.start) {
-        const keepPrevious = queen.isDeleted && !previous.isDeleted;
+        const keepPrevious = isBefore(queen, previous);
         const lost = keepPrevious ? queen : previous;
         skipped.push({
           queen_id: lost.id,
@@ -194,7 +200,7 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
         });
         return;
       }
-      if (!inactive && end !== OPEN_END)
+      if ((!inactive && end !== OPEN_END) || (inactive && !modusDay))
         inactivate.push({ queen_id: queen.id, modus_date: end });
       hiveRows.push({
         queen_id: queen.id,
@@ -231,6 +237,35 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
     skipped,
     inactivate: inactivate.filter((entry) => kept.has(entry.queen_id)),
   };
+}
+
+/** A queen as the backfill compares two queens with the same start day. */
+interface StartCandidate {
+  id: number;
+  isDeleted: boolean;
+  move_date: unknown;
+  modus: boolean | number | null;
+}
+
+/**
+ * Tells if queen `a` loses against queen `b` with the same start day. The
+ * order is the same as in the old view `queens_locations`, but a deleted
+ * queen always loses.
+ */
+function isBefore(a: StartCandidate, b: StartCandidate) {
+  if (a.isDeleted !== b.isDeleted) return a.isDeleted;
+  const timeA = moveTime(a.move_date);
+  const timeB = moveTime(b.move_date);
+  if (timeA !== timeB) return timeA < timeB;
+  const activeA = a.modus !== false && a.modus !== 0;
+  const activeB = b.modus !== false && b.modus !== 0;
+  if (activeA !== activeB) return !activeA;
+  return a.id < b.id;
+}
+
+function moveTime(value: unknown) {
+  if (value instanceof Date) return value.toISOString();
+  return typeof value === 'string' ? value.replace(' ', 'T') : '';
 }
 
 /**

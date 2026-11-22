@@ -96,17 +96,48 @@ describe('queen placement backfill rules', () => {
     expect(rows[0].to_date).toBe('2024-09-09');
   });
 
-  it('keeps the higher id of two queens with the same start', () => {
+  it('of two queens with the same start day keeps the queen of the old view', () => {
     const { rows, skipped, inactivate } = buildQueenPlacements([
+      // Later move time wins.
       queen({ id: 7, move_date: '2024-01-01' }),
       queen({ id: 3, move_date: '2024-01-01 15:00:00' }),
+      // Same time: the active queen wins over a higher id.
+      queen({ id: 8, hive_id: 2, move_date: '2024-01-01', modus: true }),
+      queen({
+        id: 9,
+        hive_id: 2,
+        move_date: '2024-01-01',
+        modus: false,
+        modus_date: '2024-01-01',
+      }),
+      // Same time and status: the higher id wins.
+      queen({ id: 10, hive_id: 3, move_date: '2024-01-01' }),
+      queen({ id: 11, hive_id: 3, move_date: '2024-01-01' }),
+      // A deleted queen always loses.
+      queen({ id: 12, hive_id: 4, move_date: '2024-01-01' }),
+      queen({ id: 13, hive_id: 4, move_date: '2024-01-02', deleted: 1 }),
+      queen({ id: 14, hive_id: 4, move_date: '2024-01-02' }),
     ]);
-    expect(rows.map((row) => row.queen_id)).toEqual([7]);
-    expect(skipped).toEqual([
-      { queen_id: 3, user_id: 1, reason: 'same_start' },
-    ]);
+    expect(rows.map((row) => row.queen_id)).toEqual([3, 8, 11, 12, 14]);
+    expect(skipped.map((skip) => skip.queen_id)).toEqual([7, 9, 10, 13]);
     // A skipped queen stays active, without a hive.
-    expect(inactivate).toEqual([]);
+    expect(inactivate).toEqual([{ queen_id: 12, modus_date: '2024-01-02' }]);
+  });
+
+  it('reads the zero date 0000-00-00 as no date', () => {
+    const { rows, skipped, inactivate } = buildQueenPlacements([
+      queen({
+        id: 1,
+        move_date: '2024-01-01',
+        modus: false,
+        modus_date: '0000-00-00',
+        updated_at: '2024-06-01 10:00:00',
+      }),
+    ]);
+    expect(skipped).toEqual([]);
+    expect(rows[0].to_date).toBe('2024-06-01');
+    // The queen gets the end of her row as modus_date.
+    expect(inactivate).toEqual([{ queen_id: 1, modus_date: '2024-06-01' }]);
   });
 
   it('skips empty periods, queens without hive and without company', () => {

@@ -105,7 +105,7 @@ export async function up(knex) {
     `queen_placements: ${rows.length} rows, ${skipped.length} queens skipped`,
     reasons,
     `in ${companies.size} companies,`,
-    `${inactivate.length} replaced queens set inactive`,
+    `${inactivate.length} queens set inactive or given a modus_date`,
   );
   if (skipped.length)
     console.log('queen_placements skipped:', JSON.stringify(skipped));
@@ -119,6 +119,7 @@ export async function up(knex) {
   // Write the derived values now, so that both stay the same from the start.
   // Replaced queens that are still active: set them inactive, the same as a
   // move does today. Else they would count as queens without a hive.
+  // Inactive queens without a valid modus_date get the end of their row.
   const byDay = new Map();
   for (const { queen_id, modus_date } of inactivate)
     byDay.set(modus_date, [...(byDay.get(modus_date) ?? []), queen_id]);
@@ -126,7 +127,6 @@ export async function up(knex) {
     for (let index = 0; index < ids.length; index += 1000)
       await knex('queens')
         .whereIn('id', ids.slice(index, index + 1000))
-        .where('modus', true)
         .update({ modus: false, modus_date: day });
 
   // Queens whose hive does not exist (old data, also hive_id 0): no hive,
