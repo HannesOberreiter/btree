@@ -122,6 +122,7 @@ export default function routes(
         req.session.user.bee_id,
         req.body.ids,
         req.body.status,
+        req.body.modus_date,
       ),
   );
   server.patch(

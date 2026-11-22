@@ -87,6 +87,14 @@ export type PatchBody = z.infer<typeof patchBodySchema>;
 export const updateStatusBodySchema = z.object({
   ids: z.array(numberSchema),
   status: z.boolean(),
+  /**
+   * Day of the status change (`YYYY-MM-DD`), the local day of the client.
+   * Without it, the server uses its own day.
+   */
+  modus_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 export type UpdateStatusBody = z.infer<typeof updateStatusBodySchema>;
 

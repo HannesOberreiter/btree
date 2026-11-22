@@ -37,7 +37,7 @@ export const patchBodySchema = z.object({
   ids: z.array(numberSchema).min(1),
   data: z.object({
     from_date: daySchema.optional(),
-    /** Null opens the placement. */
+    /** Only for a closed placement. Null is accepted for an open one. */
     to_date: daySchema.nullable().optional(),
   }),
 });

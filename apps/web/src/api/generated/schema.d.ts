@@ -8548,6 +8548,7 @@ export interface paths {
         content: {
           'application/json': {
             ids: number[];
+            modus_date?: string;
             status: boolean;
           };
         };

@@ -583,6 +583,7 @@ export async function updateQueenStatus(
   beeId: number,
   ids: number[],
   status: boolean,
+  modusDate?: string,
 ) {
   return db.transaction().execute(async (trx) => {
     const owned = await ownedQueenIds(trx, companyId, ids);
@@ -602,13 +603,18 @@ export async function updateQueenStatus(
         .where('id', '=', id)
         .executeTakeFirstOrThrow();
       if ((queen.modus !== false) === status) continue;
-      // Without a day for inactive, so that the server can use the start
-      // of the placement after local midnight (see defaultDay).
+      // Without a day from the client, inactive gets no day, so that the
+      // server can use the start of the placement after local midnight
+      // (see defaultDay).
       await applyQueenWrite(
         trx,
         ctx,
         id,
-        status ? { modus: status, modus_date: day } : { modus: status },
+        modusDate
+          ? { modus: status, modus_date: modusDate }
+          : status
+            ? { modus: status, modus_date: day }
+            : { modus: status },
         new Set(),
         day,
       );
