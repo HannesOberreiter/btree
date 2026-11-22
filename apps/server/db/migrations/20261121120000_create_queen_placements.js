@@ -110,9 +110,9 @@ export async function up(knex) {
   if (skipped.length)
     console.log('queen_placements skipped:', JSON.stringify(skipped));
 
-  // Replace the view before the UPDATE below. The UPDATE sets
-  // queens.hive_id to NULL for skipped queens, and the backfill reads only
-  // queens with a hive. So a failure before the UPDATE is safe to run again.
+  // Replace the view before the UPDATES below, so that a failure of the
+  // view is safe to run again. Skipped queens keep queens.hive_id and are
+  // inactive, so a new run reads them again with the same result.
   await knex.raw(readSql('./20261121120000_create_queen_placements.sql'));
 
   // The API derives queens.hive_id and queens.move_date from the placements.
@@ -154,7 +154,7 @@ export async function up(knex) {
     )
     SET
       q.hive_id = CASE
-        WHEN p.id IS NULL THEN NULL
+        WHEN p.id IS NULL THEN q.hive_id
         WHEN p.to_date = '${OPEN_END}' OR q.modus = 0 THEN p.hive_id
         ELSE NULL
       END,

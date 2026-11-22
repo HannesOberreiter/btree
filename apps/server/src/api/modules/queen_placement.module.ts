@@ -181,7 +181,9 @@ async function setPeriod(
 /**
  * Writes the derived `hive_id` and `move_date` to `queens`. The old columns
  * stay until the cleanup, so that a rollback of the server still works.
- * A queen without placements keeps the stored `move_date`.
+ * A queen without placements keeps the stored `move_date`. If she is
+ * inactive, she also keeps the stored `hive_id`: old data has dead queens in
+ * a hive without a placement, for example of a batch on one day.
  */
 export async function syncQueen(db: Database, queenId: number) {
   const queen = await db
@@ -192,11 +194,12 @@ export async function syncQueen(db: Database, queenId: number) {
   if (!queen) return;
   const rows = await queenPeriods(db, queenId);
   if (!rows.length) {
-    await db
-      .updateTable('queens')
-      .set({ hive_id: null })
-      .where('id', '=', queenId)
-      .execute();
+    if (queen.modus !== false)
+      await db
+        .updateTable('queens')
+        .set({ hive_id: null })
+        .where('id', '=', queenId)
+        .execute();
     return;
   }
   const derived = derivePlacement(queen.modus, rows);
@@ -411,7 +414,7 @@ export async function applyQueenWrite(
 ) {
   const queen = await db
     .selectFrom('queens')
-    .select(['modus', 'modus_date'])
+    .select(['modus', 'modus_date', 'hive_id', 'move_date'])
     .where('id', '=', queenId)
     .executeTakeFirstOrThrow();
   const oldModus = queen.modus !== false;
@@ -441,7 +444,16 @@ export async function applyQueenWrite(
       .execute();
 
   if (data.hive_id !== undefined || data.move_date !== undefined) {
-    const derived = derivePlacement(modus, await queenPeriods(db, queenId));
+    const rows = await queenPeriods(db, queenId);
+    // An inactive queen without placements keeps her stored hive.
+    const derived =
+      !rows.length && !modus
+        ? {
+            hive_id: queen.hive_id,
+            move_date: toDay(queen.move_date),
+            row: undefined,
+          }
+        : derivePlacement(modus, rows);
     const target =
       data.hive_id === undefined
         ? derived.hive_id
@@ -459,6 +471,12 @@ export async function applyQueenWrite(
           hive_id: target,
           from_date: day ?? undefined,
         });
+      else
+        await db
+          .updateTable('queens')
+          .set({ hive_id: target, ...(day && { move_date: asDate(day) }) })
+          .where('id', '=', queenId)
+          .execute();
     } else {
       if (target !== null) {
         if (movedInto.has(target)) throw hiveTwiceError();

@@ -120,8 +120,12 @@ describe('queen placement backfill rules', () => {
     ]);
     expect(rows.map((row) => row.queen_id)).toEqual([3, 8, 11, 12, 14]);
     expect(skipped.map((skip) => skip.queen_id)).toEqual([7, 9, 10, 13]);
-    // A skipped queen stays active, without a hive.
-    expect(inactivate).toEqual([{ queen_id: 12, modus_date: '2024-01-02' }]);
+    // A skipped active queen becomes inactive on her start day.
+    expect(inactivate).toEqual([
+      { queen_id: 12, modus_date: '2024-01-02' },
+      { queen_id: 7, modus_date: '2024-01-01' },
+      { queen_id: 10, modus_date: '2024-01-01' },
+    ]);
   });
 
   it('reads the zero date 0000-00-00 as no date', () => {
@@ -518,7 +522,8 @@ describe('queen placements', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(await placements(h)).toEqual([]);
-    expect(await state(h)).toMatchObject({ hive_id: null, modus: false });
+    // She keeps the hive, the same as a dead queen of the backfill.
+    expect(await state(h)).toMatchObject({ hive_id: u, modus: false });
   });
 
   it('a new move_date of a queen without hive is saved', async () => {
@@ -540,6 +545,40 @@ describe('queen placements', () => {
     const res = await patch([i], { move_date: '2025-01-10' });
     expect(res.statusCode).toBe(400);
     expect(res.body.code).toBe('QUEEN_PLACEMENT_RANGE');
+  });
+
+  it('an inactive queen without placements keeps her hive', async () => {
+    const [x, y] = hives;
+    const result = await db
+      .insertInto('queens')
+      .values({
+        name: 'Placement batch',
+        user_id: companyId,
+        date: new Date('2024-01-01'),
+        hive_id: x,
+        move_date: new Date('2024-01-01'),
+        modus: false,
+        modus_date: new Date('2024-01-01'),
+      })
+      .executeTakeFirstOrThrow();
+    const j = Number(result.insertId);
+    queens.push(j);
+    const same = await patch([j], {
+      name: 'Placement batch 2',
+      hive_id: x,
+      move_date: '2024-01-01',
+      modus: false,
+      modus_date: '2024-01-01',
+    });
+    expect(same.statusCode).toBe(200);
+    expect(await placements(j)).toEqual([]);
+    expect(await state(j)).toMatchObject({ hive_id: x, modus: false });
+    expect((await patch([j], { hive_id: y })).statusCode).toBe(200);
+    expect(await state(j)).toMatchObject({ hive_id: y, modus: false });
+    expect(await placements(j)).toEqual([]);
+    // Active again: she has no placement, so she has no hive.
+    expect((await patch([j], { modus: true })).statusCode).toBe(200);
+    expect(await state(j)).toMatchObject({ hive_id: null, modus: true });
   });
 
   describe('/api/v1/queen_placement', () => {

@@ -128,6 +128,10 @@ export interface BackfillSkip {
  *     many of them.
  *   - An inactive queen without a valid `modus_date`. Then the view
  *     `queens_locations` shows her as the last queen of the hive.
+ *   - An active queen that lost against another queen with the same start
+ *     day, with that day as `modus_date`. She keeps `queens.hive_id`, but
+ *     gets no placement. The old view never showed her as the current
+ *     queen of the hive.
  */
 export function buildQueenPlacements(queens: BackfillQueen[]): {
   rows: BackfillRow[];
@@ -136,6 +140,7 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
 } {
   const skipped: BackfillSkip[] = [];
   const inactivate: { queen_id: number; modus_date: Day }[] = [];
+  const lostSameStart: { queen_id: number; modus_date: Day }[] = [];
   type Entry = BackfillQueen & { start: Day; isDeleted: boolean };
   const byHive = new Map<number, Entry[]>();
   for (const queen of queens) {
@@ -173,6 +178,9 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
       if (previous && previous.start === queen.start) {
         const keepPrevious = isBefore(queen, previous);
         const lost = keepPrevious ? queen : previous;
+        const lostActive = lost.modus !== false && lost.modus !== 0;
+        if (lostActive && !lost.isDeleted)
+          lostSameStart.push({ queen_id: lost.id, modus_date: lost.start });
         skipped.push({
           queen_id: lost.id,
           user_id: lost.user_id,
@@ -235,7 +243,10 @@ export function buildQueenPlacements(queens: BackfillQueen[]): {
   return {
     rows,
     skipped,
-    inactivate: inactivate.filter((entry) => kept.has(entry.queen_id)),
+    inactivate: [
+      ...inactivate.filter((entry) => kept.has(entry.queen_id)),
+      ...lostSameStart,
+    ],
   };
 }
 
