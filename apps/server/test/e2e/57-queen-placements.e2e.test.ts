@@ -306,7 +306,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 9; index++) {
+    for (let index = 0; index < 11; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -556,6 +556,35 @@ describe('queen placements', () => {
     const res = await patch([i], { move_date: '2025-01-10' });
     expect(res.statusCode).toBe(400);
     expect(res.body.code).toBe('QUEEN_PLACEMENT_RANGE');
+  });
+
+  it('a server day before the start uses the start day', async () => {
+    // The client saved a local day that is after the UTC day of the server,
+    // for example after local midnight in Europe.
+    const tomorrow = new Date(Date.now() + 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const [r9, r10] = [hives[9], hives[10]];
+    const m = await create({ hive_id: r9, move_date: tomorrow });
+    const off = await agent.request('PATCH', '/api/v1/queen/status', {
+      ids: [m],
+      status: false,
+    });
+    expect(off.statusCode).toBe(200);
+    expect(await placements(m)).toEqual([]);
+    expect(await state(m)).toMatchObject({
+      modus: false,
+      modus_date: tomorrow,
+    });
+
+    const n = await create({ hive_id: r10, move_date: tomorrow });
+    const o = await create({ hive_id: r10 });
+    expect(await placements(o)).toEqual([[r10, tomorrow, OPEN_END]]);
+    expect(await placements(n)).toEqual([]);
+    expect(await state(n)).toMatchObject({
+      modus: false,
+      modus_date: tomorrow,
+    });
   });
 
   describe('/api/v1/queen_placement', () => {

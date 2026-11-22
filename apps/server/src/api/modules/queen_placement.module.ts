@@ -101,6 +101,31 @@ async function hivePeriods(db: Database, hiveId: number) {
 }
 
 /**
+ * The day of a move or of an inactive status when the client sends no day.
+ * The server day is UTC, so after local midnight in Europe it can be one day
+ * before the start of a placement that the client saved with its local day.
+ * Then the latest start of the open placements of the queen and of the hive
+ * is used.
+ */
+export async function defaultDay(
+  db: Database,
+  queenId: number | null,
+  hiveId: number | null,
+  day: Day,
+) {
+  const rows = [
+    ...(queenId === null ? [] : await queenPeriods(db, queenId)),
+    ...(hiveId === null ? [] : await hivePeriods(db, hiveId)),
+  ];
+  return rows
+    .filter(isOpen)
+    .reduce(
+      (latest, row) => (row.from_date > latest ? row.from_date : latest),
+      day,
+    );
+}
+
+/**
  * Locks the hives, then the queens, in ascending id order. Concurrent
  * requests for the same hive or queen then wait instead of both passing the
  * overlap check.
@@ -414,7 +439,7 @@ export async function applyQueenWrite(
     modus_date?: string | null;
   },
   movedInto: Set<number>,
-  defaultDay: Day,
+  today: Day,
 ) {
   const queen = await db
     .selectFrom('queens')
@@ -429,7 +454,7 @@ export async function applyQueenWrite(
 
   let modusDay: Day | null = sentModusDay ?? oldModusDay;
   if (oldModus && !modus) {
-    modusDay = sentModusDay ?? defaultDay;
+    modusDay = sentModusDay ?? (await defaultDay(db, queenId, null, today));
     await endOnInactive(db, ctx, queenId, modusDay);
   } else if (!oldModus && modus) {
     await reopenOnActive(db, ctx, queenId, oldModusDay);
@@ -471,7 +496,13 @@ export async function applyQueenWrite(
         if (movedInto.has(target)) throw hiveTwiceError();
         movedInto.add(target);
       }
-      await moveQueen(db, ctx, queenId, target, day ?? defaultDay);
+      await moveQueen(
+        db,
+        ctx,
+        queenId,
+        target,
+        day ?? (await defaultDay(db, queenId, target, today)),
+      );
     }
   }
   await syncQueen(db, queenId);

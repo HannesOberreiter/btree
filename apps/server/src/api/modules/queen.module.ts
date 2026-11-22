@@ -11,6 +11,7 @@ import { actorProjection } from './actor_projection.module.js';
 import {
   applyQueenWrite,
   asDate,
+  defaultDay,
   hiveTwiceError,
   lockRows,
   moveQueen,
@@ -484,7 +485,7 @@ export async function createQueens(
       await requireOwned(trx, 'hives', hiveId, companyId);
     await lockRows(trx, hiveIds, []);
     const ctx = { companyId, beeId };
-    const day = toDay(body.move_date) ?? today();
+    const sentDay = toDay(body.move_date);
     const movedInto = new Set<number>();
     const ids: number[] = [];
     for (let index = 0; index < repeat; index++) {
@@ -510,7 +511,13 @@ export async function createQueens(
       if (hiveId) {
         if (movedInto.has(hiveId)) throw hiveTwiceError();
         movedInto.add(hiveId);
-        await moveQueen(trx, ctx, id, hiveId, day);
+        await moveQueen(
+          trx,
+          ctx,
+          id,
+          hiveId,
+          sentDay ?? (await defaultDay(trx, null, hiveId, today())),
+        );
       }
       if (body.modus === false || body.modus_date !== undefined)
         await applyQueenWrite(
@@ -595,11 +602,13 @@ export async function updateQueenStatus(
         .where('id', '=', id)
         .executeTakeFirstOrThrow();
       if ((queen.modus !== false) === status) continue;
+      // Without a day for inactive, so that the server can use the start
+      // of the placement after local midnight (see defaultDay).
       await applyQueenWrite(
         trx,
         ctx,
         id,
-        { modus: status, modus_date: day },
+        status ? { modus: status, modus_date: day } : { modus: status },
         new Set(),
         day,
       );
