@@ -19,7 +19,7 @@ import queryString from 'query-string';
 
 import {
   checkMySQLError,
-  isMappedDatabaseError,
+  isConcurrentUpdateError,
 } from '../api/adapters/mysql_error.adapter.js';
 import routes from '../api/routes/index.js';
 import mcpRoutes from '../api/routes/mcp.route.js';
@@ -322,17 +322,16 @@ export class Application {
 
       const e = checkMySQLError(error);
       const path = redactApiKeyFromUrl(request.url);
-      // Database errors stay at error level with the stack, also when a module
-      // already mapped and rethrew them: a deadlock maps to a 409, but it is
-      // a server-side fault, not a client mistake.
       // Client-caused 4xx responses are expected in normal use (401 on
       // auth/ping, 402 on premium calendar subscriptions, 404 on external
-      // feeds). Log them at info without a stack trace, so the error log
-      // keeps only 5xx and unexpected errors.
+      // feeds, duplicate entries). Log them at info without a stack trace.
+      // Only server-side 4xx faults stay at error: deadlocks and lock wait
+      // timeouts, mapped to 409 CONCURRENT_UPDATE, also when a module
+      // already mapped and rethrew them.
       const statusCode =
         typeof e.statusCode === 'number' ? e.statusCode : undefined;
       if (
-        !isMappedDatabaseError(e) &&
+        !isConcurrentUpdateError(e) &&
         statusCode !== undefined &&
         statusCode >= 400 &&
         statusCode < 500

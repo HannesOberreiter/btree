@@ -56,6 +56,13 @@ vi.mock('../../src/api/routes/index.js', () => ({
         code: 'CONCURRENT_UPDATE',
       });
     });
+    server.get('/v1/throws/duplicate', () => {
+      // Shaped like a MySQL duplicate-entry error; maps to a 409
+      // UNIQUE_VIOLATION, which is client-caused and logs at info.
+      throw Object.assign(new Error('Duplicate entry'), {
+        code: 'ER_DUP_ENTRY',
+      });
+    });
     done();
   },
 }));
@@ -101,6 +108,7 @@ describe('error handler log levels', () => {
     ['/api/v1/throws/unauthorized', 401],
     ['/api/v1/throws/payment-required', 402],
     ['/api/v1/throws/not-found', 404],
+    ['/api/v1/throws/duplicate', 409],
   ])(
     'logs expected client error %s (%i) at info without an error object',
     async (url, statusCode) => {
