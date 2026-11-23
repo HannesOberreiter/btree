@@ -32,6 +32,25 @@ export class Cron {
     });
   }
 
+  /** Log a failed cron task with the stack and the underlying cause. */
+  private logTaskError(name: string, error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    this.logger.log('error', `${name} failed`, {
+      label: 'CronJob',
+      error: err,
+      ...(err.cause !== undefined && {
+        cause:
+          err.cause instanceof Error
+            ? {
+                name: err.cause.name,
+                message: err.cause.message,
+                code: (err.cause as { code?: unknown }).code,
+              }
+            : err.cause,
+      }),
+    });
+  }
+
   /** Run a cron task and log its duration, also when the task fails. */
   private async timed<T>(name: string, task: () => Promise<T>): Promise<T> {
     const start = performance.now();
@@ -158,13 +177,7 @@ export class Cron {
     )
       .then((res) => this.Logging(res))
       .catch((error) =>
-        this.logger.log(
-          'error',
-          error instanceof Error ? error.message : String(error),
-          {
-            label: 'CronJob',
-          },
-        ),
+        this.logTaskError('fetchObservations Vespa velutina', error),
       )
       .finally(() =>
         this.timed('fetchObservations Aethina tumida', () =>
@@ -172,11 +185,7 @@ export class Cron {
         )
           .then((res) => this.Logging(res))
           .catch((error) =>
-            this.logger.log(
-              'error',
-              error instanceof Error ? error.message : String(error),
-              { label: 'CronJob' },
-            ),
+            this.logTaskError('fetchObservations Aethina tumida', error),
           ),
       );
 
