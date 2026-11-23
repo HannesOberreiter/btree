@@ -5,7 +5,9 @@
 #   docker compose -f infra/test/compose.yml up -d --wait
 #   docker compose -f infra/test/compose.yml down
 #
-# Set TEST_DB_PORT or TEST_REDIS_PORT when a host port is in use.
+# The host ports differ from the usual MariaDB and Redis ports, so that the
+# containers can run next to a development database and Redis. Set
+# TEST_DB_PORT or TEST_REDIS_PORT when a host port is in use.
 name: btree-test
 
 services:
@@ -17,7 +19,7 @@ services:
     tmpfs:
       - /var/lib/mysql
     ports:
-      - ${TEST_DB_PORT:-3306}:3306
+      - ${TEST_DB_PORT:-33306}:3306
     healthcheck:
       test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
       interval: 2s
@@ -27,7 +29,7 @@ services:
   redis:
     image: redis
     ports:
-      - ${TEST_REDIS_PORT:-6379}:6379
+      - ${TEST_REDIS_PORT:-63790}:6379
     healthcheck:
       test: [CMD, redis-cli, ping]
       interval: 2s
