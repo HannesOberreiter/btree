@@ -129,7 +129,8 @@ const hiveChanged = computed(() => {
   if (!isEdit.value || !state.value.modus || !valuesReady.value) {
     return false;
   }
-  if (!hive || Array.isArray(hive)) {
+  // The option for an inactive or deleted hive has no id. It is no change.
+  if (!hive || Array.isArray(hive) || hive.id === undefined) {
     return false;
   }
   return (hive.id === 'empty' ? null : hive.id) !== stored;

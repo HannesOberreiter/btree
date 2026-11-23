@@ -1,5 +1,6 @@
 import type { Page } from '../../support/user-helpers';
 import dayjs from 'dayjs';
+import { t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 const backendURL =
@@ -174,14 +175,14 @@ test.describe('user - Queen Placement Table', () => {
       const moveDate = dataCy('input-queen-move-date').locator(
         "xpath=ancestor::label[contains(concat(' ', @class, ' '), ' q-field ')]"
       );
-      await expect(moveDate).not.toContainText('Day of the hive change');
+      await expect(moveDate).not.toContainText(t('queenHiveChangeInfo'));
 
       await dataCy('dropdown-hive').click();
       await page
         .locator('.q-menu .q-item')
-        .filter({ hasText: 'No hive' })
+        .filter({ hasText: t('noHive') })
         .click();
-      await expect(moveDate).toContainText('Day of the hive change');
+      await expect(moveDate).toContainText(t('queenHiveChangeInfo'));
       await expect(moveDate.locator('.q-field__label')).toHaveClass(
         /text-orange-9/
       );
@@ -192,7 +193,7 @@ test.describe('user - Queen Placement Table', () => {
         .locator('.q-menu .q-item')
         .filter({ hasText: hiveName })
         .click();
-      await expect(moveDate).not.toContainText('Day of the hive change');
+      await expect(moveDate).not.toContainText(t('queenHiveChangeInfo'));
       await expect(moveDate.locator('.q-field__label')).not.toHaveClass(
         /text-orange-9/
       );
@@ -200,7 +201,7 @@ test.describe('user - Queen Placement Table', () => {
       await dataCy('dropdown-hive').click();
       await page
         .locator('.q-menu .q-item')
-        .filter({ hasText: 'No hive' })
+        .filter({ hasText: t('noHive') })
         .click();
       const update = page.waitForRequest(
         request =>
@@ -233,6 +234,71 @@ test.describe('user - Queen Placement Table', () => {
           return results.map(row => [row.from_date, row.to_date]);
         })
         .toEqual([['2025-01-01', today]]);
+    } finally {
+      await cleanup(page, setup);
+    }
+  });
+
+  test('a queen in an inactive hive keeps her move day', async ({
+    page,
+    dataCy
+  }) => {
+    const stamp = Date.now();
+    const hiveName = `E2E inactive hive ${stamp}`;
+    const queen = `Kept ${stamp}`;
+    const setup: Setup = { apiaryIds: [], hiveIds: [], queenIds: [] };
+    await page.goto('/table/queen');
+    try {
+      const hiveId = await createHive(page, setup, hiveName);
+      const queenId = await createQueen(
+        page,
+        setup,
+        queen,
+        hiveId,
+        '2025-01-01'
+      );
+      const status = await page
+        .context()
+        .request.patch(`${backendURL}/api/v1/hive/status`, {
+          headers: headers(page),
+          data: { ids: [hiveId], status: false }
+        });
+      expect(status.ok()).toBe(true);
+
+      // The queen table hides queens in inactive hives, so open the edit page.
+      await page.goto(`/edit/queen/${queenId}`);
+      await expect(dataCy('form-queen')).toBeAttached();
+      // The hive dropdown cannot select the inactive hive.
+      await expect(dataCy('form-queen')).toContainText(
+        t('dropdownNotAvailable')
+      );
+      const moveDate = dataCy('input-queen-move-date').locator(
+        "xpath=ancestor::label[contains(concat(' ', @class, ' '), ' q-field ')]"
+      );
+      await expect(moveDate).not.toContainText(t('queenHiveChangeInfo'));
+
+      const update = page.waitForResponse(
+        response =>
+          response.request().method() === 'PATCH' &&
+          new URL(response.url()).pathname === '/api/v1/queen'
+      );
+      await dataCy('btn-form-update').click();
+      expect((await update).ok()).toBe(true);
+
+      const response = await page
+        .context()
+        .request.get(`${backendURL}/api/v1/queen_placement`, {
+          headers: headers(page),
+          params: {
+            filters: JSON.stringify([{ 'queen_placements.queen_id': queenId }])
+          }
+        });
+      const { results } = (await response.json()) as {
+        results: Array<{ from_date: string; to_date: string | null }>;
+      };
+      expect(results.map(row => [row.from_date, row.to_date])).toEqual([
+        ['2025-01-01', null]
+      ]);
     } finally {
       await cleanup(page, setup);
     }
