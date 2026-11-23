@@ -2,7 +2,9 @@ import type { Knex } from 'knex';
 import knex from 'knex';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { deleteOwnedCompany } from '../../src/api/modules/company.module.js';
 import { knexConfig } from '../../src/config/environment.config.js';
+import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
 import {
   createAgent,
@@ -382,6 +384,68 @@ describe('company routes', () => {
           .where('user_id', companyId)
           .where('bee_id', bee.id)
           .del();
+        await db('companies').where('id', companyId).del();
+      }
+    });
+  });
+
+  describe('delete /:id error codes', () => {
+    it('403 COMPANY_HAS_OTHER_USERS - other users in the company', async () => {
+      const temp = await doRequest(agent, 'post', route, null, accessToken, {
+        name: `TempShared${Date.now()}`,
+      });
+      expect(temp.statusCode).toEqual(200);
+      const [otherBeeId] = await db('bees').insert({
+        email: `other${Date.now()}@demo.at`,
+      });
+      await db('company_bee').insert({
+        bee_id: otherBeeId,
+        user_id: temp.body.id,
+        rank: 2,
+      });
+      try {
+        const res = await doRequest(
+          agent,
+          'delete',
+          route,
+          temp.body.id,
+          accessToken,
+          {},
+        );
+        expect(res.statusCode).toEqual(403);
+        expect(res.body.code).toEqual('COMPANY_HAS_OTHER_USERS');
+      } finally {
+        await db('bees').where('id', otherBeeId).del();
+        const del = await doRequest(
+          agent,
+          'delete',
+          route,
+          temp.body.id,
+          accessToken,
+          {},
+        );
+        expect(del.statusCode).toEqual(200);
+      }
+    });
+
+    it('403 LAST_COMPANY - last company of the user', async () => {
+      const [beeId] = await db('bees').insert({
+        email: `single${Date.now()}@demo.at`,
+      });
+      const [companyId] = await db('companies').insert({
+        name: `Single${Date.now()}`,
+      });
+      await db('company_bee').insert({
+        bee_id: beeId,
+        user_id: companyId,
+        rank: 1,
+      });
+      try {
+        await expect(
+          deleteOwnedCompany(KyselyServer.getInstance().db, beeId, companyId),
+        ).rejects.toMatchObject({ statusCode: 403, code: 'LAST_COMPANY' });
+      } finally {
+        await db('bees').where('id', beeId).del();
         await db('companies').where('id', companyId).del();
       }
     });

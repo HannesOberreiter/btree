@@ -1,5 +1,6 @@
 import process from 'node:process';
 import type { Page, Response } from '@playwright/test';
+import { t } from '../../support/i18n';
 import { expect, test } from '../../support/user-helpers';
 
 const backendURL =
@@ -39,6 +40,27 @@ async function deleteCompany(page: Page, id: number, name: string) {
   const response = waitForApi(page, 'DELETE', `/api/v1/company/${id}`);
   await submitPrompt(page, name);
   expect((await response).ok()).toBe(true);
+}
+
+// Name of the active company, from the session data in localStorage.
+async function activeCompanyName(page: Page): Promise<string> {
+  return page.evaluate(
+    () => JSON.parse(localStorage.getItem('company') ?? '{}').name as string
+  );
+}
+
+async function fulfillForbidden(page: Page, path: string, code: string) {
+  await page.route(path, async route => {
+    if (route.request().method() !== 'DELETE') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({ statusCode: 403, code, message: code })
+    });
+  });
 }
 
 async function cleanupCompany(page: Page, id: number) {
@@ -171,5 +193,95 @@ test.describe('user - Setting Company', () => {
     await dataCy('btn-company-new').click();
     await submitPrompt(page, `E2E conflict ${Date.now()}`);
     await expect(dataCy('notification')).toContainText(message);
+  });
+
+  test('shows the loading state while the company is renamed', async ({
+    page,
+    dataCy
+  }) => {
+    let release = () => {};
+    const released = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    await page.route('**/api/v1/company', async route => {
+      if (route.request().method() !== 'PATCH') {
+        await route.continue();
+        return;
+      }
+      await released;
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: '' })
+      });
+    });
+
+    await dataCy('btn-company-edit').click();
+    await submitPrompt(page, `E2E rename ${Date.now()}`);
+    const spinner = dataCy('btn-company-edit').locator('.q-spinner');
+    await expect(spinner).toBeVisible();
+
+    release();
+    await expect(dataCy('notification')).toContainText(t('error.unknown'));
+    await expect(spinner).toHaveCount(0);
+  });
+
+  test('explains the last company and links to the profile', async ({
+    page,
+    dataCy
+  }) => {
+    // Keep only the active company in the session data.
+    await page.evaluate(() => {
+      const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+      const company = JSON.parse(localStorage.getItem('company') ?? '{}');
+      user.company = user.company.filter(
+        (item: { id: number }) => item.id === company.id
+      );
+      localStorage.setItem('user', JSON.stringify(user));
+    });
+    await page.reload();
+    await expect(dataCy('page-setting-company')).toBeAttached();
+    const dialog = page.locator('.q-dialog');
+
+    await dataCy('btn-company-leave').click();
+    await expect(dialog).toContainText(t('company.lastCompany'));
+    await dialog.getByRole('button', { name: t('cancel') }).click();
+    await expect(dialog).toHaveCount(0);
+
+    await dataCy('btn-company-delete').click();
+    await expect(dialog).toContainText(t('company.lastCompany'));
+    await dialog
+      .getByRole('button', { name: t('company.openProfile') })
+      .click();
+    await expect(page).toHaveURL(/\/setting\/profile\/user$/);
+  });
+
+  test('shows why the server refuses to delete or leave the company', async ({
+    page,
+    dataCy
+  }) => {
+    const name = await activeCompanyName(page);
+    await fulfillForbidden(
+      page,
+      '**/api/v1/company/*',
+      'COMPANY_HAS_OTHER_USERS'
+    );
+    await fulfillForbidden(
+      page,
+      '**/api/v1/company_user/*',
+      'COMPANY_HAS_NO_OTHER_USERS'
+    );
+
+    await dataCy('btn-company-delete').click();
+    await submitPrompt(page, name);
+    await expect(dataCy('notification').last()).toContainText(
+      t('error.companyHasOtherUsers')
+    );
+
+    await dataCy('btn-company-leave').click();
+    await submitPrompt(page, name);
+    await expect(dataCy('notification').last()).toContainText(
+      t('error.companyHasNoOtherUsers')
+    );
   });
 });

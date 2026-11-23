@@ -1,5 +1,3 @@
-import process from 'node:process';
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
@@ -15,11 +13,13 @@ import {
   doQueryRequest,
   doRequest,
   expectations,
+  withTimeZone,
 } from '../utils.js';
 
+// Ten queens cannot move into one hive in one request, so no hive here.
 const testInsert = {
   name: 'testQueen',
-  hive_id: 1,
+  hive_id: null,
   date: new Date().toISOString().slice(0, 10),
   race_id: 1,
   mating_id: 1,
@@ -340,9 +340,7 @@ describe('queen routes', () => {
         .select(['user_id', 'bee_id'])
         .where('id', '=', 1)
         .executeTakeFirstOrThrow();
-      const timeZone = process.env.TZ;
-      process.env.TZ = 'Europe/Vienna';
-      try {
+      await withTimeZone('Europe/Vienna', async () => {
         const create = (name: string, moveDate: string) =>
           createQueens(db, hive.user_id, hive.bee_id!, {
             name,
@@ -360,10 +358,7 @@ describe('queen routes', () => {
           .deleteFrom('queens')
           .where('id', 'in', [oldId, newId])
           .execute();
-      } finally {
-        if (timeZone === undefined) delete process.env.TZ;
-        else process.env.TZ = timeZone;
-      }
+      });
     });
   });
 

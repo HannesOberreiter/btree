@@ -7,6 +7,7 @@ import type {
   CalendarRangeQuery,
   CalendarRearingQuery,
 } from '../schemas/calendar.schema.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 import { actorProjection } from './actor_projection.module.js';
 
 const COMMA_REGEX = /,/g;
@@ -27,6 +28,13 @@ const taskTables: Record<CalendarTask, CalendarTaskTable> = {
 
 function dateRange(params: CalendarRangeQuery) {
   return { start: new Date(params.start), end: new Date(params.end) };
+}
+
+// The calendar views return `date` as 'YYYY-MM-DD' text of the UTC value.
+// Compare with the UTC day of the range limit, so that the text comparison
+// keeps the first day of the range.
+function utcDay(value: Date) {
+  return value.toISOString().slice(0, 10);
 }
 
 function uniqueIdentifiers(value: string | null) {
@@ -163,17 +171,18 @@ export async function listCalendarRearings(
     if (startKey < 0 || rearing.date === null) return [];
 
     const startPosition = steps[startKey].position;
+    const rearingDate = parseDbDateTime(rearing.date);
     const dates: string[] = [];
-    let addDate = dayjs(rearing.date);
+    let addDate = dayjs(rearingDate);
     steps.forEach((step, index) => {
       let date: dayjs.Dayjs;
       if (index === startKey) {
-        date = dayjs(rearing.date);
+        date = dayjs(rearingDate);
       } else if (index > startKey) {
         addDate = addDate.add(step.sleep_before ?? 0, 'hour');
         date = addDate;
       } else {
-        date = dayjs(rearing.date);
+        date = dayjs(rearingDate);
         for (let offset = 0; offset < startKey - index; offset++) {
           date = date.subtract(
             steps[startKey - offset].sleep_before ?? 0,
@@ -281,8 +290,8 @@ export async function listCalendarMovements(
     .selectFrom('calendar_movements')
     .selectAll()
     .where('user_id', '=', companyId)
-    .where('date', '>=', dayjs(start).format('YYYY-MM-DD HH:mm:ss'))
-    .where('date', '<=', dayjs(end).format('YYYY-MM-DD HH:mm:ss'))
+    .where('date', '>=', utcDay(start))
+    .where('date', '<=', utcDay(end))
     .execute();
 
   return rows.flatMap((row) => {
@@ -387,8 +396,8 @@ export async function listCalendarScaleData(
     .selectFrom('calendar_scale_data')
     .selectAll()
     .where('user_id', '=', companyId)
-    .where('date', '>=', dayjs(start).format('YYYY-MM-DD HH:mm:ss'))
-    .where('date', '<=', dayjs(end).format('YYYY-MM-DD HH:mm:ss'))
+    .where('date', '>=', utcDay(start))
+    .where('date', '<=', utcDay(end))
     .execute();
 
   let previousWeight = 0;

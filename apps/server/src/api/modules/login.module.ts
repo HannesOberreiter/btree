@@ -6,6 +6,7 @@ import httpErrors from 'http-errors';
 
 import { MailService } from '../../services/mail.service.js';
 import type { Database } from '../../types/database.types.js';
+import { isPaidDayValid } from '../utils/date.util.js';
 
 dayjs.extend(utc);
 
@@ -181,7 +182,7 @@ async function getPaidRank(db: Database, beeId: number, companyId: number) {
     .executeTakeFirst();
   if (!relation)
     throw httpErrors.Unauthorized('Invalid Company / Bee Connection');
-  return { rank: relation.rank, paid: dayjs(relation.paid).isAfter(dayjs()) };
+  return { rank: relation.rank, paid: isPaidDayValid(relation.paid) };
 }
 
 export { fetchUser, getPaidRank, loginCheck, reviewPassword };

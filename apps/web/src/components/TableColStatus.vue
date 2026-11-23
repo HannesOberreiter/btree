@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import dayjs from 'dayjs';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
+import { clearCache } from '../composables/useQuery';
 
 const props = defineProps({
   id: {
@@ -30,7 +32,11 @@ const api = useApiFetch();
 async function changeStatus() {
   const data = JSON.stringify({
     status: !props.value,
-    ids: [props.id]
+    ids: [props.id],
+    // The local day, the server day can be the day before after midnight.
+    ...(props.table === 'queen'
+      ? { modus_date: dayjs().format('YYYY-MM-DD') }
+      : {})
   });
   const url =
     props.table === 'option'
@@ -39,6 +45,10 @@ async function changeStatus() {
   await api.patch(url, data).then(
     (_response: any) => {
       notification.open('positive', '');
+      // A queen status change also ends or opens her placement.
+      if (props.table === 'queen') {
+        clearCache('queen');
+      }
       emit('change', true);
     },
     error => {

@@ -131,6 +131,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../pages/TableMovement.vue')
       },
       {
+        path: 'queen-placement',
+        name: 'table-queen-placement',
+        meta: {
+          title: 'queenHistory'
+        },
+        component: () => import('../pages/TableQueenPlacement.vue')
+      },
+      {
         path: 'todo',
         name: 'table-todo',
         meta: {

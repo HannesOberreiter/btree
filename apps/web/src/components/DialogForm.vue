@@ -69,6 +69,9 @@ const FormMainCharge = defineAsyncComponent(
   () => import('./FormMainCharge.vue')
 );
 const FormMainScale = defineAsyncComponent(() => import('./FormMainScale.vue'));
+const FormMainQueenPlacement = defineAsyncComponent(
+  () => import('./FormMainQueenPlacement.vue')
+);
 const FormMainRearing = defineAsyncComponent(
   () => import('./FormMainRearing.vue')
 );
@@ -125,6 +128,10 @@ const layouts = {
     props: {
       selected: props.selected
     }
+  },
+  queen_placement: {
+    comp: FormMainQueenPlacement,
+    props: {}
   },
   feed: {
     comp: FormMainTask,

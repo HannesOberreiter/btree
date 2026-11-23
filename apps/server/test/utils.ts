@@ -118,6 +118,24 @@ export class TestAgent {
   }
 }
 
+/**
+ * Runs fn with process.env.TZ set to timeZone, and restores the time zone
+ * after fn. Node applies a TZ change at runtime.
+ */
+export async function withTimeZone<T>(
+  timeZone: string,
+  fn: () => Promise<T> | T,
+): Promise<T> {
+  const previous = process.env.TZ;
+  process.env.TZ = timeZone;
+  try {
+    return await fn();
+  } finally {
+    if (previous === undefined) delete process.env.TZ;
+    else process.env.TZ = previous;
+  }
+}
+
 export function createAgent(): TestAgent {
   return new TestAgent();
 }

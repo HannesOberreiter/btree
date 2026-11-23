@@ -28,6 +28,14 @@ const state = reactive({
 
 let notificationId = 0;
 
+/** Server error codes of queen placements and their translation keys. */
+const QUEEN_PLACEMENT_ERRORS: Record<string, string> = {
+  QUEEN_PLACEMENT_OVERLAP: 'error.queenPlacementOverlap',
+  QUEEN_PLACEMENT_RANGE: 'error.queenPlacementRange',
+  QUEEN_PLACEMENT_HIVE_TWICE: 'error.queenPlacementHiveTwice',
+  QUEEN_PLACEMENT_STATE: 'error.queenPlacementState'
+};
+
 function useNotification(t?: ComposerTranslation) {
   const $t = t || useI18n().t;
 
@@ -64,7 +72,11 @@ function useNotification(t?: ComposerTranslation) {
   ) {
     let displayMessage = '';
     if (statusCode === 400) {
-      displayMessage = `${$t('error.unknown')} ${errorField}`;
+      if (errorCode && errorCode in QUEEN_PLACEMENT_ERRORS) {
+        displayMessage = $t(QUEEN_PLACEMENT_ERRORS[errorCode]!);
+      } else {
+        displayMessage = `${$t('error.unknown')} ${errorField}`;
+      }
     } else if (statusCode === 401) {
       if (errorField === 'mail') {
         displayMessage = $t('error.mailError');
@@ -76,6 +88,12 @@ function useNotification(t?: ComposerTranslation) {
     } else if (statusCode === 403) {
       if (errorField === 'lastMovement') {
         displayMessage = $t('error.lastMovement');
+      } else if (errorCode === 'LAST_COMPANY') {
+        displayMessage = $t('company.lastCompany');
+      } else if (errorCode === 'COMPANY_HAS_OTHER_USERS') {
+        displayMessage = $t('error.companyHasOtherUsers');
+      } else if (errorCode === 'COMPANY_HAS_NO_OTHER_USERS') {
+        displayMessage = $t('error.companyHasNoOtherUsers');
       } else {
         displayMessage = $t('error.forbidden');
       }
@@ -84,6 +102,8 @@ function useNotification(t?: ComposerTranslation) {
     } else if (statusCode === 409) {
       if (errorCode === 'FOREIGN_KEY_VIOLATION') {
         displayMessage = $t('error.unknown');
+      } else if (errorCode === 'CONCURRENT_UPDATE') {
+        displayMessage = $t('error.concurrentUpdate');
       } else if (errorField && errorField !== 'duplicate') {
         displayMessage = `${$t('error.duplicate')} (${$t(errorField)})`;
       } else {

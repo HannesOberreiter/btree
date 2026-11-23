@@ -502,6 +502,14 @@ export function replaceRecipeLines(
         'Checkup types have no amount; use mode per_hive',
       );
     }
+    if (
+      table !== 'checkup_types' &&
+      body.lines.some((line) => line.mode !== 'per_amount')
+    ) {
+      throw httpErrors.BadRequest(
+        'Feed, treatment and harvest types have an amount; use mode per_amount',
+      );
+    }
     for (const chargeTypeId of new Set(
       body.lines.map((line) => line.charge_type_id),
     ))

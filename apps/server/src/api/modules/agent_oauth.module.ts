@@ -13,6 +13,7 @@ import {
 } from '../../config/environment.config.js';
 import { RedisServer } from '../../servers/redis.server.js';
 import type { Database } from '../../types/database.types.js';
+import { parseDbDateTime } from '../utils/date.util.js';
 import { redisValueToString } from '../utils/redis.util.js';
 import { isPremium } from './premium.module.js';
 
@@ -276,7 +277,7 @@ export async function refreshAccessToken(
     .where('revoked_at', 'is', null)
     .executeTakeFirst();
 
-  if (!stored || new Date(stored.expires_at) < new Date()) {
+  if (!stored || parseDbDateTime(stored.expires_at) < new Date()) {
     throw httpErrors.Unauthorized('Invalid refresh token');
   }
 

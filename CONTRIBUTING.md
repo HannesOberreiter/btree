@@ -16,6 +16,8 @@ This repository holds two apps. Each app is a separate pnpm project with its own
 - [`apps/server`](apps/server): the API server. Setup: [`apps/server/readme.md`](apps/server/readme.md).
 - [`apps/web`](apps/web): the web app (PWA). Setup: [`apps/web/README.md`](apps/web/README.md).
 
+After the setup, `scripts/dev.sh` starts the server and the web app together in watch mode.
+
 ## Pull requests
 
 1. Fork the repository and create a branch from `beta`.

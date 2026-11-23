@@ -192,6 +192,12 @@ const links = computed(
             icon: 'fas fa-table',
             count: count.value.virgin,
             menu: false
+          },
+          {
+            label: t('queenHistory'),
+            route: 'table-queen-placement',
+            icon: 'fas fa-clock-rotate-left',
+            menu: false
           }
         ]
       },

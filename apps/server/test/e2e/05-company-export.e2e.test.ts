@@ -38,6 +38,7 @@ const expectedFiles = [
   'wax_operation_lines',
   'wax_inventory_counts',
   'queens',
+  'queen_placements',
   'queen_matings',
   'queen_races',
   'todos',

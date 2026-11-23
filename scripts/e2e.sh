@@ -8,7 +8,7 @@
 #   scripts/e2e.sh e2e/02-user/03-*    # arguments go to playwright test
 #
 # Environment:
-#   TEST_DB_PORT, TEST_REDIS_PORT  host ports of the containers (3306, 6379)
+#   TEST_DB_PORT, TEST_REDIS_PORT  host ports of the containers (33306, 63790)
 #   E2E_WEB_PORT                   port of the web app (9000)
 #   E2E_LOG_DIR                    directory for server.log and web.log
 set -euo pipefail
@@ -21,7 +21,7 @@ compose=(docker compose -f "$root/infra/test/compose.yml")
 # The server reads apps/server/env/ci.env. dotenv keeps variables that are
 # already set, so these values win over the file.
 export ENVIRONMENT=ci NODE_ENV=ci
-export DB_PORT=${TEST_DB_PORT:-3306} REDIS_PORT=${TEST_REDIS_PORT:-6379}
+export DB_PORT=${TEST_DB_PORT:-33306} REDIS_PORT=${TEST_REDIS_PORT:-63790}
 export AUTHORIZED=http://localhost:$web_port FRONTEND=http://localhost:$web_port
 
 server_url=http://localhost:8102

@@ -244,6 +244,35 @@ export function useMovementsQuery({
   });
 }
 
+export function useQueenPlacementsQuery({
+  offset = 0 as MaybeRef<number>,
+  limit = 10000 as MaybeRef<number>,
+  order = ['from_date'] as MaybeRef<Array<string>>,
+  direction = ['desc'] as MaybeRef<Array<string>>,
+  q = '' as MaybeRef<string>,
+  filters = '' as MaybeRef<string>,
+  enabled = true as MaybeRef<boolean>
+}) {
+  const api = useApiFetch();
+  return useQuery({
+    queryKey: ['queen_placement', offset, limit, order, direction, q, filters],
+    queryFn: () => {
+      const payload = {
+        offset: unref(offset),
+        limit: unref(limit),
+        order: unref(order),
+        direction: unref(direction),
+        q: unref(q),
+        filters: unref(filters)
+      };
+      return api.get('/v1/queen_placement', payload);
+    },
+    enabled,
+    placeholderData: keepPreviousData,
+    select: response => response
+  });
+}
+
 export function useTodosQuery({
   offset = 0 as MaybeRef<number>,
   limit = 10000 as MaybeRef<number>,
@@ -1005,8 +1034,18 @@ const STOCK_QUERY_KEYS = [
   ['option', 'charge_types']
 ];
 
+// A queen change can change her placements, and a placement edit changes
+// the hive and move date of the queen.
+const QUEEN_QUERY_KEYS = [['queen'], ['queen_placement']];
+
 function relatedQueryKeys(q: string) {
-  return STOCK_TASKS.includes(q) ? [[q], ...STOCK_QUERY_KEYS] : [[q]];
+  if (STOCK_TASKS.includes(q)) {
+    return [[q], ...STOCK_QUERY_KEYS];
+  }
+  if (['queen', 'queen_placement'].includes(q)) {
+    return QUEEN_QUERY_KEYS;
+  }
+  return [[q]];
 }
 
 export function clearCache(q = '') {

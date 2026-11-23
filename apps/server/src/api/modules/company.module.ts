@@ -216,9 +216,9 @@ export async function deleteOwnedCompany(
     .where('bee_id', '!=', beeId)
     .executeTakeFirst();
   if (otherUser) {
-    throw httpErrors.Forbidden(
-      'Other user(s) found, please remove them first.',
-    );
+    throw httpErrors(403, 'Other user(s) found, please remove them first.', {
+      code: 'COMPANY_HAS_OTHER_USERS',
+    });
   }
   // Fixed order (oldest membership first), so the company that becomes
   // active after the deletion is predictable.
@@ -230,9 +230,9 @@ export async function deleteOwnedCompany(
     .orderBy('id', 'asc')
     .executeTakeFirst();
   if (!otherCompany?.user_id) {
-    throw httpErrors.Forbidden(
-      'This is your last company, you cannot delete it.',
-    );
+    throw httpErrors(403, 'This is your last company, you cannot delete it.', {
+      code: 'LAST_COMPANY',
+    });
   }
   await deleteCompany(db, companyId);
   return otherCompany.user_id;

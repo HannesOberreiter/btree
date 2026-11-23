@@ -38,7 +38,11 @@ test.describe('visitor - Discourse SSO', () => {
     await expect(dataCy('notification')).toBeVisible();
   });
 
-  test('wrong Login', async ({ page }) => {
+  test('redirects to the forum after login', async ({ page }) => {
+    // Do not contact the live forum. The test only checks the redirect.
+    await page.route('https://forum.btree.at/**', route =>
+      route.fulfill({ contentType: 'text/html', body: '' })
+    );
     await page.goto(`/visitor/forum?${sso}`);
     await page.locator('[name=email]').fill(userDemo.mail);
     await page.locator('[name=password]').fill(userDemo.password);
