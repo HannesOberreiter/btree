@@ -2,6 +2,7 @@
 import dayjs from 'dayjs';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
+import { clearCache } from '../composables/useQuery';
 
 const props = defineProps({
   id: {
@@ -44,6 +45,10 @@ async function changeStatus() {
   await api.patch(url, data).then(
     (_response: any) => {
       notification.open('positive', '');
+      // A queen status change also ends or opens her placement.
+      if (props.table === 'queen') {
+        clearCache('queen');
+      }
       emit('change', true);
     },
     error => {
