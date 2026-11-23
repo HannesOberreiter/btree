@@ -318,19 +318,34 @@ export class Application {
       }
 
       const e = checkMySQLError(error);
-      const logContext = {
-        user: request?.session?.user,
-        req: request,
-        error: e,
-        path: redactApiKeyFromUrl(request.url),
-      };
-      const isExpectedExternalCalendarNotFound =
-        e.statusCode === 404 &&
-        request.routeOptions.url?.endsWith('/external/ical/:source/:api');
-      if (isExpectedExternalCalendarNotFound) {
-        this.log.info(logContext, e.message || 'HTTP error');
+      const path = redactApiKeyFromUrl(request.url);
+      // Client-caused 4xx responses are expected in normal use (401 on
+      // auth/ping, 402 on premium calendar subscriptions, 404 on external
+      // feeds). Log them at info without a stack trace, so the error log
+      // keeps only 5xx and unexpected errors.
+      const statusCode =
+        typeof e.statusCode === 'number' ? e.statusCode : undefined;
+      if (statusCode !== undefined && statusCode >= 400 && statusCode < 500) {
+        this.log.info(
+          {
+            user: request?.session?.user,
+            req: request,
+            path,
+            statusCode,
+            code: e.code,
+          },
+          e.message || 'HTTP error',
+        );
       } else {
-        this.log.error(logContext, e.message || 'Unhandled error');
+        this.log.error(
+          {
+            user: request?.session?.user,
+            req: request,
+            error: e,
+            path,
+          },
+          e.message || 'Unhandled error',
+        );
       }
       if (e.statusCode) {
         reply.status(e.statusCode).send({
