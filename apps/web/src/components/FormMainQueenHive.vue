@@ -77,6 +77,11 @@ function onReset() {
 const { confirmSameDay } = useQueenSameDay();
 
 function beforeSave() {
+  // An inactive queen does not move into a hive and replaces nobody.
+  const rows = Array.isArray(values.value) ? values.value : [];
+  if (rows.length > 0 && rows.every((row: any) => !row.modus)) {
+    return Promise.resolve(true);
+  }
   const hives = Array.isArray(state.value.hive)
     ? state.value.hive
     : [state.value.hive];

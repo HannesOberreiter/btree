@@ -374,6 +374,29 @@ export async function moveEndWithModusDate(
 }
 
 /**
+ * A new end of the last placement of an inactive queen also moves her
+ * `modus_date`, if it was the old end. Else `queens_locations` no longer
+ * finds her as the last queen of the hive. The reverse of
+ * `moveEndWithModusDate`.
+ */
+async function moveModusDateWithEnd(
+  db: Database,
+  ctx: PlacementContext,
+  row: PlacementPeriod & { id: number },
+  newDay: Day,
+) {
+  const last = (await queenPeriods(db, row.queen_id)).at(-1);
+  if (last?.id !== row.id) return;
+  await db
+    .updateTable('queens')
+    .set({ modus_date: asDate(newDay), edit_id: ctx.beeId })
+    .where('id', '=', row.queen_id)
+    .where('modus', '=', false)
+    .where('modus_date', '=', asDate(row.to_date))
+    .execute();
+}
+
+/**
  * Changes the current placement (the one the API shows as `hive_id` and
  * `move_date`): its start, or its hive. A null hive deletes the placement.
  */
@@ -716,6 +739,8 @@ export function updatePlacements(
       const next = { ...row, from_date: fromDate, to_date: toDate };
       await assertFree(trx, next, row.id);
       await setPeriod(trx, ctx, row.id, next);
+      if (!isOpen(row) && toDate !== row.to_date)
+        await moveModusDateWithEnd(trx, ctx, row, toDate);
       await syncQueen(trx, row.queen_id);
     }
     return rows.length;

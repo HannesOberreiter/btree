@@ -306,7 +306,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 14; index++) {
+    for (let index = 0; index < 15; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -724,6 +724,42 @@ describe('queen placements', () => {
       expect((await state(d)).move_date).toBe('2025-04-12');
     });
 
+    it('a new end of the last placement moves the modus_date', async () => {
+      const w = hives[14];
+      const h = await create({ hive_id: w, move_date: '2025-01-01' });
+      expect(
+        (await patch([h], { modus: false, modus_date: '2025-05-01' }))
+          .statusCode,
+      ).toBe(200);
+      const row = await db
+        .selectFrom('queen_placements')
+        .select('id')
+        .where('queen_id', '=', h)
+        .executeTakeFirstOrThrow();
+      const res = await agent.request('PATCH', route, {
+        ids: [row.id],
+        data: { to_date: '2025-05-20' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(await placements(h)).toEqual([[w, '2025-01-01', '2025-05-20']]);
+      expect(await state(h)).toMatchObject({
+        modus: false,
+        modus_date: '2025-05-20',
+      });
+      const current = await db
+        .selectFrom('queens_locations')
+        .select('queen_id')
+        .where('hive_id', '=', w)
+        .executeTakeFirstOrThrow();
+      expect(current.queen_id).toBe(h);
+      // A new start does not change the modus_date.
+      await agent.request('PATCH', route, {
+        ids: [row.id],
+        data: { from_date: '2025-01-05' },
+      });
+      expect((await state(h)).modus_date).toBe('2025-05-20');
+    });
+
     it('deletes the open placement, the queen has no hive', async () => {
       const d = caged;
       const open = await db
@@ -811,8 +847,34 @@ describe('queen placements', () => {
     expect(res.body.results.length).toBe(2);
     for (const row of res.body.results) {
       expect(row.queen.name).toEqual(expect.any(String));
-      expect(row.checkup).toBeDefined();
     }
+    // The caged queen lived in z from 2025-01-01 to 2025-04-01, the next
+    // queen from 2025-04-01. A checkup on 2025-04-01 belongs to the next one.
+    for (const [date, brood] of [
+      ['2025-02-01', 4],
+      ['2025-04-01', 2],
+    ] as const) {
+      const checkup = await agent.request('POST', '/api/v1/checkup', {
+        hive_ids: [z],
+        date,
+        type_id: 1,
+        brood,
+        repeat: 1,
+        interval: 0,
+      });
+      expect(checkup.statusCode).toBe(200);
+    }
+    const after = await agent.request('GET', '/api/v1/queen/stats', undefined, {
+      filters: JSON.stringify([{ 'queens.hive_id': z }]),
+      limit: 100,
+    });
+    const brood = Object.fromEntries(
+      after.body.results.map((row: any) => [
+        row.move_date,
+        Number(row.checkup.brood),
+      ]),
+    );
+    expect(brood).toEqual({ '2025-01-01': 4, '2025-04-01': 2 });
   });
 
   it('company transfer copies placements, also from an old archive', async () => {
