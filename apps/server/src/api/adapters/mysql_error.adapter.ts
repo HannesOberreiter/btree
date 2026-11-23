@@ -6,6 +6,18 @@ export type MappedDatabaseError = Error & {
   details?: Record<string, unknown>;
 };
 
+/**
+ * Whether the error is a server-side database fault: a deadlock or lock wait
+ * timeout, mapped by checkMySQLError to a 409 CONCURRENT_UPDATE, also when a
+ * module already mapped and rethrew it.
+ */
+export function isConcurrentUpdateError(error: unknown): boolean {
+  return (
+    (error as { code?: unknown } | null | undefined)?.code ===
+    'CONCURRENT_UPDATE'
+  );
+}
+
 type DatabaseErrorShape = Error & {
   code?: string;
   errno?: number;

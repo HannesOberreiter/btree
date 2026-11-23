@@ -17,7 +17,10 @@ import {
 } from 'fastify-type-provider-zod';
 import queryString from 'query-string';
 
-import { checkMySQLError } from '../api/adapters/mysql_error.adapter.js';
+import {
+  checkMySQLError,
+  isConcurrentUpdateError,
+} from '../api/adapters/mysql_error.adapter.js';
 import routes from '../api/routes/index.js';
 import mcpRoutes from '../api/routes/mcp.route.js';
 import {
@@ -318,19 +321,41 @@ export class Application {
       }
 
       const e = checkMySQLError(error);
-      const logContext = {
-        user: request?.session?.user,
-        req: request,
-        error: e,
-        path: redactApiKeyFromUrl(request.url),
-      };
-      const isExpectedExternalCalendarNotFound =
-        e.statusCode === 404 &&
-        request.routeOptions.url?.endsWith('/external/ical/:source/:api');
-      if (isExpectedExternalCalendarNotFound) {
-        this.log.info(logContext, e.message || 'HTTP error');
+      const path = redactApiKeyFromUrl(request.url);
+      // Client-caused 4xx responses are expected in normal use (401 on
+      // auth/ping, 402 on premium calendar subscriptions, 404 on external
+      // feeds, duplicate entries). Log them at info without a stack trace.
+      // Only server-side 4xx faults stay at error: deadlocks and lock wait
+      // timeouts, mapped to 409 CONCURRENT_UPDATE, also when a module
+      // already mapped and rethrew them.
+      const statusCode =
+        typeof e.statusCode === 'number' ? e.statusCode : undefined;
+      if (
+        !isConcurrentUpdateError(e) &&
+        statusCode !== undefined &&
+        statusCode >= 400 &&
+        statusCode < 500
+      ) {
+        this.log.info(
+          {
+            user: request?.session?.user,
+            req: request,
+            path,
+            statusCode,
+            code: e.code,
+          },
+          e.message || 'HTTP error',
+        );
       } else {
-        this.log.error(logContext, e.message || 'Unhandled error');
+        this.log.error(
+          {
+            user: request?.session?.user,
+            req: request,
+            error: e,
+            path,
+          },
+          e.message || 'Unhandled error',
+        );
       }
       if (e.statusCode) {
         reply.status(e.statusCode).send({
