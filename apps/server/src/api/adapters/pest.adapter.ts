@@ -4,6 +4,7 @@ import { sql } from 'kysely';
 import proj4 from 'proj4';
 
 import { KyselyServer } from '../../servers/kysely.server.js';
+import { Logger } from '../../services/logger.service.js';
 import type { Point } from '../../types/db.types.js';
 import {
   deleteObservationsByIds,
@@ -18,47 +19,129 @@ import { fetchStopVelutina } from './stopvelutina.adapter.js';
 import { fetchStopVespa } from './stopvespa.adapter.js';
 
 const observationDb = KyselyServer.getInstance().db;
+const logger = Logger.getInstance();
+
+const PROVIDER_URLS = {
+  iNaturalist: 'https://api.inaturalist.org/v2/observations',
+  observationOrg: 'https://observation.org/api/v1',
+  artenfinderNet: 'https://www.artenfinder.net/api/v2/sichtbeobachtungen',
+  infoFaunaCh: 'https://api.gbif.org/v1/occurrence/search',
+  asiatischeHornisseCh: 'https://frelonasiatique.ch/api/v1/observations/map',
+  frelonsAsiatiques:
+    'https://signal.frelonsasiatiques.fr/iceadmin/cartographie',
+  bienengesundheitAt: 'https://www.bienengesundheit.at/vespa-velutina',
+  stopVelutina:
+    'https://www.beewatching.it/sito-stopvelutina-mappa-segnalazioni-embedded/',
+  stopVespa:
+    'https://services9.arcgis.com/yDJ0v2H03rmzNPRm/arcgis/rest/services/STOPvespa_municipio_dados_vespa/FeatureServer/0/query',
+} as const;
+
+/**
+ * Run one observation provider. A failure is logged with the provider name,
+ * the URL, the underlying cause (Node fetch puts it on error.cause) and the
+ * stack, and reported in the result, so one failed provider does not stop
+ * the others.
+ */
+async function runProvider<T>(
+  provider: string,
+  url: string,
+  task: () => Promise<T>,
+): Promise<T | { error: string }> {
+  try {
+    return await task();
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    const cause = err.cause;
+    logger.log('error', `Observation provider ${provider} failed`, {
+      label: 'Observation',
+      provider,
+      url,
+      cause:
+        cause instanceof Error
+          ? {
+              name: cause.name,
+              message: cause.message,
+              code: (cause as { code?: unknown }).code,
+            }
+          : cause,
+      error: err,
+    });
+    return { error: err.message };
+  }
+}
 
 export async function fetchObservations(taxa: Taxa = 'Vespa velutina') {
   const fInat = fetchInat();
   const fObservation = fetchObservationOrg();
 
-  const cleanupInat = await fInat.cleanupOldObs();
-  const cleanupObservationOrg = await fObservation.cleanupOldObs();
+  const cleanupInat = await runProvider(
+    'iNaturalist cleanup',
+    PROVIDER_URLS.iNaturalist,
+    () => fInat.cleanupOldObs(),
+  );
+  const cleanupObservationOrg = await runProvider(
+    'Observation.org cleanup',
+    PROVIDER_URLS.observationOrg,
+    () => fObservation.cleanupOldObs(),
+  );
 
-  const inat = await fInat.fetchNewObs(taxa);
-  const observationOrg = await fObservation.fetchNewObs(taxa);
-  const artenfinderNet = await fetchArtenfinderNet(taxa);
+  const inat = await runProvider('iNaturalist', PROVIDER_URLS.iNaturalist, () =>
+    fInat.fetchNewObs(taxa),
+  );
+  const observationOrg = await runProvider(
+    'Observation.org',
+    PROVIDER_URLS.observationOrg,
+    () => fObservation.fetchNewObs(taxa),
+  );
+  const artenfinderNet = await runProvider(
+    'Artenfinder.net',
+    PROVIDER_URLS.artenfinderNet,
+    () => fetchArtenfinderNet(taxa),
+  );
   const infoFaunaCh =
     taxa === 'Aethina tumida'
-      ? await fetchInfoFaunaCh(taxa)
+      ? await runProvider('Info Fauna (GBIF)', PROVIDER_URLS.infoFaunaCh, () =>
+          fetchInfoFaunaCh(taxa),
+        )
       : { newObservations: 0 };
   const asiatischeHornisseCh =
     taxa === 'Vespa velutina'
-      ? await fetchAsiatischeHornisseCh()
+      ? await runProvider(
+          'asiatischehornisse.ch',
+          PROVIDER_URLS.asiatischeHornisseCh,
+          () => fetchAsiatischeHornisseCh(),
+        )
       : { newObservations: 0 };
 
   const frelonsAsiatiques =
     taxa === 'Vespa velutina'
-      ? await fetchFrelonsAsiatiques()
+      ? await runProvider(
+          'Frelons Asiatiques FR',
+          PROVIDER_URLS.frelonsAsiatiques,
+          () => fetchFrelonsAsiatiques(),
+        )
       : { newObservations: 0 };
   const bienengesundheitAt =
     taxa === 'Vespa velutina'
-      ? await fetchBienengesundheitAt()
+      ? await runProvider(
+          'Bienengesundheit.at',
+          PROVIDER_URLS.bienengesundheitAt,
+          () => fetchBienengesundheitAt(),
+        )
       : { newObservations: 0 };
 
-  // Each new provider reports its own failure without suppressing the other.
+  // Each provider reports its own failure without suppressing the others.
   const stopVelutina =
     taxa === 'Vespa velutina'
-      ? await fetchStopVelutina().catch((error: unknown) => ({
-          error: error instanceof Error ? error.message : String(error),
-        }))
+      ? await runProvider('StopVelutina', PROVIDER_URLS.stopVelutina, () =>
+          fetchStopVelutina(),
+        )
       : undefined;
   const stopVespa =
     taxa === 'Vespa velutina'
-      ? await fetchStopVespa().catch((error: unknown) => ({
-          error: error instanceof Error ? error.message : String(error),
-        }))
+      ? await runProvider('StopVespa', PROVIDER_URLS.stopVespa, () =>
+          fetchStopVespa(),
+        )
       : undefined;
 
   return {
