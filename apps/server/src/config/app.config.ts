@@ -319,13 +319,22 @@ export class Application {
 
       const e = checkMySQLError(error);
       const path = redactApiKeyFromUrl(request.url);
+      // checkMySQLError maps database errors to HTTP errors. Those stay at
+      // error level with the stack: a deadlock or lock timeout maps to a 409,
+      // but it is a server-side fault, not a client mistake.
+      const isMappedDatabaseError = e !== error;
       // Client-caused 4xx responses are expected in normal use (401 on
       // auth/ping, 402 on premium calendar subscriptions, 404 on external
       // feeds). Log them at info without a stack trace, so the error log
       // keeps only 5xx and unexpected errors.
       const statusCode =
         typeof e.statusCode === 'number' ? e.statusCode : undefined;
-      if (statusCode !== undefined && statusCode >= 400 && statusCode < 500) {
+      if (
+        !isMappedDatabaseError &&
+        statusCode !== undefined &&
+        statusCode >= 400 &&
+        statusCode < 500
+      ) {
         this.log.info(
           {
             user: request?.session?.user,
