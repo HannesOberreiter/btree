@@ -6,6 +6,7 @@ interface State {
   hive: string;
   queen: string;
   movedate: string;
+  queen_placement: string;
   todo: string;
   feed: string;
   harvest: string;
@@ -30,6 +31,7 @@ export const useTableFilterStore = defineStore('tableFilter', {
     ({
       hive: '',
       movedate: '',
+      queen_placement: '',
       todo: '',
       feed: '',
       harvest: '',

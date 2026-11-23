@@ -131,7 +131,7 @@ function openForm(title: string, id: number | null, selected: number) {
           narrow-indicator
         >
           <q-tab name="task" :label="$t('task', 2)" />
-          <q-tab name="info" :label="$t('info')" />
+          <q-tab name="info" :label="$t('info')" data-cy="tab-hive-info" />
           <BtnDropdownTask @refetch="() => refetchCounter++" />
         </q-tabs>
 

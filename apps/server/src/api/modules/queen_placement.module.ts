@@ -20,6 +20,7 @@ export const PLACEMENT_ERRORS = {
   overlap: 'QUEEN_PLACEMENT_OVERLAP',
   range: 'QUEEN_PLACEMENT_RANGE',
   hiveTwice: 'QUEEN_PLACEMENT_HIVE_TWICE',
+  state: 'QUEEN_PLACEMENT_STATE',
 } as const;
 
 function overlapError() {
@@ -34,6 +35,13 @@ function rangeError() {
     400,
     'The end of a queen placement must be after its start.',
     { code: PLACEMENT_ERRORS.range },
+  );
+}
+function stateError() {
+  return httpErrors(
+    400,
+    'An edit cannot open or close a queen placement. Move the queen or change her status.',
+    { code: PLACEMENT_ERRORS.state },
   );
 }
 export function hiveTwiceError() {
@@ -591,10 +599,14 @@ export async function listPlacements(
           if (typeof filter !== 'object' || filter === null) continue;
           const value = filter as Record<string, unknown>;
           for (const column of ['queen_id', 'hive_id'] as const) {
-            const id = Number(value[`queen_placements.${column}`]);
-            if (Number.isFinite(id) && id > 0) {
-              query = query.where(`queen_placements.${column}`, '=', id);
-              count = count.where(`queen_placements.${column}`, '=', id);
+            // One id, or a list of ids from a dropdown with several values.
+            const raw = value[`queen_placements.${column}`];
+            const ids = (Array.isArray(raw) ? raw : [raw])
+              .map(Number)
+              .filter((id) => Number.isInteger(id) && id > 0);
+            if (ids.length) {
+              query = query.where(`queen_placements.${column}`, 'in', ids);
+              count = count.where(`queen_placements.${column}`, 'in', ids);
             }
           }
         }
@@ -670,8 +682,9 @@ async function ownedPeriods(db: Database, companyId: number, ids: number[]) {
 }
 
 /**
- * Changes `from_date` and `to_date` of placements. A null `to_date` opens the
- * placement. The queen state (`modus`) does not change.
+ * Changes `from_date` and `to_date` of placements. An edit cannot open or
+ * close a placement, because the queen state (`modus`) does not change: a
+ * move or a status change does that.
  */
 export function updatePlacements(
   db: Kysely<DB>,
@@ -699,6 +712,7 @@ export function updatePlacements(
             ? OPEN_END
             : toDay(body.data.to_date);
       if (!fromDate || !toDate) throw rangeError();
+      if (isOpen(row) !== (toDate === OPEN_END)) throw stateError();
       const next = { ...row, from_date: fromDate, to_date: toDate };
       await assertFree(trx, next, row.id);
       await setPeriod(trx, ctx, row.id, next);

@@ -23,6 +23,7 @@ test.describe('user - Movement Table', () => {
 
     try {
       await expect(page.locator('.q-table')).toBeAttached();
+      await expect(dataCy('banner-movement')).toBeVisible();
       const apiaryResponse = await page
         .context()
         .request.post(`${backendURL}/api/v1/apiary`, {

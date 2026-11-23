@@ -306,7 +306,7 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 13; index++) {
+    for (let index = 0; index < 14; index++) {
       const result = await db
         .insertInto('hives')
         .values({
@@ -556,6 +556,32 @@ describe('queen placements', () => {
     expect(await state(q)).toMatchObject({ hive_id: b, modus: false });
   });
 
+  it('a status change uses the day of the client', async () => {
+    const h = hives[13];
+    const q = await create({ hive_id: h, move_date: '2025-01-01' });
+    const status = (body: Record<string, unknown>) =>
+      agent.request('PATCH', '/api/v1/queen/status', { ids: [q], ...body });
+    expect(
+      (await status({ status: false, modus_date: '01.02.2025' })).statusCode,
+    ).toBe(400);
+    expect(
+      (await status({ status: false, modus_date: '2025-02-01' })).statusCode,
+    ).toBe(200);
+    expect(await placements(q)).toEqual([[h, '2025-01-01', '2025-02-01']]);
+    expect(await state(q)).toMatchObject({
+      modus: false,
+      modus_date: '2025-02-01',
+    });
+    expect(
+      (await status({ status: true, modus_date: '2025-03-01' })).statusCode,
+    ).toBe(200);
+    expect(await placements(q)).toEqual([[h, '2025-01-01', OPEN_END]]);
+    expect(await state(q)).toMatchObject({
+      modus: true,
+      modus_date: '2025-03-01',
+    });
+  });
+
   it('a new move_date of a queen without hive is saved', async () => {
     const t = hives[7];
     const i = await create({ move_date: '2025-01-01' });
@@ -631,6 +657,27 @@ describe('queen placements', () => {
       expect(res.body.results[0].hive.id).toBe(hives[3]);
     });
 
+    it('filters by a list of hive ids', async () => {
+      const list = (ids: number[]) =>
+        agent.request('GET', route, undefined, {
+          filters: JSON.stringify([{ 'queen_placements.hive_id': ids }]),
+          limit: 1000,
+        });
+      const one = await list([hives[3]]);
+      const two = await list([hives[3], hives[12]]);
+      expect(one.statusCode).toBe(200);
+      expect(one.body.total).toBeGreaterThan(0);
+      expect(
+        one.body.results.every((row: any) => row.hive_id === hives[3]),
+      ).toBe(true);
+      expect(two.body.total).toBeGreaterThan(one.body.total);
+      expect(
+        two.body.results.every((row: any) =>
+          [hives[3], hives[12]].includes(row.hive_id),
+        ),
+      ).toBe(true);
+    });
+
     it('validates and saves date edits', async () => {
       const d = caged;
       const rows = await db
@@ -646,6 +693,23 @@ describe('queen placements', () => {
       });
       expect(range.statusCode).toBe(400);
       expect(range.body.code).toBe('QUEEN_PLACEMENT_RANGE');
+      // An edit cannot open or close a placement.
+      for (const [id, to_date] of [
+        [first, null],
+        [open, '2025-06-01'],
+      ] as const) {
+        const res = await agent.request('PATCH', route, {
+          ids: [id],
+          data: { to_date },
+        });
+        expect(res.statusCode).toBe(400);
+        expect(res.body.code).toBe('QUEEN_PLACEMENT_STATE');
+      }
+      const keepOpen = await agent.request('PATCH', route, {
+        ids: [open],
+        data: { to_date: null },
+      });
+      expect(keepOpen.statusCode).toBe(200);
       const overlap = await agent.request('PATCH', route, {
         ids: [open],
         data: { from_date: '2025-03-01' },

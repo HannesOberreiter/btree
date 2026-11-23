@@ -36,6 +36,14 @@ const state = reactive({
   'queens.race_id': storeFilter.field(props.form, 'queens.race_id'),
   'queens.date': storeFilter.field(props.form, 'queens.date'),
   'queens.hive_id': storeFilter.field(props.form, 'queens.hive_id'),
+  'queen_placements.queen_id': storeFilter.field(
+    props.form,
+    'queen_placements.queen_id'
+  ),
+  'queen_placements.hive_id': storeFilter.field(
+    props.form,
+    'queen_placements.hive_id'
+  ),
   'hive_location.apiary_id': storeFilter.field(
     props.form,
     'hive_location.apiary_id'
@@ -154,6 +162,26 @@ const layouts = {
       model: 'date',
       props: {
         label: 'daterange'
+      }
+    }
+  ],
+  queen_placement: [
+    {
+      comp: FormDropdownType,
+      model: 'queen_placements.queen_id',
+      props: {
+        table: 'queen',
+        label: 'queen',
+        'allow-empty': 'filterEmpty'
+      }
+    },
+    {
+      comp: FormDropdownType,
+      model: 'queen_placements.hive_id',
+      props: {
+        table: 'hive',
+        label: 'hive',
+        'allow-empty': 'filterEmpty'
       }
     }
   ],

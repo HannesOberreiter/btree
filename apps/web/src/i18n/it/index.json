@@ -234,7 +234,12 @@
     "validation": "Errore di convalida!",
     "voiceEmpty": "Impossibile comprendere la registrazione. Riprova.",
     "voicePermission": "Accesso al microfono negato. Consenti l'uso del microfono nelle impostazioni del browser.",
-    "voiceUnsupported": "L'input vocale non è supportato da questo browser."
+    "voiceUnsupported": "L'input vocale non è supportato da questo browser.",
+    "queenPlacementOverlap": "Il periodo si sovrappone a un'altra regina in questo alveare, o a un altro alveare di questa regina.",
+    "queenPlacementRange": "La data di fine deve essere successiva alla data di introduzione.",
+    "queenPlacementHiveTwice": "Solo una regina alla volta può essere introdotta in un alveare.",
+    "queenPlacementState": "Una modifica non può iniziare o terminare la permanenza in un alveare. Sposta la regina o cambia il suo stato.",
+    "concurrentUpdate": "Qualcun altro ha modificato questi dati nello stesso momento. Riprova."
   },
   "error404": "Ops. Niente qui...",
   "errorNoFile": "Impossibile trovare o caricare l'immagine.",
@@ -588,6 +593,12 @@
   "queenMotherInfo": "Puoi scrivere qui il nome della mamma o selezionarne uno tuo.",
   "queenMovedate": "Data di introduzione",
   "queenMovedateInfo": "Data in cui la regina fu introdotta nella colonia.",
+  "queenHiveChangeInfo": "Giorno del cambio di alveare. Lo storico delle regine registra il cambio in questo giorno.",
+  "queenHistory": "Storico delle regine",
+  "queenHistoryInfo": "Questa tabella mostra in quale alveare ha vissuto ogni regina, e quando. Gli spostamenti e i cambi di stato la aggiornano automaticamente. Modifica una voce qui solo per correggere una data sbagliata.",
+  "durationDays": "Durata (giorni)",
+  "movementTableInfo": "Questa tabella mostra in quale apiario si trovava ogni alveare, e quando. Per spostare gli alveari, aggiungi una nuova voce. Modifica una voce qui solo per correggere una data o un apiario sbagliato.",
+  "queenSameDay": "{queen} è stata introdotta in {hive} in questo giorno. Se salvi, verrà sostituita e impostata come non attiva.",
   "queencell": "Cella reale | Celle reali",
   "queencells": "Celle reali",
   "queued": "in coda",
@@ -935,5 +946,6 @@
   "year": "Anno",
   "yearly": "Annuale",
   "yellow": "Giallo",
-  "yes": "Sì"
+  "yes": "Sì",
+  "since": "dal"
 }
