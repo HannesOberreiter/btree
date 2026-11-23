@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import dayjs from 'dayjs';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
 
@@ -30,7 +31,11 @@ const api = useApiFetch();
 async function changeStatus() {
   const data = JSON.stringify({
     status: !props.value,
-    ids: [props.id]
+    ids: [props.id],
+    // The local day, the server day can be the day before after midnight.
+    ...(props.table === 'queen'
+      ? { modus_date: dayjs().format('YYYY-MM-DD') }
+      : {})
   });
   const url =
     props.table === 'option'

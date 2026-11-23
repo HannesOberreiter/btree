@@ -32,6 +32,8 @@ export function useFormCleanup(
       return cleanupQuicktool(state.value, isEdit, unref(table));
     } else if (unref(table) === 'movedate') {
       return cleanupMovement(state.value, isEdit);
+    } else if (unref(table) === 'queen_placement') {
+      return cleanupQueenPlacement(state.value);
     } else if (unref(table) === 'queen') {
       return cleanupQueen(state.value, isEdit);
     } else if (unref(table) === 'apiary') {
@@ -160,6 +162,14 @@ function cleanupMovement(originalState: any, isEdit: boolean) {
     result.hive_ids = state.hive.map((obj: any) => obj.id);
   }
   return omitBy(result, isNil);
+}
+
+function cleanupQueenPlacement(state: {
+  from_date?: string | null;
+  to_date?: string | null;
+}) {
+  /* DATE columns, send plain YYYY-MM-DD. An empty value does not change. */
+  return omitBy({ from_date: state.from_date, to_date: state.to_date }, isNil);
 }
 
 function cleanupQueen(state: FormQueen, isEdit: boolean) {

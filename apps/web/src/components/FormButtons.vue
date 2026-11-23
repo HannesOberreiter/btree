@@ -40,6 +40,11 @@ const props = defineProps({
   successMessage: {
     type: String,
     default: ''
+  },
+  // Runs after the validation. A false result stops the save.
+  beforeSave: {
+    type: Function as PropType<() => Promise<boolean>>,
+    default: null
   }
 });
 // needed on quicktool form to handle multiple "forms"
@@ -101,6 +106,10 @@ async function onUpdate() {
     isSubmitting.value = false;
     return;
   }
+  if (props.beforeSave && !(await props.beforeSave())) {
+    isSubmitting.value = false;
+    return;
+  }
 
   // Read before the request, the form can change after the save.
   const message = props.successMessage;
@@ -150,6 +159,10 @@ async function onSubmit() {
   const isFormCorrect = await v.value?.$validate();
   if (!isFormCorrect) {
     notification.open('negative', v.value.$errors[0].$message, true);
+    isSubmitting.value = false;
+    return;
+  }
+  if (props.beforeSave && !(await props.beforeSave())) {
     isSubmitting.value = false;
     return;
   }

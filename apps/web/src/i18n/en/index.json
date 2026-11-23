@@ -234,7 +234,12 @@
     "validation": "Validation error!",
     "voiceEmpty": "Could not understand the recording. Please try again.",
     "voicePermission": "Microphone access denied. Please allow microphone use in your browser settings.",
-    "voiceUnsupported": "Voice input is not supported by this browser."
+    "voiceUnsupported": "Voice input is not supported by this browser.",
+    "queenPlacementOverlap": "The period overlaps with another queen in this hive, or with another hive of this queen.",
+    "queenPlacementRange": "The end date must be after the date of introduction.",
+    "queenPlacementHiveTwice": "Only one queen at a time can move into a hive.",
+    "queenPlacementState": "An edit cannot start or end the stay in a hive. Move the queen or change her status.",
+    "concurrentUpdate": "Someone else changed this data at the same time. Please try again."
   },
   "error404": "Oops. Nothing here...",
   "errorNoFile": "Could not find or load the image.",
@@ -588,6 +593,12 @@
   "queenMotherInfo": "You can write the mother's name here or select one of your own.",
   "queenMovedate": "Date of introduction",
   "queenMovedateInfo": "Date when queen was introduced to the colony.",
+  "queenHiveChangeInfo": "Day of the hive change. The queen history saves the change on this day.",
+  "queenHistory": "Queen history",
+  "queenHistoryInfo": "This table shows in which hive each queen lived, and when. Moves and status changes update it automatically. Edit an entry here only to correct a wrong date.",
+  "durationDays": "Duration (days)",
+  "movementTableInfo": "This table shows in which apiary each hive was, and when. To move hives, add a new entry. Edit an entry here only to correct a wrong date or apiary.",
+  "queenSameDay": "{queen} moved into {hive} on this day. If you save, she is replaced and set inactive.",
   "queencell": "Queen cell | Queen cells",
   "queencells": "Queen cells",
   "queued": "queued",
@@ -935,5 +946,6 @@
   "year": "Year",
   "yearly": "Yearly",
   "yellow": "Yellow",
-  "yes": "Yes"
+  "yes": "Yes",
+  "since": "since"
 }

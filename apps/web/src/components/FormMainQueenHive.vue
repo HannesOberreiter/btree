@@ -6,6 +6,7 @@ import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
+import { useQueenSameDay } from '../composables/useQueenSameDay';
 import FormButtons from './FormButtons.vue';
 import FormDropdownEdit from './FormDropdownEdit.vue';
 import FormDropdownHive from './FormDropdownHive.vue';
@@ -73,6 +74,19 @@ function onReset() {
   notification.open('info', 'successReset');
 }
 
+const { confirmSameDay } = useQueenSameDay();
+
+function beforeSave() {
+  const hives = Array.isArray(state.value.hive)
+    ? state.value.hive
+    : [state.value.hive];
+  return confirmSameDay({
+    hiveIds: hives.map((o: any) => o?.id).filter((id: any) => id > 0),
+    day: state.value.move_date || dayjs().format('YYYY-MM-DD'),
+    queenIds: editOptions.value.map((o: any) => o.value)
+  });
+}
+
 async function onChange() {
   emit('success', true);
 }
@@ -120,6 +134,7 @@ async function onChange() {
     :is-edit="isEdit"
     :edit-ids="editOptions"
     :v="v"
+    :before-save="beforeSave"
     form="queen"
     @reset="onReset"
     @change="onChange"

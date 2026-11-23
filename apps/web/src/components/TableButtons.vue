@@ -154,7 +154,7 @@ function onDelete() {
     message += ` ${t('deleteApiary')}`;
   }
 
-  if (['movedate'].includes(props.table) || deleted.value) {
+  if (['movedate', 'queen_placement'].includes(props.table) || deleted.value) {
     message += ` <b>${t('warningNoUndo')}</b>`;
   }
 
@@ -383,7 +383,8 @@ function onPrint() {
           'statistic_treatment_table',
           'statistic_rating_table',
           'statistic_queen_table',
-          'chargeStock'
+          'chargeStock',
+          'queen_placement'
         ].includes(table)
       "
       color="primary"
@@ -476,6 +477,7 @@ function onPrint() {
           'hive',
           'queen',
           'movedate',
+          'queen_placement',
           'todo',
           'feed',
           'harvest',

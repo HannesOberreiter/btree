@@ -41,6 +41,18 @@ export const useTablesStore = defineStore('tables', {
       sort: useStorage('table-sort-col-movedate', 'date'),
       direction: useStorage('table-sort-direction-movedate', true)
     },
+    queen_placement: {
+      visible: useStorage('table-visible-queen_placement', [
+        'queen.name',
+        'hive.name',
+        'from_date',
+        'to_date',
+        'duration'
+      ]),
+      length: useStorage('table-length-queen_placement', 10),
+      sort: useStorage('table-sort-col-queen_placement', 'from_date'),
+      direction: useStorage('table-sort-direction-queen_placement', true)
+    },
     todo: {
       visible: useStorage('table-visible-todo', [
         'date',

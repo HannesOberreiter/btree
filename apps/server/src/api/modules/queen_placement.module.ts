@@ -599,10 +599,14 @@ export async function listPlacements(
           if (typeof filter !== 'object' || filter === null) continue;
           const value = filter as Record<string, unknown>;
           for (const column of ['queen_id', 'hive_id'] as const) {
-            const id = Number(value[`queen_placements.${column}`]);
-            if (Number.isFinite(id) && id > 0) {
-              query = query.where(`queen_placements.${column}`, '=', id);
-              count = count.where(`queen_placements.${column}`, '=', id);
+            // One id, or a list of ids from a dropdown with several values.
+            const raw = value[`queen_placements.${column}`];
+            const ids = (Array.isArray(raw) ? raw : [raw])
+              .map(Number)
+              .filter((id) => Number.isInteger(id) && id > 0);
+            if (ids.length) {
+              query = query.where(`queen_placements.${column}`, 'in', ids);
+              count = count.where(`queen_placements.${column}`, 'in', ids);
             }
           }
         }

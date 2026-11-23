@@ -657,6 +657,27 @@ describe('queen placements', () => {
       expect(res.body.results[0].hive.id).toBe(hives[3]);
     });
 
+    it('filters by a list of hive ids', async () => {
+      const list = (ids: number[]) =>
+        agent.request('GET', route, undefined, {
+          filters: JSON.stringify([{ 'queen_placements.hive_id': ids }]),
+          limit: 1000,
+        });
+      const one = await list([hives[3]]);
+      const two = await list([hives[3], hives[12]]);
+      expect(one.statusCode).toBe(200);
+      expect(one.body.total).toBeGreaterThan(0);
+      expect(
+        one.body.results.every((row: any) => row.hive_id === hives[3]),
+      ).toBe(true);
+      expect(two.body.total).toBeGreaterThan(one.body.total);
+      expect(
+        two.body.results.every((row: any) =>
+          [hives[3], hives[12]].includes(row.hive_id),
+        ),
+      ).toBe(true);
+    });
+
     it('validates and saves date edits', async () => {
       const d = caged;
       const rows = await db

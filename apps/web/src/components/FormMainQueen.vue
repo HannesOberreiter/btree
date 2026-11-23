@@ -4,9 +4,10 @@ import useVuelidate from '@vuelidate/core';
 import { toRefs } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
-import { computed, ref, unref, watch } from 'vue';
+import { computed, nextTick, ref, unref, watch } from 'vue';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
+import { useQueenSameDay } from '../composables/useQueenSameDay';
 import { useQueensQuery } from '../composables/useQuery';
 
 import BtnBase from './BtnBase.vue';
@@ -101,6 +102,66 @@ const state = ref<FormQueen>({
   ...stateDefault
 });
 
+const { confirmSameDay } = useQueenSameDay();
+const editIds = computed(() =>
+  isEdit.value ? editOptions.value.map((o: any) => o.value) : []
+);
+
+/** The stored value of a column, 'mixed' for different values. */
+function storedValue(column: string) {
+  const rows = values.value as any[];
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return undefined;
+  }
+  const set = new Set(rows.map(row => row[column] ?? null));
+  return set.size === 1 ? [...set][0] : 'mixed';
+}
+
+// The child inputs set their values from the stored queens one tick after
+// the load. Before that, the hive dropdown can show a default option.
+const valuesReady = ref(false);
+
+// An active queen in edit mode moves when the hive changes. The old move
+// day would end her stay on the day it started, so the form sets today.
+const hiveChanged = computed(() => {
+  const hive = state.value.hive as any;
+  const stored = storedValue('hive_id');
+  if (!isEdit.value || !state.value.modus || !valuesReady.value) {
+    return false;
+  }
+  if (!hive || Array.isArray(hive)) {
+    return false;
+  }
+  return (hive.id === 'empty' ? null : hive.id) !== stored;
+});
+
+// The move day before the hive change, restored when the hive changes back.
+let previousMoveDate: string | undefined;
+watch(hiveChanged, changed => {
+  if (changed) {
+    previousMoveDate = state.value.move_date;
+    state.value.move_date = dayjs().format('YYYY-MM-DD');
+  } else if (previousMoveDate !== undefined) {
+    state.value.move_date = previousMoveDate;
+    previousMoveDate = undefined;
+  }
+});
+
+function beforeSave() {
+  // An inactive queen does not move into a hive.
+  if (state.value.modus === false) {
+    return Promise.resolve(true);
+  }
+  const hives = Array.isArray(state.value.hive)
+    ? state.value.hive
+    : [state.value.hive];
+  return confirmSameDay({
+    hiveIds: hives.map((o: any) => o?.id).filter((id: any) => id > 0),
+    day: state.value.move_date || dayjs().format('YYYY-MM-DD'),
+    queenIds: editIds.value
+  });
+}
+
 const lastNames = computed(() =>
   queens.value ? getNames(queens.value.results) : ''
 );
@@ -154,6 +215,9 @@ async function getEdit(id: unknown[]) {
         response[0].modus_date = dayjs().format('YYYY-MM-DD');
       }
       values.value = response;
+      void nextTick(() => {
+        valuesReady.value = true;
+      });
     },
     error => {
       notification.open('negative', error);
@@ -291,7 +355,11 @@ async function onChange() {
         :reset="reset"
         label="queenMovedate"
         table-id="move_date"
-        :hint="$t('queenMovedateInfo')"
+        :hint="
+          hiveChanged ? $t('queenHiveChangeInfo') : $t('queenMovedateInfo')
+        "
+        :label-color="hiveChanged ? 'orange-9' : undefined"
+        data-cy="input-queen-move-date"
       />
     </div>
 
@@ -376,6 +444,7 @@ async function onChange() {
     :is-edit="isEdit"
     :edit-ids="editOptions"
     :v="v"
+    :before-save="beforeSave"
     form="queen"
     @reset="onReset"
     @change="onChange"

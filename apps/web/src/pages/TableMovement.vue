@@ -156,6 +156,17 @@ function onRequest(props: any) {
 <template>
   <div class="row q-pa-sm justify-center">
     <div class="col-12">
+      <q-banner
+        dense
+        rounded
+        class="bg-info text-white q-mb-sm"
+        data-cy="banner-movement"
+      >
+        <template #avatar>
+          <q-icon name="fas fa-circle-info" />
+        </template>
+        {{ $t('movementTableInfo') }}
+      </q-banner>
       <q-table
         v-model:pagination="pagination"
         v-model:selected="selected"

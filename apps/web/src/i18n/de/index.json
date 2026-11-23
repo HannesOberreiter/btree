@@ -234,7 +234,12 @@
     "validation": "Validierungsfehler!",
     "voiceEmpty": "Die Aufnahme konnte nicht verstanden werden. Bitte versuche es erneut.",
     "voicePermission": "Mikrofonzugriff verweigert. Bitte erlaube die Mikrofonnutzung in deinen Browser-Einstellungen.",
-    "voiceUnsupported": "Spracheingabe wird von diesem Browser nicht unterstützt."
+    "voiceUnsupported": "Spracheingabe wird von diesem Browser nicht unterstützt.",
+    "queenPlacementOverlap": "Der Zeitraum überschneidet sich mit einer anderen Königin in diesem Stock oder mit einem anderen Stock dieser Königin.",
+    "queenPlacementRange": "Das Enddatum muss nach dem Einsetzdatum liegen.",
+    "queenPlacementHiveTwice": "Es kann nur eine Königin auf einmal in einen Stock eingesetzt werden.",
+    "queenPlacementState": "Eine Bearbeitung kann den Aufenthalt in einem Stock nicht beginnen oder beenden. Setze die Königin um oder ändere ihren Status.",
+    "concurrentUpdate": "Jemand anderes hat diese Daten gleichzeitig geändert. Bitte versuche es erneut."
   },
   "error404": "Hoppla. Nichts hier...",
   "errorNoFile": "Das Bild konnte nicht gefunden oder geladen werden.",
@@ -588,6 +593,12 @@
   "queenMotherInfo": "Du kannst hier den Namen der Mutter schreiben oder eine eigene auswählen.",
   "queenMovedate": "Datum Einweiselung",
   "queenMovedateInfo": "Datum, an dem die Königin eingeweiselt wurde.",
+  "queenHiveChangeInfo": "Tag des Stockwechsels. Der Königinnen-Verlauf speichert den Wechsel an diesem Tag.",
+  "queenHistory": "Königinnen-Verlauf",
+  "queenHistoryInfo": "Diese Tabelle zeigt, in welchem Stock jede Königin wann war. Das Umsetzen einer Königin und Statusänderungen aktualisieren sie automatisch. Bearbeite hier einen Eintrag nur, um ein falsches Datum zu korrigieren.",
+  "durationDays": "Dauer (Tage)",
+  "movementTableInfo": "Diese Tabelle zeigt, an welchem Stand jeder Stock wann war. Um Stöcke zu wandern, füge einen neuen Eintrag hinzu. Bearbeite hier einen Eintrag nur, um ein falsches Datum oder einen falschen Stand zu korrigieren.",
+  "queenSameDay": "{queen} wurde an diesem Tag in {hive} eingesetzt. Wenn du speicherst, wird sie ersetzt und auf inaktiv gesetzt.",
   "queencell": "Weiselzelle | Weiselzellen",
   "queencells": "Weiselzellen",
   "queued": "in Warteschlange",
@@ -935,5 +946,6 @@
   "year": "Jahr",
   "yearly": "Jährlich",
   "yellow": "Gelb",
-  "yes": "Ja"
+  "yes": "Ja",
+  "since": "seit"
 }
