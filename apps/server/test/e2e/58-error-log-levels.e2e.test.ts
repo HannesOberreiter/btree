@@ -96,7 +96,8 @@ describe('error handler log levels', () => {
       expect(
         (infoCalls[0]![0] as Record<string, unknown>).error,
       ).toBeUndefined();
-      expect(callsWithStatusCode(error, statusCode)).toHaveLength(0);
+      // No error-level entry may carry this failure: match by the error
+      // message, because the error branch logs no statusCode field.
       expect(
         error.mock.calls.filter(
           ([context]) =>
