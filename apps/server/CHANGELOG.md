@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.17.0](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.16.1...btree-server-v7.17.0) (2026-11-23)
+
+
+### Features
+
+* **server:** add queen placement history table ([#384](https://github.com/HannesOberreiter/btree/issues/384)) ([4bb17f9](https://github.com/HannesOberreiter/btree/commit/4bb17f9e35c3f43e3930f5fa2cd7e215b2c6281d))
+* **web:** show and edit the queen placement history ([#386](https://github.com/HannesOberreiter/btree/issues/386)) ([8173145](https://github.com/HannesOberreiter/btree/commit/8173145e40b6e5ee3c40a5e2ff54ec24c2d1457f))
+
+
+### Bug Fixes
+
+* explain why a company cannot be deleted or left ([#381](https://github.com/HannesOberreiter/btree/issues/381)) ([cfb6f69](https://github.com/HannesOberreiter/btree/commit/cfb6f695f3dc07aa253e996b3dbb73d4a3205c0a))
+* keep the queen modus date in sync with a placement edit ([#388](https://github.com/HannesOberreiter/btree/issues/388)) ([7fc8675](https://github.com/HannesOberreiter/btree/commit/7fc8675fbe8f799fafde0f68b60b3a2aa28d04c6))
+* parse database times as UTC and keep the paid day valid ([#382](https://github.com/HannesOberreiter/btree/issues/382)) ([4cc2545](https://github.com/HannesOberreiter/btree/commit/4cc2545014ffb1ebc3c8e71aae9f9e50ebb17951))
+* **server:** allow recipe mode per_hive only for checkup types ([#379](https://github.com/HannesOberreiter/btree/issues/379)) ([ec9edb4](https://github.com/HannesOberreiter/btree/commit/ec9edb4c723ee65802471fc94b17f06566598562))
+
 ## [7.16.1](https://github.com/HannesOberreiter/btree/compare/btree-server-v7.16.0...btree-server-v7.16.1) (2026-11-20)
 
 
