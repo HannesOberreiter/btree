@@ -6,6 +6,25 @@ export type MappedDatabaseError = Error & {
   details?: Record<string, unknown>;
 };
 
+/** The codes that checkMySQLError assigns to mapped database errors. */
+const MAPPED_DATABASE_ERROR_CODES = new Set([
+  'NOT_FOUND',
+  'UNIQUE_VIOLATION',
+  'CONCURRENT_UPDATE',
+  'FOREIGN_KEY_VIOLATION',
+  'INVALID_DATA',
+]);
+
+/**
+ * Whether the error is a database error mapped by checkMySQLError, also when
+ * a module already mapped and rethrew it (for example a deadlock mapped to a
+ * 409 CONCURRENT_UPDATE).
+ */
+export function isMappedDatabaseError(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  return typeof code === 'string' && MAPPED_DATABASE_ERROR_CODES.has(code);
+}
+
 type DatabaseErrorShape = Error & {
   code?: string;
   errno?: number;

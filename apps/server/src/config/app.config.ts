@@ -17,7 +17,10 @@ import {
 } from 'fastify-type-provider-zod';
 import queryString from 'query-string';
 
-import { checkMySQLError } from '../api/adapters/mysql_error.adapter.js';
+import {
+  checkMySQLError,
+  isMappedDatabaseError,
+} from '../api/adapters/mysql_error.adapter.js';
 import routes from '../api/routes/index.js';
 import mcpRoutes from '../api/routes/mcp.route.js';
 import {
@@ -319,10 +322,9 @@ export class Application {
 
       const e = checkMySQLError(error);
       const path = redactApiKeyFromUrl(request.url);
-      // checkMySQLError maps database errors to HTTP errors. Those stay at
-      // error level with the stack: a deadlock or lock timeout maps to a 409,
-      // but it is a server-side fault, not a client mistake.
-      const isMappedDatabaseError = e !== error;
+      // Database errors stay at error level with the stack, also when a module
+      // already mapped and rethrew them: a deadlock maps to a 409, but it is
+      // a server-side fault, not a client mistake.
       // Client-caused 4xx responses are expected in normal use (401 on
       // auth/ping, 402 on premium calendar subscriptions, 404 on external
       // feeds). Log them at info without a stack trace, so the error log
@@ -330,7 +332,7 @@ export class Application {
       const statusCode =
         typeof e.statusCode === 'number' ? e.statusCode : undefined;
       if (
-        !isMappedDatabaseError &&
+        !isMappedDatabaseError(e) &&
         statusCode !== undefined &&
         statusCode >= 400 &&
         statusCode < 500

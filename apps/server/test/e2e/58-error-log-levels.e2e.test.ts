@@ -49,6 +49,13 @@ vi.mock('../../src/api/routes/index.js', () => ({
         { code: 'ER_LOCK_DEADLOCK' },
       );
     });
+    server.get('/v1/throws/premapped-deadlock', () => {
+      // Modules like account_deletion already throw checkMySQLError(error),
+      // so the handler sees an already-mapped 409 CONCURRENT_UPDATE.
+      throw Object.assign(httpErrors.Conflict('concurrentUpdate'), {
+        code: 'CONCURRENT_UPDATE',
+      });
+    });
     done();
   },
 }));
@@ -134,22 +141,27 @@ describe('error handler log levels', () => {
     expect(callsWithStatusCode(info, 500)).toHaveLength(0);
   });
 
-  it('logs a mapped database 409 deadlock at error level with the stack', async () => {
-    const { response, info, error } = await injectAndSpy(
-      '/api/v1/throws/deadlock',
-    );
-    expect(response.statusCode).toBe(409);
+  it.each(['/api/v1/throws/deadlock', '/api/v1/throws/premapped-deadlock'])(
+    'logs a mapped database 409 deadlock at error level with the stack (%s)',
+    async (url) => {
+      const { response, info, error } = await injectAndSpy(url);
+      expect(response.statusCode).toBe(409);
 
-    // The mapped error stays at error level even though it is a 4xx.
-    expect(callsWithStatusCode(info, 409)).toHaveLength(0);
-    const errorEntries = error.mock.calls
-      .map((call) => call[0])
-      .filter(
-        (context): context is { error: { message?: string; stack?: string } } =>
-          typeof context === 'object' && context !== null && 'error' in context,
-      );
-    expect(errorEntries).toHaveLength(1);
-    expect(errorEntries[0].error.message).toBe('concurrentUpdate');
-    expect(errorEntries[0].error.stack).toBeTruthy();
-  });
+      // The mapped error stays at error level even though it is a 4xx.
+      expect(callsWithStatusCode(info, 409)).toHaveLength(0);
+      const errorEntries = error.mock.calls
+        .map((call) => call[0])
+        .filter(
+          (
+            context,
+          ): context is { error: { message?: string; stack?: string } } =>
+            typeof context === 'object' &&
+            context !== null &&
+            'error' in context,
+        );
+      expect(errorEntries).toHaveLength(1);
+      expect(errorEntries[0].error.message).toBe('concurrentUpdate');
+      expect(errorEntries[0].error.stack).toBeTruthy();
+    },
+  );
 });
