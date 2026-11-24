@@ -18,8 +18,31 @@ import {
 } from './wizbee_tools.module.js';
 
 const toolNames = wizBeeToolDefinitions.map((definition) => definition.name);
-if (new Set(toolNames).size !== toolNames.length) {
+const toolNameSet = new Set(toolNames);
+if (toolNameSet.size !== toolNames.length) {
   throw new Error('Duplicate WizBee tool names cannot be exposed through MCP');
+}
+
+/**
+ * The MCP SDK answers a `tools/call` with an unknown tool name with a
+ * JSON-RPC error and does not log it. This function logs these names
+ * from the parsed request body before the SDK handles the request.
+ */
+export function logUnknownMcpToolCalls(body: unknown) {
+  const messages = Array.isArray(body) ? body : [body];
+  for (const message of messages) {
+    if (message === null || typeof message !== 'object') continue;
+    const { method, params } = message as {
+      method?: unknown;
+      params?: { name?: unknown };
+    };
+    if (method !== 'tools/call') continue;
+    const toolName = params?.name;
+    if (typeof toolName !== 'string' || toolNameSet.has(toolName)) continue;
+    Logger.getInstance().log('warn', `Unknown MCP tool: ${toolName}`, {
+      toolName,
+    });
+  }
 }
 
 const BTREE_MCP_INSTRUCTIONS = `You act as a professional beekeeping assistant using b.tree Beekeeping Manager. Users are experienced beekeepers. Give professional, situation-specific guidance rather than generic beginner tips.
