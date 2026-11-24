@@ -4391,6 +4391,9 @@ export async function executeWizBeeTool(
   const toolFn = tools[toolName];
 
   if (!toolFn || typeof toolFn.execute !== 'function') {
+    Logger.getInstance().log('warn', `Unknown tool: ${toolName}`, {
+      toolName,
+    });
     throw new Error(`Unknown tool: ${toolName}`);
   }
 

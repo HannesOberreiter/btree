@@ -22,7 +22,10 @@ import { env, mcp } from '../../config/environment.config.js';
 import McpOAuthController from '../controllers/mcp_oauth.controller.js';
 import { Guard } from '../hooks/guard.hook.js';
 import { authenticateMcpRequest } from '../hooks/mcp_auth.hook.js';
-import { createBtreeMcpServer } from '../modules/mcp.module.js';
+import {
+  createBtreeMcpServer,
+  logUnknownMcpToolCalls,
+} from '../modules/mcp.module.js';
 import { permissiveJsonResponseSchema } from '../schemas/common.schema.js';
 import {
   mcpConnectionParamsSchema,
@@ -194,6 +197,7 @@ export default async function mcpRoutes(instance: FastifyInstance) {
     },
     async (request, reply) => {
       if (!(await authenticateMcpRequest(request, reply))) return;
+      logUnknownMcpToolCalls(request.body);
       reply.hijack();
       await nodeHandler(request.raw, reply.raw, request.body);
     },
