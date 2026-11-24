@@ -28,14 +28,20 @@ jobs:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
+          # A pattern with a leading '!' excludes a file, also when another
+          # pattern includes it. The release-please PR changes only the
+          # changelogs and .release-please-manifest.json, so it runs no tests.
+          predicate-quantifier: 'some-with-excludes'
           filters: |
             server:
               - 'apps/server/**'
+              - '!apps/server/CHANGELOG.md'
               - 'infra/test/compose.yml'
               - 'scripts/e2e.sh'
               - '.github/workflows/ci.yml'
             web:
               - 'apps/web/**'
+              - '!apps/web/CHANGELOG.md'
               - 'infra/test/compose.yml'
               - 'scripts/e2e.sh'
               - '.github/workflows/ci.yml'
