@@ -471,6 +471,12 @@ const links = computed(
             menu: [] as any
           },
           {
+            label: t('breeding.name'),
+            route: 'setting-breeding',
+            icon: 'fas fa-dna',
+            menu: [] as any
+          },
+          {
             label: t('premium'),
             route: 'premium',
             icon: 'fas fa-face-smile',

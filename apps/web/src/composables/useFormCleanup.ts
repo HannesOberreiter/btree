@@ -116,6 +116,8 @@ function cleanupQuicktool(state: FormQuicktool, isEdit: boolean, task: string) {
     result.pollen = state.checkup_rating.pollen;
     result.swarm = state.checkup_rating.swarm;
     result.temper = state.checkup_rating.temper;
+    result.colony_strength = state.checkup_rating.colony_strength;
+    result.spring_development = state.checkup_rating.spring_development;
     if (state.checkup_queen[0]) {
       result.queen = includes(state.checkup_queen, 'queen');
       result.queencells = includes(state.checkup_queen, 'queencells');

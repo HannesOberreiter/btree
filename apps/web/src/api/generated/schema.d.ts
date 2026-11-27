@@ -2254,6 +2254,7 @@ export interface paths {
                       [key: string]: unknown;
                     })
                   | null;
+                colony_strength?: number | null;
                 comb?: number | null;
                 created_at?: string | null;
                 creator?:
@@ -2298,6 +2299,7 @@ export interface paths {
                 pollen?: number | null;
                 queen?: boolean | null;
                 queencells?: boolean | null;
+                spring_development?: number | null;
                 strong?: number | null;
                 swarm?: number | null;
                 temper?: number | null;
@@ -2342,6 +2344,7 @@ export interface paths {
               /** @enum {string} */
               kind: 'in' | 'out';
             }[];
+            colony_strength?: number | null;
             comb?: number | null;
             date: string;
             deleted?: boolean;
@@ -2358,6 +2361,7 @@ export interface paths {
             queen?: boolean | null;
             queencells?: boolean | null;
             repeat: number;
+            spring_development?: number | null;
             strong?: number | null;
             swarm?: number | null;
             temper?: number | null;
@@ -2406,6 +2410,7 @@ export interface paths {
                 /** @enum {string} */
                 kind: 'in' | 'out';
               }[];
+              colony_strength?: number | null;
               comb?: number | null;
               date?: string;
               deleted?: boolean;
@@ -2419,6 +2424,7 @@ export interface paths {
               pollen?: number | null;
               queen?: boolean | null;
               queencells?: boolean | null;
+              spring_development?: number | null;
               strong?: number | null;
               swarm?: number | null;
               temper?: number | null;
@@ -2504,6 +2510,7 @@ export interface paths {
                     [key: string]: unknown;
                   })
                 | null;
+              colony_strength?: number | null;
               comb?: number | null;
               created_at?: string | null;
               creator?:
@@ -2548,6 +2555,7 @@ export interface paths {
               pollen?: number | null;
               queen?: boolean | null;
               queencells?: boolean | null;
+              spring_development?: number | null;
               strong?: number | null;
               swarm?: number | null;
               temper?: number | null;
@@ -2621,6 +2629,7 @@ export interface paths {
                     [key: string]: unknown;
                   })
                 | null;
+              colony_strength?: number | null;
               comb?: number | null;
               created_at?: string | null;
               creator?:
@@ -2665,6 +2674,7 @@ export interface paths {
               pollen?: number | null;
               queen?: boolean | null;
               queencells?: boolean | null;
+              spring_development?: number | null;
               strong?: number | null;
               swarm?: number | null;
               temper?: number | null;
@@ -2810,6 +2820,7 @@ export interface paths {
             'application/json': {
               api_active?: boolean;
               api_key?: string | null;
+              breeding_system?: 'beebreed' | null;
               created_at?: string | null;
               id: number;
               name: string;
@@ -2837,6 +2848,7 @@ export interface paths {
           'application/json': {
             api_active?: boolean;
             api_change?: boolean;
+            breeding_system?: 'beebreed' | null;
             name?: string;
             password?: string;
           } & {
@@ -2854,6 +2866,7 @@ export interface paths {
             'application/json': {
               api_active: boolean;
               api_key?: string | null;
+              breeding_system?: 'beebreed' | null;
               created_at?: string | null;
               id: number;
               name: string;
@@ -7038,6 +7051,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              breeding_section?: string | null;
               created_at: string | null;
               favorite: boolean | null;
               id: number;
@@ -7085,6 +7099,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
+            breeding_section?: ('early' | 'summer' | 'late' | 'stock') | null;
             favorite?: boolean;
             modus?: boolean;
             name: string;
@@ -7101,6 +7116,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              breeding_section?: string | null;
               created_at: string | null;
               favorite: boolean | null;
               id: number;
@@ -7151,6 +7167,7 @@ export interface paths {
         content: {
           'application/json': {
             data: {
+              breeding_section?: ('early' | 'summer' | 'late' | 'stock') | null;
               favorite?: boolean;
               modus?: boolean;
               name?: string;
@@ -7341,6 +7358,7 @@ export interface paths {
           };
           content: {
             'application/json': {
+              breeding_section?: string | null;
               created_at: string | null;
               favorite: boolean | null;
               id: number;
@@ -10432,6 +10450,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -10444,6 +10463,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -10511,6 +10531,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )
@@ -10529,6 +10551,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )[];
@@ -10552,6 +10576,7 @@ export interface paths {
                 amount_sum?: string | number | null;
                 brood?: string | number | null;
                 calm_comb?: string | number | null;
+                colony_strength?: string | number | null;
                 comb?: string | number | null;
                 frames_avg?: string | number | null;
                 frames_sum?: string | number | null;
@@ -10564,6 +10589,7 @@ export interface paths {
                 hive_count?: string | number | null;
                 hive_id?: number | null;
                 pollen?: string | number | null;
+                spring_development?: string | number | null;
                 strong?: string | number | null;
                 swarm?: string | number | null;
                 task_apiary?:
@@ -10631,6 +10657,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -10643,6 +10670,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -10708,6 +10736,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -10720,6 +10749,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -10785,6 +10815,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -10797,6 +10828,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -10864,6 +10896,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )
@@ -10882,6 +10916,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )[];
@@ -10905,6 +10941,7 @@ export interface paths {
                 amount_sum?: string | number | null;
                 brood?: string | number | null;
                 calm_comb?: string | number | null;
+                colony_strength?: string | number | null;
                 comb?: string | number | null;
                 frames_avg?: string | number | null;
                 frames_sum?: string | number | null;
@@ -10917,6 +10954,7 @@ export interface paths {
                 hive_count?: string | number | null;
                 hive_id?: number | null;
                 pollen?: string | number | null;
+                spring_development?: string | number | null;
                 strong?: string | number | null;
                 swarm?: string | number | null;
                 task_apiary?:
@@ -10984,6 +11022,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -10996,6 +11035,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -11061,6 +11101,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -11073,6 +11114,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -11226,6 +11268,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )
@@ -11244,6 +11288,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )[];
@@ -11267,6 +11313,7 @@ export interface paths {
                 amount_sum?: string | number | null;
                 brood?: string | number | null;
                 calm_comb?: string | number | null;
+                colony_strength?: string | number | null;
                 comb?: string | number | null;
                 frames_avg?: string | number | null;
                 frames_sum?: string | number | null;
@@ -11279,6 +11326,7 @@ export interface paths {
                 hive_count?: string | number | null;
                 hive_id?: number | null;
                 pollen?: string | number | null;
+                spring_development?: string | number | null;
                 strong?: string | number | null;
                 swarm?: string | number | null;
                 task_apiary?:
@@ -11346,6 +11394,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -11358,6 +11407,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -11425,6 +11475,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )
@@ -11443,6 +11495,8 @@ export interface paths {
                 | 'temper'
                 | 'calm_comb'
                 | 'swarm'
+                | 'colony_strength'
+                | 'spring_development'
                 | 'varroa'
                 | 'strong'
               )[];
@@ -11466,6 +11520,7 @@ export interface paths {
                 amount_sum?: string | number | null;
                 brood?: string | number | null;
                 calm_comb?: string | number | null;
+                colony_strength?: string | number | null;
                 comb?: string | number | null;
                 frames_avg?: string | number | null;
                 frames_sum?: string | number | null;
@@ -11478,6 +11533,7 @@ export interface paths {
                 hive_count?: string | number | null;
                 hive_id?: number | null;
                 pollen?: string | number | null;
+                spring_development?: string | number | null;
                 strong?: string | number | null;
                 swarm?: string | number | null;
                 task_apiary?:
@@ -11545,6 +11601,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -11557,6 +11614,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -11622,6 +11680,7 @@ export interface paths {
               amount_sum?: string | number | null;
               brood?: string | number | null;
               calm_comb?: string | number | null;
+              colony_strength?: string | number | null;
               comb?: string | number | null;
               frames_avg?: string | number | null;
               frames_sum?: string | number | null;
@@ -11634,6 +11693,7 @@ export interface paths {
               hive_count?: string | number | null;
               hive_id?: number | null;
               pollen?: string | number | null;
+              spring_development?: string | number | null;
               strong?: string | number | null;
               swarm?: string | number | null;
               task_apiary?:
@@ -14406,6 +14466,7 @@ export interface paths {
             broodframes?: number;
             calmComb?: number;
             cappedBrood?: boolean;
+            colonyStrength?: number;
             comb?: number;
             date: string;
             done?: boolean;
@@ -14421,6 +14482,7 @@ export interface paths {
             queen?: boolean;
             queencells?: boolean;
             repeat?: number;
+            springDevelopment?: number;
             strong?: number;
             swarm?: number;
             temper?: number;
@@ -15831,6 +15893,7 @@ export interface paths {
             broodframes?: number;
             calmComb?: number;
             cappedBrood?: boolean;
+            colonyStrength?: number;
             comb?: number;
             date?: string;
             done?: boolean;
@@ -15844,6 +15907,7 @@ export interface paths {
             pollen?: number;
             queen?: boolean;
             queencells?: boolean;
+            springDevelopment?: number;
             strong?: number;
             swarm?: number;
             temper?: number;

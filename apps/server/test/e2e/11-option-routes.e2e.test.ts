@@ -323,3 +323,77 @@ options.forEach((option) => {
     });
   });
 });
+
+describe('harvest_types breeding section', () => {
+  const route = '/api/v1/option/harvest_types';
+  let agent: TestAgent;
+  let typeId: number;
+
+  beforeAll(async () => {
+    agent = await createAuthenticatedAgent();
+    const res = await doRequest(agent, 'post', route, null, null, {
+      name: 'breeding section test',
+    });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.breeding_section).toBeNull();
+    typeId = res.body.id;
+  });
+
+  it('patch 400 - invalid section', async () => {
+    const res = await doRequest(agent, 'patch', route, null, null, {
+      ids: [typeId],
+      data: { breeding_section: 'winter' },
+    });
+    expect(res.statusCode).toEqual(400);
+  });
+
+  it('patch - set, keep and clear the section', async () => {
+    const section = async () => {
+      const res = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        null,
+        { ids: [typeId] },
+      );
+      expect(res.statusCode).toEqual(200);
+      return res.body[0].breeding_section;
+    };
+
+    let res = await doRequest(agent, 'patch', route, null, null, {
+      ids: [typeId],
+      data: { breeding_section: 'summer' },
+    });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toBe(1);
+    expect(await section()).toBe('summer');
+
+    res = await doRequest(agent, 'patch', route, null, null, {
+      ids: [typeId],
+      data: { name: 'breeding section renamed' },
+    });
+    expect(res.statusCode).toEqual(200);
+    expect(await section()).toBe('summer');
+
+    res = await doRequest(agent, 'patch', route, null, null, {
+      ids: [typeId],
+      data: { breeding_section: null },
+    });
+    expect(res.statusCode).toEqual(200);
+    expect(await section()).toBeNull();
+  });
+
+  it('other option tables ignore the section', async () => {
+    const created = await doRequest(
+      agent,
+      'post',
+      '/api/v1/option/feed_types',
+      null,
+      null,
+      { name: 'breeding section feed', breeding_section: 'early' },
+    );
+    expect(created.statusCode).toEqual(200);
+    expect(created.body.breeding_section).toBeUndefined();
+  });
+});

@@ -106,6 +106,25 @@
   "birth": "Data di nascita",
   "blue": "Blu",
   "both": "Tutti e due",
+  "breeding": {
+    "adminOnly": "Solo un amministratore dell'azienda può modificare la modalità allevamento.",
+    "description": "La modalità allevamento prepara i dati dell'azienda per la prova di performance di un sistema di allevamento. Solo un amministratore può modificarla.",
+    "lockedFields": "La modalità allevamento dell'azienda imposta alcune di queste voci:",
+    "name": "Modalità allevamento",
+    "nameCheck": "Il nome della regina deve essere il codice della regina del sistema di allevamento. Per BeeBreed: paese-associazione-allevatore-numero-anno di nascita, per esempio DE-44-101-1-2025. Il modulo della regina mostra un avviso per un nome in un altro formato.",
+    "off": "Disattivata",
+    "overrides": "Quando la modalità è attiva, le impostazioni dei campi di tutti i membri mostrano le valutazioni {ratings}, e la valutazione massima è {max}. I membri non possono modificare queste voci. Le loro impostazioni tornano quando la modalità è disattivata.",
+    "section": {
+      "early": "Raccolto precoce (TEIL1)",
+      "summer": "Raccolto estivo (TEIL2)",
+      "late": "Raccolto tardivo (TEIL3)",
+      "stock": "Scorte (VORRAT)"
+    },
+    "sections": "Sezioni di raccolto",
+    "sectionsHint": "Assegna ogni tipo di raccolto a una sezione del test di prestazione. Un tipo di raccolto è al massimo in una sezione. I raccolti dei tipi senza sezione non contano. La quantità conta in kg.",
+    "warningFormat": "Modalità allevamento: \"{name}\" non è un codice della regina valido. Esempio: {example}",
+    "warningYear": "Modalità allevamento: l'anno in \"{name}\" non è l'anno di nascita della regina."
+  },
   "calculate": "Calcolare",
   "calculateVarroa": "Conteggio varroa al giorno",
   "calculator": "Calcolatrice",
@@ -613,10 +632,12 @@
   "rating": {
     "brood": "Covata",
     "calm_comb": "Calma sul favo",
+    "colony_strength": "Forza della colonia",
     "comb": "Favo",
     "max": "Valore massimo",
     "name": "Valutazione",
     "pollen": "Polline",
+    "spring_development": "Sviluppo primaverile",
     "swarm": "Sciame",
     "temper": "Temperamento",
     "text": "Voto da basso ad alto"

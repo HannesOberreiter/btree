@@ -180,6 +180,9 @@ export async function updateCompany(
           api_active: body.api_active,
         }),
         ...(regenerateKey && { api_key: randomBytes(25).toString('hex') }),
+        ...(body.breeding_system !== undefined && {
+          breeding_system: body.breeding_system,
+        }),
       })
       .where('id', '=', companyId)
       .execute();

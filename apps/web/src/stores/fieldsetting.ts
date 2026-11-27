@@ -3,7 +3,9 @@ import cloneDeep from 'lodash-es/cloneDeep';
 import defaultsDeep from 'lodash-es/defaultsDeep';
 import { defineStore } from 'pinia';
 import { useApiFetch } from '../composables/useApi';
+import { BREEDING_RATING_MAX, BREEDING_RATINGS } from '../helpers/breeding';
 import refreshService from '../services/refresh.service';
+import { useAuthUserStore } from './auth';
 
 interface Rating {
   brood: boolean;
@@ -12,6 +14,8 @@ interface Rating {
   pollen: boolean;
   swarm: boolean;
   temper: boolean;
+  colony_strength: boolean;
+  spring_development: boolean;
   max: number;
 }
 
@@ -79,6 +83,8 @@ const resetSettings = {
       pollen: false,
       swarm: false,
       temper: false,
+      colony_strength: false,
+      spring_development: false,
       max: 5
     },
     checkboxes: {
@@ -122,8 +128,24 @@ export const useFieldsettingStore = defineStore('fieldsetting', {
   }),
   getters: {
     get: state => state.settings,
-    someRatingTrue: state =>
-      Object.values(state.settings.checkup.ratings).includes(true),
+    // True when the breeding mode of the company is on.
+    breedingLocked: () => Boolean(useAuthUserStore().company.breeding_system),
+    // The settings that the forms use: the personal settings with the
+    // overrides of the breeding mode. The personal settings stay unchanged.
+    active(state): Fieldsetting {
+      if (!this.breedingLocked) {
+        return state.settings;
+      }
+      const settings = cloneDeep(state.settings);
+      for (const rating of BREEDING_RATINGS) {
+        settings.checkup.ratings[rating] = true;
+      }
+      settings.checkup.ratings.max = BREEDING_RATING_MAX;
+      return settings;
+    },
+    someRatingTrue(): boolean {
+      return Object.values(this.active.checkup.ratings).includes(true);
+    },
     someCheckboxTrue: state =>
       Object.values(state.settings.checkup.checkboxes).includes(true),
     someFrameTrue: state =>

@@ -136,6 +136,15 @@ function cleanupCheckup(state: any) {
       name: 'swarm',
       type: 'number'
     },
+    // Ratings of the breeding mode.
+    {
+      name: 'colony_strength',
+      type: 'number'
+    },
+    {
+      name: 'spring_development',
+      type: 'number'
+    },
     {
       name: 'varroa',
       type: 'number'
