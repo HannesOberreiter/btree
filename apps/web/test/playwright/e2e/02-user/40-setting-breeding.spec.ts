@@ -132,18 +132,26 @@ test.describe('user - Setting Breeding', () => {
     expect(hives).toHaveLength(1);
     const hiveId = hives[0]?.id;
     // An old or imported checkup has no value in the new rating columns.
+    // The second checkup has a value, so a multi-row edit shows
+    // "multiple values".
     const note = `Breeding unrated ${Date.now()}`;
-    const created = await request.post(`${backendURL}/api/v1/checkup`, {
-      headers,
-      data: {
-        hive_ids: [hiveId],
-        date: new Date().toISOString().slice(0, 10),
-        interval: 0,
-        repeat: 0,
-        note
-      }
-    });
-    expect(created.ok()).toBe(true);
+    for (const [suffix, rating] of [
+      ['a', {}],
+      ['b', { colony_strength: 2 }]
+    ] as const) {
+      const created = await request.post(`${backendURL}/api/v1/checkup`, {
+        headers,
+        data: {
+          hive_ids: [hiveId],
+          date: new Date().toISOString().slice(0, 10),
+          interval: 0,
+          repeat: 0,
+          note: `${note} ${suffix}`,
+          ...rating
+        }
+      });
+      expect(created.ok()).toBe(true);
+    }
     const response = await request.patch(`${backendURL}/api/v1/company`, {
       headers,
       data: { breeding_system: 'beebreed' }
@@ -158,18 +166,34 @@ test.describe('user - Setting Breeding', () => {
         JSON.stringify(['date', 'hive.name', 'note'])
       );
     });
+    const rating = dataCy('checkup-rating-colony_strength');
+    const stars = rating.locator('.q-rating__icon-container');
 
     await page.goto('/table/checkup');
-    const row = page.locator('tbody > tr').filter({ hasText: note });
+    const row = page.locator('tbody > tr').filter({ hasText: `${note} a` });
     await expect(row).toHaveCount(1);
     await row.locator('.q-checkbox').click();
     await dataCy('btn-table-edit').click();
     await dataCy('checkup-rating').click();
-    await expect(
-      dataCy('checkup-rating-colony_strength').locator(
-        '.q-rating__icon-container'
-      )
-    ).toHaveCount(4);
+    await expect(stars).toHaveCount(4);
+    await page.keyboard.press('Escape');
+    await expect(dataCy('form-quicktool')).not.toBeAttached();
+
+    // Multi-row edit: the field is off until the user switches it on.
+    const rows = page.locator('tbody > tr').filter({ hasText: note });
+    await expect(rows).toHaveCount(2);
+    await page
+      .locator('tbody > tr')
+      .filter({ hasText: `${note} b` })
+      .locator('.q-checkbox')
+      .click();
+    await expect(page.locator('tbody > tr.selected')).toHaveCount(2);
+    await dataCy('btn-table-edit').click();
+    await dataCy('checkup-rating').click();
+    await expect(rating).toBeVisible();
+    await expect(stars).toHaveCount(0);
+    await rating.locator('.fa-pen').click();
+    await expect(stars).toHaveCount(4);
     await page.keyboard.press('Escape');
   });
 

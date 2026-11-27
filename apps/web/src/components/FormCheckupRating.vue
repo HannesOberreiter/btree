@@ -128,11 +128,13 @@ function setValues() {
   }
 }
 
+// A disabled field has null, so the save does not send it. An enabled
+// field with null gets 0, so it shows the empty stars.
 function editValues(val: boolean, key: string) {
   disable.value[key as keyof typeof disable.value] = val;
   modelValue.value[key as keyof typeof modelValue.value] = val
     ? null
-    : modelValue.value[key as keyof typeof modelValue.value];
+    : (modelValue.value[key as keyof typeof modelValue.value] ?? 0);
 }
 </script>
 
