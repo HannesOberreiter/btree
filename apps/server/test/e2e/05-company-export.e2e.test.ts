@@ -46,7 +46,9 @@ const expectedFiles = [
   'scale_data',
   'rearings',
   'rearing_types',
-].map((name) => `${name}.csv`);
+]
+  .map((name) => `${name}.csv`)
+  .concat('format.json');
 
 async function exportCsvFiles(rows: Record<string, ExportRow[]>) {
   // Keep the real export/CSV/ZIP pipeline; only database reads use fixtures.
@@ -87,8 +89,33 @@ describe('company ZIP export', () => {
 
     expect([...files.keys()].sort()).toEqual([...expectedFiles].sort());
     expect(files.get('company.csv')).toBe('id,name\r\n42,Test company\r\n');
-    for (const name of expectedFiles.filter((name) => name !== 'company.csv'))
+    for (const name of expectedFiles.filter(
+      (name) => !['company.csv', 'format.json'].includes(name),
+    ))
       expect(files.get(name)).toBe('');
+  });
+
+  it('writes the archive format to format.json', async () => {
+    vi.stubEnv('SERVICE_VERSION', 'abc123');
+    try {
+      const before = Date.now();
+      const files = await exportCsvFiles({});
+      const format = JSON.parse(files.get('format.json') ?? '');
+      expect(format).toEqual({
+        format: 'btree-company-export',
+        version: 2,
+        server_version: 'abc123',
+        exported_at: expect.any(String),
+      });
+      expect(Date.parse(format.exported_at)).toBeGreaterThanOrEqual(
+        before - 1000,
+      );
+      expect(new Date(format.exported_at).toISOString()).toBe(
+        format.exported_at,
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('preserves CSV dates, booleans, escaping, line endings, and joined-table contents', async () => {

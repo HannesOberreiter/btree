@@ -362,6 +362,158 @@ describe('queen routes', () => {
     });
   });
 
+  describe('derived hive_id and move_date', () => {
+    const db = KyselyServer.getInstance().db;
+    let hiveId: number;
+    let inHive: number;
+    let noHive: number;
+
+    async function list(query: Record<string, unknown>) {
+      const res = await doQueryRequest(agent, route, null, accessToken, {
+        limit: 1000,
+        ...query,
+      });
+      expect(res.statusCode).toBe(200);
+      return res.body.results as Record<string, any>[];
+    }
+    async function batchGet(ids: number[]) {
+      const res = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids },
+      );
+      expect(res.statusCode).toBe(200);
+      return res.body as Record<string, any>[];
+    }
+
+    beforeAll(async () => {
+      const company = await db
+        .selectFrom('hives')
+        .select('user_id')
+        .where('id', '=', 1)
+        .executeTakeFirstOrThrow();
+      const apiary = await db
+        .selectFrom('apiaries')
+        .select('id')
+        .where('user_id', '=', company.user_id)
+        .executeTakeFirstOrThrow();
+      const hive = await db
+        .insertInto('hives')
+        .values({
+          name: `Derived hive ${Date.now()}`,
+          user_id: company.user_id,
+          modus: true,
+        })
+        .executeTakeFirstOrThrow();
+      hiveId = Number(hive.insertId);
+      await db
+        .insertInto('movedates')
+        .values({
+          apiary_id: apiary.id,
+          hive_id: hiveId,
+          date: new Date('2020-01-01'),
+        })
+        .execute();
+      const create = async (body: Record<string, unknown>) => {
+        const res = await doRequest(agent, 'post', route, null, accessToken, {
+          name: 'testQueenDerived',
+          ...body,
+        });
+        expect(res.statusCode).toBe(200);
+        return res.body[0] as number;
+      };
+      inHive = await create({ hive_id: hiveId, move_date: '2025-02-03' });
+      noHive = await create({ move_date: '2025-02-04' });
+    });
+
+    afterAll(async () => {
+      await db
+        .deleteFrom('queens')
+        .where('id', 'in', [inHive, noHive])
+        .execute();
+      await db.deleteFrom('movedates').where('hive_id', '=', hiveId).execute();
+      await db.deleteFrom('hives').where('id', '=', hiveId).execute();
+    });
+
+    it('list and batchGet show the hive and move date of the placement', async () => {
+      const [row] = await list({
+        filters: JSON.stringify([{ 'queens.hive_id': hiveId }]),
+      });
+      expect(row).toMatchObject({
+        id: inHive,
+        hive_id: hiveId,
+        move_date: '2025-02-03',
+        hive_location: expect.objectContaining({ hive_id: hiveId }),
+      });
+      expect(await batchGet([inHive, noHive])).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: inHive,
+            hive_id: hiveId,
+            move_date: '2025-02-03',
+          }),
+          expect.objectContaining({
+            id: noHive,
+            hive_id: null,
+            move_date: null,
+          }),
+        ]),
+      );
+    });
+
+    it('filters by hive id and by queens without hive', async () => {
+      const byHive = await list({
+        filters: JSON.stringify([{ 'queens.hive_id': hiveId }]),
+      });
+      expect(byHive.map((row) => row.id)).toEqual([inHive]);
+      const empty = await list({
+        filters: JSON.stringify([{ 'queens.hive_id': 'empty' }]),
+      });
+      const ids = empty.map((row) => row.id);
+      expect(ids).toContain(noHive);
+      expect(ids).not.toContain(inHive);
+      expect(empty.every((row) => row.hive_id === null)).toBe(true);
+    });
+
+    it('latest shows the current queen of the hive', async () => {
+      const latest = await list({ details: true, latest: true });
+      expect(latest.find((row) => row.id === inHive)).toMatchObject({
+        hive_id: hiveId,
+        queen_location: expect.objectContaining({
+          hive_id: hiveId,
+          queen_id: inHive,
+          queen_move_date: '2025-02-03',
+        }),
+      });
+      expect(latest.map((row) => row.id)).not.toContain(noHive);
+      const others = await list({ details: true, latest: false });
+      expect(others.map((row) => row.id)).toContain(noHive);
+      expect(others.map((row) => row.id)).not.toContain(inHive);
+    });
+
+    it('orders by move_date', async () => {
+      const rows = await list({ order: 'move_date', direction: 'desc' });
+      const dates = rows
+        .map((row) => row.move_date as string | null)
+        .filter((date): date is string => date !== null);
+      expect(dates.length).toBeGreaterThan(0);
+      expect(dates).toEqual(dates.toSorted().toReversed());
+    });
+
+    it('a move out shows no hive and the end of the placement', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [inHive],
+        data: { hive_id: 'empty', move_date: '2025-03-01' },
+      });
+      expect(res.statusCode).toBe(200);
+      const [row] = await batchGet([inHive]);
+      expect(row).toMatchObject({ hive_id: null, move_date: '2025-03-01' });
+    });
+  });
+
   describe('/api/v1/queen/stats', () => {
     it('get 401 - no header', async () => {
       const res = await doQueryRequest(

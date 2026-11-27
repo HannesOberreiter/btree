@@ -2,6 +2,8 @@ import { PassThrough } from 'node:stream';
 import { buffer } from 'node:stream/consumers';
 
 import { ZipArchive } from 'archiver';
+import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import yauzl from 'yauzl-promise';
 
@@ -249,6 +251,30 @@ describe('queen placements', () => {
   const queens: number[] = [];
   /** Queen of the caged queen test, used again by the placement routes. */
   let caged = 0;
+  let apiaryId = 0;
+
+  /** Adds an active hive in the apiary of the company. */
+  async function addHive() {
+    const result = await db
+      .insertInto('hives')
+      .values({
+        name: `Placement hive ${hives.length}`,
+        user_id: companyId,
+        modus: true,
+      })
+      .executeTakeFirstOrThrow();
+    const id = Number(result.insertId);
+    hives.push(id);
+    await db
+      .insertInto('movedates')
+      .values({
+        apiary_id: apiaryId,
+        hive_id: id,
+        date: new Date('2020-01-01'),
+      })
+      .execute();
+    return id;
+  }
 
   async function post(data: Record<string, unknown>) {
     const res = await agent.request('POST', '/api/v1/queen', {
@@ -279,11 +305,22 @@ describe('queen placements', () => {
       String(row.to_date),
     ]);
   }
+  /** The derived hive and move date, and the status of a queen. */
   async function state(queenId: number) {
     const row = await db
       .selectFrom('queens')
-      .select(['hive_id', 'move_date', 'modus', 'modus_date'])
-      .where('id', '=', queenId)
+      .innerJoin(
+        'queen_current_placements',
+        'queen_current_placements.queen_id',
+        'queens.id',
+      )
+      .select([
+        'queen_current_placements.hive_id',
+        'queen_current_placements.move_date',
+        'queens.modus',
+        'queens.modus_date',
+      ])
+      .where('queens.id', '=', queenId)
       .executeTakeFirstOrThrow();
     return {
       hive_id: row.hive_id,
@@ -306,26 +343,8 @@ describe('queen placements', () => {
       .select('id')
       .where('user_id', '=', companyId)
       .executeTakeFirstOrThrow();
-    for (let index = 0; index < 15; index++) {
-      const result = await db
-        .insertInto('hives')
-        .values({
-          name: `Placement hive ${index}`,
-          user_id: companyId,
-          modus: true,
-        })
-        .executeTakeFirstOrThrow();
-      const id = Number(result.insertId);
-      hives.push(id);
-      await db
-        .insertInto('movedates')
-        .values({
-          apiary_id: apiary.id,
-          hive_id: id,
-          date: new Date('2020-01-01'),
-        })
-        .execute();
-    }
+    apiaryId = apiary.id;
+    for (let index = 0; index < 15; index++) await addHive();
   });
 
   afterAll(async () => {
@@ -407,9 +426,10 @@ describe('queen placements', () => {
     const l = await create({ hive_id: s8, move_date: '2025-05-01' });
     expect(await placements(k)).toEqual([]);
     expect(await placements(l)).toEqual([[s8, '2025-05-01', OPEN_END]]);
+    // The replaced queen has no placement left, so also no move date.
     expect(await state(k)).toEqual({
       hive_id: null,
-      move_date: '2025-05-01',
+      move_date: null,
       modus: false,
       modus_date: '2025-05-01',
     });
@@ -582,14 +602,16 @@ describe('queen placements', () => {
     });
   });
 
-  it('a new move_date of a queen without hive is saved', async () => {
+  it('a queen without placements has no move_date', async () => {
     const t = hives[7];
+    // Old clients send a move date also for a queen without hive.
     const i = await create({ move_date: '2025-01-01' });
-    expect((await state(i)).move_date).toBe('2025-01-01');
+    expect((await state(i)).move_date).toBeNull();
     expect((await patch([i], { move_date: '2025-01-05' })).statusCode).toBe(
       200,
     );
-    expect((await state(i)).move_date).toBe('2025-01-05');
+    expect(await state(i)).toMatchObject({ hive_id: null, move_date: null });
+    expect(await placements(i)).toEqual([]);
     // Moved out of her last hive: the date is the end of that placement.
     await patch([i], { hive_id: t, move_date: '2025-02-01' });
     await patch([i], { hive_id: 'empty', move_date: '2025-03-01' });
@@ -877,82 +899,375 @@ describe('queen placements', () => {
     expect(brood).toEqual({ '2025-01-01': 4, '2025-04-01': 2 });
   });
 
-  it('company transfer copies placements, also from an old archive', async () => {
-    const beeId = await db
-      .selectFrom('company_bee')
-      .select('bee_id')
+  it('queen_current_placements derives the same values as derivePlacement', async () => {
+    const [h1, h2] = [await addHive(), await addHive()];
+    const addQueen = async (modus: boolean) => {
+      const result = await db
+        .insertInto('queens')
+        .values({
+          name: `Placement view ${queens.length}`,
+          user_id: companyId,
+          date: new Date('2023-01-01'),
+          modus,
+          modus_date: modus ? null : new Date('2025-03-01'),
+        })
+        .executeTakeFirstOrThrow();
+      const id = Number(result.insertId);
+      queens.push(id);
+      return id;
+    };
+    const addPlacement = (
+      queen_id: number,
+      hive_id: number,
+      from: string,
+      to: string,
+    ) =>
+      db
+        .insertInto('queen_placements')
+        .values({
+          queen_id,
+          hive_id,
+          user_id: companyId,
+          from_date: new Date(`${from}T00:00:00Z`),
+          to_date: new Date(`${to}T00:00:00Z`),
+        })
+        .execute();
+    const open = await addQueen(true);
+    await addPlacement(open, h2, '2023-01-01', '2023-06-01');
+    await addPlacement(open, h1, '2025-01-01', OPEN_END);
+    const inactive = await addQueen(false);
+    await addPlacement(inactive, h2, '2024-01-01', '2024-03-01');
+    await addPlacement(inactive, h2, '2024-05-01', '2025-03-01');
+    const movedOut = await addQueen(true);
+    await addPlacement(movedOut, h1, '2024-01-01', '2024-12-01');
+    const none = await addQueen(true);
+    expect(
+      await Promise.all([open, inactive, movedOut, none].map(state)),
+    ).toMatchObject([
+      { hive_id: h1, move_date: '2025-01-01' },
+      { hive_id: h2, move_date: '2024-05-01' },
+      { hive_id: null, move_date: '2024-12-01' },
+      { hive_id: null, move_date: null },
+    ]);
+
+    // All queens of the company, also from the tests before.
+    const rows = await db
+      .selectFrom('queens')
+      .innerJoin(
+        'queen_current_placements',
+        'queen_current_placements.queen_id',
+        'queens.id',
+      )
+      .select([
+        'queens.id',
+        'queens.modus',
+        'queen_current_placements.hive_id',
+        'queen_current_placements.move_date',
+      ])
+      .where('queens.user_id', '=', companyId)
+      .execute();
+    const periods = await db
+      .selectFrom('queen_placements')
+      .select(['id', 'queen_id', 'hive_id', 'from_date', 'to_date'])
       .where('user_id', '=', companyId)
-      .executeTakeFirstOrThrow();
-    const archive = new ZipArchive();
-    const output = new PassThrough();
-    archive.pipe(output);
-    const contents = buffer(output);
-    await downloadCompanyData(db, archive, companyId);
-    await archive.finalize();
-    const zip = await contents;
-
-    const count = async (userId: number) =>
-      (
-        await db
-          .selectFrom('queen_placements')
-          .select(db.fn.countAll<number>().as('total'))
-          .where('user_id', '=', userId)
-          .executeTakeFirstOrThrow()
-      ).total;
-    const newCompany = async (name: string) =>
-      (
-        await db
-          .selectFrom('companies')
-          .select('id')
-          .where('name', '=', name)
-          .executeTakeFirstOrThrow()
-      ).id;
-
-    const copy = await importCompanyArchive(db, beeId.bee_id as number, zip);
-    expect(await count(await newCompany(copy.name))).toBe(
-      await count(companyId),
-    );
-
-    // An archive from before queen_placements.csv existed.
-    const old = new ZipArchive();
-    const oldOutput = new PassThrough();
-    old.pipe(oldOutput);
-    const oldContents = buffer(oldOutput);
-    const reader = await yauzl.fromBuffer(zip);
-    for await (const entry of reader) {
-      if (entry.filename === 'queen_placements.csv') continue;
-      old.append(await buffer(await entry.openReadStream()), {
-        name: entry.filename,
+      .execute();
+    expect(rows.length).toBeGreaterThan(4);
+    for (const row of rows) {
+      const derived = derivePlacement(
+        row.modus,
+        periods
+          .filter((period) => period.queen_id === row.id)
+          .map((period) => ({
+            id: period.id,
+            queen_id: period.queen_id,
+            hive_id: period.hive_id,
+            from_date: String(period.from_date),
+            to_date: String(period.to_date),
+          })),
+      );
+      expect({
+        id: row.id,
+        hive_id: row.hive_id,
+        move_date: row.move_date === null ? null : String(row.move_date),
+      }).toEqual({
+        id: row.id,
+        hive_id: derived.hive_id,
+        move_date: derived.move_date,
       });
     }
-    await reader.close();
-    await old.finalize();
-    const fromOld = await importCompanyArchive(
-      db,
-      beeId.bee_id as number,
-      await oldContents,
-    );
-    // The old archive has only the last hive of each queen, so compare the
-    // open placements by queen name, hive name and start.
-    const openRows = async (userId: number) =>
-      (
-        await db
-          .selectFrom('queen_placements')
-          .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
-          .innerJoin('hives', 'hives.id', 'queen_placements.hive_id')
-          .select(['queens.name as queen', 'hives.name as hive', 'from_date'])
-          .where('queen_placements.user_id', '=', userId)
-          .where(
-            'queen_placements.to_date',
-            '=',
-            new Date(`${OPEN_END}T00:00:00Z`),
-          )
-          .execute()
-      )
-        .map((row) => `${row.queen}|${row.hive}|${String(row.from_date)}`)
+  });
+
+  it('counts has the queens without hive and the current queens', async () => {
+    const counts = async () => {
+      const rows = await db
+        .selectFrom('counts')
+        .select(['kind', 'count'])
+        .where('user_id', '=', companyId)
+        .where('kind', 'in', ['virgin', 'queen'])
+        .execute();
+      const value = (kind: string) =>
+        Number(rows.find((row) => row.kind === kind)?.count ?? 0);
+      return { virgin: value('virgin'), queen: value('queen') };
+    };
+    const expected = async () => {
+      const open = await db
+        .selectFrom('queen_placements')
+        .select('queen_id')
+        .where('user_id', '=', companyId)
+        .where('to_date', '=', new Date(`${OPEN_END}T00:00:00Z`))
+        .execute();
+      const inHive = new Set(open.map((row) => row.queen_id));
+      const active = await db
+        .selectFrom('queens')
+        .select('id')
+        .where('user_id', '=', companyId)
+        .where('modus', '=', true)
+        .where('deleted', '=', false)
+        .execute();
+      // The current queen of a hive, without the view `queens_locations`:
+      // the last placement of a queen that is not deleted, in an active hive
+      // that is not deleted. It counts when it is open, or when the queen is
+      // inactive and the placement ends on her `modus_date`.
+      const rows = await db
+        .selectFrom('queen_placements')
+        .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
+        .innerJoin('hives', 'hives.id', 'queen_placements.hive_id')
+        .select([
+          'queen_placements.hive_id',
+          'queen_placements.to_date',
+          'queens.modus',
+          'queens.modus_date',
+        ])
+        .where('hives.user_id', '=', companyId)
+        .where('hives.modus', '=', true)
+        .where('hives.deleted', '=', false)
+        .where('queens.deleted', '=', false)
+        .orderBy('queen_placements.from_date', 'desc')
+        .orderBy('queen_placements.id', 'desc')
+        .execute();
+      const last = new Map<number, (typeof rows)[number]>();
+      for (const row of rows)
+        if (!last.has(row.hive_id)) last.set(row.hive_id, row);
+      const queen = [...last.values()].filter(
+        (row) =>
+          String(row.to_date) === OPEN_END ||
+          (!row.modus && String(row.to_date) === String(row.modus_date)),
+      ).length;
+      return {
+        virgin: active.filter((row) => !inHive.has(row.id)).length,
+        queen,
+      };
+    };
+    const before = await counts();
+    expect(before).toEqual(await expected());
+    const hive = await addHive();
+    const queen = await create({});
+    expect(await counts()).toEqual({
+      virgin: before.virgin + 1,
+      queen: before.queen,
+    });
+    expect(
+      (await patch([queen], { hive_id: hive, move_date: '2025-01-01' }))
+        .statusCode,
+    ).toBe(200);
+    expect(await counts()).toEqual({
+      virgin: before.virgin,
+      queen: before.queen + 1,
+    });
+    expect(await counts()).toEqual(await expected());
+  });
+
+  describe('company transfer', () => {
+    let beeId: number;
+    let source: Map<string, Buffer>;
+
+    async function unzip(zip: Buffer) {
+      const files = new Map<string, Buffer>();
+      const reader = await yauzl.fromBuffer(zip);
+      for await (const entry of reader)
+        files.set(entry.filename, await buffer(await entry.openReadStream()));
+      await reader.close();
+      return files;
+    }
+    async function zip(files: Map<string, Buffer | string>) {
+      const archive = new ZipArchive();
+      const output = new PassThrough();
+      archive.pipe(output);
+      const contents = buffer(output);
+      for (const [name, data] of files) archive.append(data, { name });
+      await archive.finalize();
+      return contents;
+    }
+    async function companyOf(name: string) {
+      const row = await db
+        .selectFrom('companies')
+        .select('id')
+        .where('name', '=', name)
+        .executeTakeFirstOrThrow();
+      return row.id;
+    }
+    async function importFiles(files: Map<string, Buffer | string>) {
+      const copy = await importCompanyArchive(db, beeId, await zip(files));
+      return companyOf(copy.name);
+    }
+    /** Placements of a company by queen name, hive name and period. */
+    async function placementRows(userId: number, onlyOpen = false) {
+      let query = db
+        .selectFrom('queen_placements')
+        .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
+        .innerJoin('hives', 'hives.id', 'queen_placements.hive_id')
+        .select([
+          'queens.name as queen',
+          'hives.name as hive',
+          'queen_placements.from_date',
+          'queen_placements.to_date',
+        ])
+        .where('queen_placements.user_id', '=', userId);
+      if (onlyOpen)
+        query = query.where(
+          'queen_placements.to_date',
+          '=',
+          new Date(`${OPEN_END}T00:00:00Z`),
+        );
+      return (await query.execute())
+        .map(
+          (row) =>
+            `${row.queen}|${row.hive}|${String(row.from_date)}|${String(row.to_date)}`,
+        )
         .sort();
-    const expected = await openRows(companyId);
-    expect(expected.length).toBeGreaterThan(0);
-    expect(await openRows(await newCompany(fromOld.name))).toEqual(expected);
+    }
+    /**
+     * The files of a version 1 archive: no format.json, and queens.csv with
+     * the derived `hive_id` and `move_date` of each queen.
+     */
+    async function versionOne(withPlacements: boolean) {
+      const derived = await db
+        .selectFrom('queen_current_placements')
+        .innerJoin('queens', 'queens.id', 'queen_current_placements.queen_id')
+        .select([
+          'queens.id',
+          'queen_current_placements.hive_id',
+          'queen_current_placements.move_date',
+        ])
+        .where('queens.user_id', '=', companyId)
+        .execute();
+      const byId = new Map(derived.map((row) => [String(row.id), row]));
+      const queensCsv: Record<string, string>[] = parse(
+        source.get('queens.csv') as Buffer,
+        { columns: true },
+      );
+      const files = new Map<string, Buffer | string>(source);
+      files.delete('format.json');
+      if (!withPlacements) files.delete('queen_placements.csv');
+      files.set(
+        'queens.csv',
+        stringify(
+          queensCsv.map((row) =>
+            Object.assign(row, {
+              hive_id: byId.get(row.id)?.hive_id ?? '',
+              move_date: byId.get(row.id)?.move_date ?? '',
+            }),
+          ),
+          { header: true, record_delimiter: 'windows' },
+        ),
+      );
+      return files;
+    }
+
+    beforeAll(async () => {
+      const bee = await db
+        .selectFrom('company_bee')
+        .select('bee_id')
+        .where('user_id', '=', companyId)
+        .executeTakeFirstOrThrow();
+      beeId = bee.bee_id as number;
+      const archive = new ZipArchive();
+      const output = new PassThrough();
+      archive.pipe(output);
+      const contents = buffer(output);
+      await downloadCompanyData(db, archive, companyId);
+      await archive.finalize();
+      source = await unzip(await contents);
+    });
+
+    it('the export has format.json and no old queen columns', () => {
+      const format = JSON.parse(String(source.get('format.json')));
+      expect(format).toEqual({
+        format: 'btree-company-export',
+        version: 2,
+        server_version: expect.any(String),
+        exported_at: expect.any(String),
+      });
+      expect(new Date(format.exported_at).toISOString()).toBe(
+        format.exported_at,
+      );
+      const header = String(source.get('queens.csv')).split('\r\n')[0];
+      expect(header.split(',')).toContain('modus_date');
+      expect(header.split(',')).not.toContain('hive_id');
+      expect(header.split(',')).not.toContain('move_date');
+    });
+
+    it('a version 2 archive copies the placements and the derived values', async () => {
+      const copy = await importFiles(source);
+      const expected = await placementRows(companyId);
+      expect(expected.length).toBeGreaterThan(0);
+      expect(await placementRows(copy)).toEqual(expected);
+      const derived = async (userId: number) =>
+        (
+          await db
+            .selectFrom('queens')
+            .innerJoin(
+              'queen_current_placements',
+              'queen_current_placements.queen_id',
+              'queens.id',
+            )
+            .leftJoin('hives', 'hives.id', 'queen_current_placements.hive_id')
+            .select([
+              'queens.name',
+              'hives.name as hive',
+              'queen_current_placements.move_date',
+            ])
+            .where('queens.user_id', '=', userId)
+            .execute()
+        )
+          .map((row) => `${row.name}|${row.hive}|${String(row.move_date)}`)
+          .sort();
+      expect(await derived(copy)).toEqual(await derived(companyId));
+    });
+
+    it('a version 2 archive reads the placements only from queen_placements.csv', async () => {
+      const files = await versionOne(false);
+      files.set('format.json', source.get('format.json') as Buffer);
+      const copy = await importFiles(files);
+      expect(await placementRows(copy)).toEqual([]);
+    });
+
+    it('a version 1 archive with queen_placements.csv copies the placements', async () => {
+      const copy = await importFiles(await versionOne(true));
+      expect(await placementRows(copy)).toEqual(await placementRows(companyId));
+    });
+
+    it('a version 1 archive without queen_placements.csv builds them from queens.csv', async () => {
+      const copy = await importFiles(await versionOne(false));
+      // The old archive has only the last hive of each queen, so compare
+      // the open placements.
+      const expected = await placementRows(companyId, true);
+      expect(expected.length).toBeGreaterThan(0);
+      expect(await placementRows(copy, true)).toEqual(expected);
+    });
+
+    it('rejects an unknown archive version or format', async () => {
+      for (const format of [
+        { format: 'btree-company-export', version: 3 },
+        { format: 'other', version: 2 },
+        { format: 'btree-company-export', version: '2' },
+      ]) {
+        const files = new Map<string, Buffer | string>(source);
+        files.set('format.json', JSON.stringify(format));
+        await expect(
+          importCompanyArchive(db, beeId, await zip(files)),
+        ).rejects.toMatchObject({ statusCode: 400 });
+      }
+    });
   });
 });

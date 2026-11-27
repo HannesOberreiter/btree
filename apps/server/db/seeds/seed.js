@@ -36,6 +36,12 @@ export async function seed(knex) {
     }
     let newData = cloneDeep(jsonData);
 
+    // `queens` has no `hive_id` and `move_date`. The placements of the queens
+    // come from these values, see seedQueenPlacements.
+    if (table === 'queens') {
+      newData = map(newData, (d) => omit(d, ['hive_id', 'move_date']));
+    }
+
     if (table === 'checkups') {
       newData = map(newData, (d) => {
         return {
@@ -46,7 +52,9 @@ export async function seed(knex) {
     }
 
     for (let i = 1; i <= duplicates; i++) {
-      if (i > 1) {
+      // Each pass empties the table first. The queens keep their ids, because
+      // seedQueenPlacements links the placements by these ids.
+      if (i > 1 && table !== 'queens') {
         newData = map(cloneDeep(newData), (d) => omit(d, ['id']));
       }
       await transactionMigration(table, newData, knex);
@@ -73,36 +81,36 @@ export async function seed(knex) {
   return Promise.all(promises);
 }
 
-/** Placements for the seeded queens, with the rules of the migration. */
+/**
+ * Placements for the seeded queens, with the rules of the migration. The
+ * rules read `hive_id` and `move_date` of `data/queens.json`. Copies of the
+ * queens without id get no placement.
+ */
 async function seedQueenPlacements(knex) {
-  const queens = await knex('queens')
-    .select(
-      'id',
-      'hive_id',
-      'user_id',
-      'move_date',
-      'created_at',
-      'updated_at',
-      'modus',
-      'modus_date',
-      'deleted',
-    )
-    .whereNotNull('hive_id');
-  const { rows, skipped, inactivate } = buildQueenPlacements(queens);
+  const now = new Date();
+  const queens = JSON.parse(
+    fs.readFileSync(`${dirname}/data/queens.json`, 'utf-8'),
+  )
+    .filter((queen) => queen.hive_id)
+    .map((queen) => ({
+      id: Number(queen.id),
+      hive_id: Number(queen.hive_id),
+      user_id: Number(queen.user_id),
+      move_date: queen.move_date ?? null,
+      created_at: now,
+      updated_at: now,
+      modus: queen.modus === undefined ? true : Number(queen.modus) === 1,
+      modus_date: queen.modus_date ?? null,
+      deleted: false,
+    }));
+  const { rows, inactivate } = buildQueenPlacements(queens);
   await knex('queen_placements').del();
   await knex.batchInsert('queen_placements', rows, 1000);
-  // Same as the migration: skipped and replaced queens are inactive, and
-  // skipped queens have no hive.
+  // Same as the migration: skipped and replaced queens are inactive.
   for (const { queen_id, modus_date } of inactivate)
     await knex('queens')
       .where('id', queen_id)
       .update({ modus: false, modus_date });
-  await knex('queens')
-    .whereIn(
-      'id',
-      skipped.map((skip) => skip.queen_id),
-    )
-    .update({ hive_id: null });
   console.log(`Insert queen_placements: ${rows.length} rows`);
 }
 

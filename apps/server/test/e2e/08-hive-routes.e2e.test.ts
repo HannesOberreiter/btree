@@ -578,6 +578,63 @@ describe('hive routes', () => {
     });
   });
 
+  describe('hard delete of a hive with queens', () => {
+    it('deletes the current queen of the hive, not a queen that moved out', async () => {
+      const db = KyselyServer.getInstance().db;
+      const hive = await agent.request('POST', route, {
+        ...testInsert,
+        name: `HiveQueens${Date.now()}`,
+        repeat: 1,
+      });
+      expect(hive.statusCode).toBe(200);
+      const hiveId = hive.body[0] as number;
+      const createQueen = async (body: Record<string, unknown>) => {
+        const res = await agent.request('POST', '/api/v1/queen', {
+          name: 'HiveDeleteQueen',
+          ...body,
+        });
+        expect(res.statusCode).toBe(200);
+        return res.body[0] as number;
+      };
+      const movedOut = await createQueen({
+        hive_id: hiveId,
+        move_date: '2024-01-01',
+      });
+      const out = await agent.request('PATCH', '/api/v1/queen', {
+        ids: [movedOut],
+        data: { hive_id: 'empty', move_date: '2024-06-01' },
+      });
+      expect(out.statusCode).toBe(200);
+      const current = await createQueen({
+        hive_id: hiveId,
+        move_date: '2025-01-01',
+      });
+
+      const detail = await agent.request('GET', `${route}/${hiveId}`);
+      expect(detail.statusCode).toBe(200);
+      expect(detail.body.queen_location.queen).toMatchObject({
+        id: current,
+        hive_id: hiveId,
+        move_date: '2025-01-01',
+      });
+
+      const res = await agent.request(
+        'PATCH',
+        `${route}/batchDelete`,
+        { ids: [hiveId] },
+        { hard: true },
+      );
+      expect(res.statusCode).toBe(200);
+      const queens = await db
+        .selectFrom('queens')
+        .select('id')
+        .where('id', 'in', [movedOut, current])
+        .execute();
+      expect(queens.map((row) => row.id)).toEqual([movedOut]);
+      await db.deleteFrom('queens').where('id', '=', movedOut).execute();
+    });
+  });
+
   describe('/api/v1/hive/status', () => {
     it('401 - no header', async () => {
       const res = await doRequest(

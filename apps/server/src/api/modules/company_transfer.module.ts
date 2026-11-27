@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import process from 'node:process';
 
 import type { Archiver } from 'archiver';
 import { parse } from 'csv-parse/sync';
@@ -20,12 +21,27 @@ import {
   toDay,
   validatePlacements,
 } from '../utils/queen_placement.util.js';
-import { asDate, syncQueen } from './queen_placement.module.js';
+import { asDate } from './queen_placement.module.js';
 
 const NEWLINE_QUOTE_REGEX = /(\r\n|[\n\r"])/g;
 const MAX_ARCHIVE_ENTRIES = 64;
 const MAX_ARCHIVE_ENTRY_BYTES = 25 * 1024 * 1024;
 const MAX_ARCHIVE_TOTAL_BYTES = 100 * 1024 * 1024;
+const MAX_FORMAT_BYTES = 64 * 1024;
+
+/** Name of the file in the archive that tells the archive format. */
+const FORMAT_FILE = 'format.json';
+/** Value of `format` in `format.json`. */
+export const ARCHIVE_FORMAT = 'btree-company-export';
+/**
+ * Version of the archive format. Increase it only on a breaking change of
+ * the export or import archive format, and add the matching branch to the
+ * import. An archive without `format.json` has version 1.
+ * - Version 1: `queens.csv` has `hive_id` and `move_date`.
+ *   `queen_placements.csv` is optional.
+ * - Version 2: `queen_placements.csv` is the only source of the placements.
+ */
+export const ARCHIVE_VERSION = 2;
 type CsvRecord = Record<string, string | number | boolean | null | undefined>;
 type TransferKey =
   | 'hives'
@@ -390,14 +406,12 @@ const columns: Record<TransferKey, readonly string[]> = {
     'mark_colour',
     'mother',
     'date',
-    'move_date',
     'url',
     'note',
     'modus',
     'modus_date',
     'deleted',
     'deleted_at',
-    'hive_id',
     'race_id',
     'mating_id',
     'mother_id',
@@ -721,21 +735,23 @@ function validateWaxArchive(data: TransferData) {
 }
 
 /**
- * Inserts the placements of the imported queens. An archive from before the
- * table `queen_placements` gets placements from `queens.hive_id` and
- * `queens.move_date`, with the same rules as the migration. Replaced queens
- * that are still active become inactive, also the same as the migration.
+ * Inserts the placements of the imported queens.
+ * - Version 2: only from `queen_placements.csv`.
+ * - Version 1 with `queen_placements.csv`: from that file.
+ * - Version 1 without it: from `hive_id` and `move_date` of `queens.csv`,
+ *   with the same rules as the migration. Replaced queens that are still
+ *   active become inactive, also the same as the migration.
  */
 async function importQueenPlacements(
   db: Transaction<DB>,
   data: TransferData,
+  version: number,
   companyId: number,
   queens: Record<string, number>,
   hives: Record<string, number>,
-  newQueens: CsvRecord[],
 ) {
   let rows: PlacementPeriod[];
-  if (data.queen_placements.length) {
+  if (version >= 2 || data.queen_placements.length) {
     rows = data.queen_placements
       .map((row) => ({
         queen_id: mapped(queens, row.queen_id),
@@ -748,18 +764,24 @@ async function importQueenPlacements(
           row.queen_id !== null && row.hive_id !== null && !!row.from_date,
       );
   } else {
+    // The raw rows, because the cleaned rows have no `hive_id` and
+    // `move_date`.
     const built = buildQueenPlacements(
-      newQueens.map((row) => ({
-        id: Number(row.id),
-        hive_id: row.hive_id === undefined ? null : Number(row.hive_id),
-        user_id: companyId,
-        move_date: row.move_date,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        modus: row.modus === undefined ? true : row.modus === true,
-        modus_date: row.modus_date,
-        deleted: row.deleted === true,
-      })),
+      data.queens.flatMap((row) => {
+        const id = mapped(queens, row.id);
+        if (id === null) return [];
+        return {
+          id,
+          hive_id: mapped(hives, row.hive_id),
+          user_id: companyId,
+          move_date: row.move_date,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          modus: row.modus === undefined ? true : row.modus === true,
+          modus_date: row.modus_date,
+          deleted: row.deleted === true,
+        };
+      }),
     );
     rows = built.rows;
     for (const { queen_id, modus_date } of built.inactivate)
@@ -781,7 +803,33 @@ async function importQueenPlacements(
     'queen_placements',
     rows.map((row) => ({ ...row, user_id: companyId })),
   );
-  for (const id of Object.values(queens)) await syncQueen(db, id);
+}
+
+/**
+ * Reads the version from `format.json`. Throws 400 for another format or a
+ * version that this server does not know.
+ */
+function parseFormat(text: string) {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw httpErrors.BadRequest('Archive contains an invalid format.json');
+  }
+  const format =
+    typeof value === 'object' && value !== null
+      ? (value as Record<string, unknown>)
+      : {};
+  if (format.format !== ARCHIVE_FORMAT)
+    throw httpErrors.BadRequest('Archive is not a b.tree company export');
+  const version = format.version;
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1)
+    throw httpErrors.BadRequest('Archive contains an invalid format version');
+  if (version > ARCHIVE_VERSION)
+    throw httpErrors.BadRequest(
+      `Archive format version ${version} is newer than this server supports (${ARCHIVE_VERSION})`,
+    );
+  return version;
 }
 
 export async function importCompanyArchive(
@@ -821,6 +869,8 @@ export async function importCompanyArchive(
     queen_races: [],
     todos: [],
   };
+  // An archive without format.json is from before the versions.
+  let version = 1;
   const zip = await yauzl.fromBuffer(upload);
   let entryCount = 0;
   let totalBytes = 0;
@@ -831,6 +881,21 @@ export async function importCompanyArchive(
         throw httpErrors.PayloadTooLarge('Archive contains too many files');
       }
 
+      if (entry.filename === FORMAT_FILE) {
+        if (entry.uncompressedSize > MAX_FORMAT_BYTES)
+          throw httpErrors.PayloadTooLarge('Archive file is too large');
+        const chunks: Buffer[] = [];
+        let entryBytes = 0;
+        for await (const chunk of await entry.openReadStream()) {
+          const buffer = Buffer.from(chunk);
+          entryBytes += buffer.byteLength;
+          if (entryBytes > MAX_FORMAT_BYTES)
+            throw httpErrors.PayloadTooLarge('Archive file is too large');
+          chunks.push(buffer);
+        }
+        version = parseFormat(Buffer.concat(chunks).toString());
+        continue;
+      }
       const key = entry.filename.split('.')[0] as TransferKey;
       if (!transferKeys.includes(key)) continue;
       if (entry.uncompressedSize > MAX_ARCHIVE_ENTRY_BYTES) {
@@ -1179,7 +1244,6 @@ export async function importCompanyArchive(
     const queenRows = data.queens.map((row) =>
       clean('queens', row, {
         user_id: companyId,
-        hive_id: mapped(hives, row.hive_id),
         race_id: mapped(races, row.race_id),
         mating_id: mapped(matings, row.mating_id),
         mother_id: null,
@@ -1189,10 +1253,10 @@ export async function importCompanyArchive(
     await importQueenPlacements(
       trx,
       data,
+      version,
       companyId,
       idMap(data.queens, queenIds),
       hives,
-      queenRows.map((row, index) => ({ ...row, id: queenIds[index] })),
     );
   });
   return { name };
@@ -1226,6 +1290,16 @@ export async function downloadCompanyData(
     },
     record_delimiter: 'windows',
   };
+  arch.append(
+    JSON.stringify({
+      format: ARCHIVE_FORMAT,
+      version: ARCHIVE_VERSION,
+      // The git SHA of the server, only for debugging.
+      server_version: process.env.SERVICE_VERSION ?? 'unknown',
+      exported_at: new Date().toISOString(),
+    }),
+    { name: FORMAT_FILE },
+  );
   const company = await db
     .selectFrom('companies')
     .selectAll()
