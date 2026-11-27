@@ -1,4 +1,4 @@
-import { useApiFetch } from '../composables/useApi';
+import { useApiFetch } from '@/composables/useApi';
 
 const ROUTE = '/v1/agent_key';
 

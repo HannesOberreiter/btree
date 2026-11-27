@@ -1,34 +1,34 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { TaskBatchGetResponse, TaskStockLine } from '../api/types';
-import type { Task } from '../types';
+import type { TaskBatchGetResponse, TaskStockLine } from '@/api/types';
+import type { Task } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import dayjs from 'dayjs';
 import { flatten, isNil, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import FormButtons from './FormButtons.vue';
-import FormCheckupFrames from './FormCheckupFrames.vue';
-import FormCheckupQueen from './FormCheckupQueen.vue';
-import FormCheckupRating from './FormCheckupRating.vue';
-import FormCheckupTemperature from './FormCheckupTemperature.vue';
-import FormCheckupVarroa from './FormCheckupVarroa.vue';
-import FormCheckupWeight from './FormCheckupWeight.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputAmount from './FormInputAmount.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputDates from './FormInputDates.vue';
-import FormInputNote from './FormInputNote.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import FormButtons from '@/components/FormButtons.vue';
+import FormCheckupFrames from '@/components/FormCheckupFrames.vue';
+import FormCheckupQueen from '@/components/FormCheckupQueen.vue';
+import FormCheckupRating from '@/components/FormCheckupRating.vue';
+import FormCheckupTemperature from '@/components/FormCheckupTemperature.vue';
+import FormCheckupVarroa from '@/components/FormCheckupVarroa.vue';
+import FormCheckupWeight from '@/components/FormCheckupWeight.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputAmount from '@/components/FormInputAmount.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputDates from '@/components/FormInputDates.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
 
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import FormInputUrl from './FormInputUrl.vue';
-import FormTaskStock from './FormTaskStock.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormInputUrl from '@/components/FormInputUrl.vue';
+import FormTaskStock from '@/components/FormTaskStock.vue';
 
 const props = defineProps({
   task: {

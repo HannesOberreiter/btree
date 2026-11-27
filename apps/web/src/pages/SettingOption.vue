@@ -2,18 +2,18 @@
 import type { QTableProps } from 'quasar';
 import type { ComputedRef, PropType } from 'vue';
 import type { RecipeTable } from '@/api/types';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import { find, uniq } from 'lodash-es';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import TableButtons from '../components/TableButtons.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColStatus from '../components/TableColStatus.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useOptionsQuery, useRecipeQuery } from '../composables/useQuery';
-import { tableCheckSelected, tableMeta } from '../helpers';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColStatus from '@/components/TableColStatus.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useOptionsQuery, useRecipeQuery } from '@/composables/useQuery';
+import { tableCheckSelected, tableMeta } from '@/helpers';
 
 const urlProps = defineProps({
   option: {

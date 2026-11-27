@@ -13,7 +13,7 @@ import {
   numeric as vNumeric,
   sameAs as vSameAs
 } from '@vuelidate/validators';
-import { i18n } from '../boot/i18n';
+import { i18n } from '@/boot/i18n';
 
 // Create your i18n message instance. Used for vue-i18n@9
 const withI18nMessage = createI18nMessage({ t: i18n.global.t.bind(i18n) });

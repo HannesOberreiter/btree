@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useDateFormat } from '../composables/useDate';
-import { useAuthUserStore } from '../stores/auth';
+import { useDateFormat } from '@/composables/useDate';
+import { useAuthUserStore } from '@/stores/auth';
 
 const useDate = useDateFormat();
 const storeUser = useAuthUserStore();

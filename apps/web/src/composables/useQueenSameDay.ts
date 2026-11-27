@@ -1,7 +1,7 @@
 import { escape } from 'lodash-es';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from './useApi';
+import { useApiFetch } from '@/composables/useApi';
 
 interface SameDayInput {
   /** Target hives of the move. */

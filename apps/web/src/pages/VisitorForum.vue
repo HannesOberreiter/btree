@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { AuthDiscourseResponse } from '../api/types';
-import type { User } from '../types';
+import type { AuthDiscourseResponse } from '@/api/types';
+import type { User } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import FormErrorMax from '../components/FormErrorMax.vue';
-import FormInputEmail from '../components/FormInputEmail.vue';
-import FormUserPassword from '../components/FormUserPassword.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import FormErrorMax from '@/components/FormErrorMax.vue';
+import FormInputEmail from '@/components/FormInputEmail.vue';
+import FormUserPassword from '@/components/FormUserPassword.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
 
 const notification = useNotification();
 const api = useApiFetch();

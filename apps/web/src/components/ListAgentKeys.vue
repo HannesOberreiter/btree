@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { AgentKeyResponse } from '../services/agent_key.service';
+import type { AgentKeyResponse } from '@/services/agent_key.service';
 import { copyToClipboard, useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useBackend } from '../composables/useBackend';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useAgentKeyService } from '../services/agent_key.service';
-import { useAuthUserStore } from '../stores/auth';
-import BtnBase from './BtnBase.vue';
+import { useBackend } from '@/composables/useBackend';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useAgentKeyService } from '@/services/agent_key.service';
+import { useAuthUserStore } from '@/stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
 
 const { t } = useI18n();
 const $q = useQuasar();

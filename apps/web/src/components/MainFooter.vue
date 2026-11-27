@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
-import { useKeyHelp } from '../composables/useKey';
-import { useAuthUserStore } from '../stores/auth';
-import BtnBase from './BtnBase.vue';
-import BtnShare from './BtnShare.vue';
-import DialogHint from './DialogHint.vue';
-import GlobalSound from './GlobalSound.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useKeyHelp } from '@/composables/useKey';
+import { useAuthUserStore } from '@/stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnShare from '@/components/BtnShare.vue';
+import DialogHint from '@/components/DialogHint.vue';
+import GlobalSound from '@/components/GlobalSound.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const storeUser = useAuthUserStore();
 

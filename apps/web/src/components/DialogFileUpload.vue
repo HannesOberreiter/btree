@@ -3,11 +3,11 @@
 import type { QUploaderFactoryFn } from 'quasar';
 import { useDialogPluginComponent } from 'quasar';
 import { ref, toRefs, watch } from 'vue';
-import { useServiceDropbox } from '../composables/useDropbox';
-import { useNotification } from '../composables/useNotification';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useServiceDropbox } from '@/composables/useDropbox';
+import { useNotification } from '@/composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   service: {

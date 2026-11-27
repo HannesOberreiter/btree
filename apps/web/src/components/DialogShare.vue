@@ -5,13 +5,13 @@ import { useDialogPluginComponent } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { useDateFormat } from '../composables/useDate';
-import { useNFC } from '../composables/useNFC';
-import { useNotification } from '../composables/useNotification';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useNFC } from '@/composables/useNFC';
+import { useNotification } from '@/composables/useNotification';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
 
 const props = defineProps({
   url: {

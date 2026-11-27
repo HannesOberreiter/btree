@@ -2,7 +2,7 @@ import type { DialogChainObject } from 'quasar';
 import { Dialog } from 'quasar';
 import { i18n } from '@/boot/i18n';
 import { reactive, ref } from 'vue';
-import { useAuthUserStore } from '../stores/auth';
+import { useAuthUserStore } from '@/stores/auth';
 
 const state = reactive({
   show: false

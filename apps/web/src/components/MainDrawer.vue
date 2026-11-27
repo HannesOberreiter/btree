@@ -4,14 +4,14 @@
 import { useQuasar } from 'quasar';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useCountsQuery } from '../composables/useQuery';
-import refreshService from '../services/refresh.service';
-import { useAuthUserStore } from '../stores/auth';
-import { useQuicktoolStore } from '../stores/quicktool';
-import BtnRefresh from './BtnRefresh.vue';
-import DrawerItem from './DrawerItem.vue';
-import ItemCompany from './ItemCompany.vue';
-import ItemPing from './ItemPing.vue';
+import { useCountsQuery } from '@/composables/useQuery';
+import refreshService from '@/services/refresh.service';
+import { useAuthUserStore } from '@/stores/auth';
+import { useQuicktoolStore } from '@/stores/quicktool';
+import BtnRefresh from '@/components/BtnRefresh.vue';
+import DrawerItem from '@/components/DrawerItem.vue';
+import ItemCompany from '@/components/ItemCompany.vue';
+import ItemPing from '@/components/ItemPing.vue';
 
 export interface MenuSection {
   label: string;

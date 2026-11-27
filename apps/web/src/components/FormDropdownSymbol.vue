@@ -3,7 +3,7 @@ import type { PropType } from 'vue';
 import { useVModels } from '@vueuse/core';
 import { filter, isEmpty } from 'lodash-es';
 import { computed, ref, toRefs, watch } from 'vue';
-import { formCheckMultipleValues } from '../helpers';
+import { formCheckMultipleValues } from '@/helpers';
 
 const props = defineProps({
   modelValue: {

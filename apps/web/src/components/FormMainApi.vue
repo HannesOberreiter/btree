@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import type { QInputProps } from 'quasar';
-import type { CompanyApiKeyResponse, CompanyPatchResponse } from '../api/types';
+import type { CompanyApiKeyResponse, CompanyPatchResponse } from '@/api/types';
 import useVuelidate from '@vuelidate/core';
 import { useClipboard } from '@vueuse/core';
 import { map } from 'lodash-es';
 import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useBackend } from '../composables/useBackend';
-import { useNotification } from '../composables/useNotification';
-import { CALENDAR } from '../constants';
-import { useAuthUserStore } from '../stores/auth';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormUserPassword from './FormUserPassword.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useBackend } from '@/composables/useBackend';
+import { useNotification } from '@/composables/useNotification';
+import { CALENDAR } from '@/constants';
+import { useAuthUserStore } from '@/stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormUserPassword from '@/components/FormUserPassword.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const storeUser = useAuthUserStore();
 const { t } = useI18n();

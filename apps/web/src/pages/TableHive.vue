@@ -1,6 +1,6 @@
 <script lang="ts">
-import { useKeyTable } from '../composables/useKey';
-import { tableCheckSelected, tableMeta } from '../helpers';
+import { useKeyTable } from '@/composables/useKey';
+import { tableCheckSelected, tableMeta } from '@/helpers';
 </script>
 
 <script setup lang="ts">
@@ -8,16 +8,16 @@ import type { QTableProps } from 'quasar';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColLink from '../components/TableColLink.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColQueen from '../components/TableColQueen.vue';
-import TableColStatus from '../components/TableColStatus.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useHivesQuery } from '../composables/useQuery';
-import { useTableFilterStore } from '../stores/tableFilter';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColLink from '@/components/TableColLink.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColQueen from '@/components/TableColQueen.vue';
+import TableColStatus from '@/components/TableColStatus.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useHivesQuery } from '@/composables/useQuery';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import { useTablesStore } from '@/stores/tables';
 
 const useDate = useDateFormat();
 const { t } = useI18n();

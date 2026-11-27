@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { TextField } from '../types';
+import type { TextField } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
 import { isEmpty } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formCheckMultipleValues, validationErrors } from '../helpers';
-import {
-  maxLength,
-  minLength,
-  requiredField
-} from '../helpers/i18n-validators';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { formCheckMultipleValues, validationErrors } from '@/helpers';
+import { maxLength, minLength, requiredField } from '@/helpers/i18n-validators';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

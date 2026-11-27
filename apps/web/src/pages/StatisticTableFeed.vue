@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { StatisticResponse } from '../api/types';
+import type { StatisticResponse } from '@/api/types';
 import type { QTableProps } from 'quasar';
 import { round } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableFilter from '../components/TableFilter.vue';
-import TableThSum from '../components/TableThSum.vue';
-import { useKeyTable } from '../composables/useKey';
-import { useStatisticTable } from '../composables/useQuery';
-import { tableCheckSelected } from '../helpers';
-import { useTableFilterStore } from '../stores/tableFilter';
+import TableButtons from '@/components/TableButtons.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import TableThSum from '@/components/TableThSum.vue';
+import { useKeyTable } from '@/composables/useKey';
+import { useStatisticTable } from '@/composables/useQuery';
+import { tableCheckSelected } from '@/helpers';
+import { useTableFilterStore } from '@/stores/tableFilter';
 
 const { t } = useI18n();
 const selected = ref<any>([]);

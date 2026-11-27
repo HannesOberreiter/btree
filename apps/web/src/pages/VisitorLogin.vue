@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { AuthOauthUrlResponse } from '../api/types';
-import type { User } from '../types';
+import type { AuthOauthUrlResponse } from '@/api/types';
+import type { User } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { truncate } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import FormDropdownServer from '../components/FormDropdownServer.vue';
-import FormErrorMax from '../components/FormErrorMax.vue';
-import FormInputEmail from '../components/FormInputEmail.vue';
-import FormUserPassword from '../components/FormUserPassword.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useBackend } from '../composables/useBackend';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import FormDropdownServer from '@/components/FormDropdownServer.vue';
+import FormErrorMax from '@/components/FormErrorMax.vue';
+import FormInputEmail from '@/components/FormInputEmail.vue';
+import FormUserPassword from '@/components/FormUserPassword.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useBackend } from '@/composables/useBackend';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
 
 const router = useRouter();
 const notification = useNotification();

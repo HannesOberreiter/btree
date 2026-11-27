@@ -1,6 +1,6 @@
-import { useApiFetch } from '../composables/useApi';
-import { useAuthUserStore } from '../stores/auth';
-import { useFieldsettingStore } from '../stores/fieldsetting';
+import { useApiFetch } from '@/composables/useApi';
+import { useAuthUserStore } from '@/stores/auth';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
 
 class RefreshService {
   private isFetching = false;

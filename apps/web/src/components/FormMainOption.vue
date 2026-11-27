@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { OptionResponse, RecipeTable } from '../api/types';
-import type { FormOption, Option } from '../types';
+import type { OptionResponse, RecipeTable } from '@/api/types';
+import type { FormOption, Option } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputText from './FormInputText.vue';
-import FormStockRecipe from './FormStockRecipe.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormStockRecipe from '@/components/FormStockRecipe.vue';
 
 const props = defineProps({
   ids: {

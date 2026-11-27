@@ -4,9 +4,9 @@ import { orderBy } from 'lodash-es';
 import { LoadingBar } from 'quasar';
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import { isImage, isVideo } from '../helpers';
-import { useApiFetch } from './useApi';
-import { useNotification } from './useNotification';
+import { isImage, isVideo } from '@/helpers';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
 
 const DROPBOX_CLIENT_ID = import.meta.env.DROPBOX_CLIENT_ID ?? '';
 const dbx = new Dropbox({ clientId: DROPBOX_CLIENT_ID });

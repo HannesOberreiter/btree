@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import RearingMethod from '../components/RearingMethod.vue';
-import TableRearingStep from './TableRearingStep.vue';
+import RearingMethod from '@/components/RearingMethod.vue';
+import TableRearingStep from '@/pages/TableRearingStep.vue';
 
 const tab = ref('method');
 </script>

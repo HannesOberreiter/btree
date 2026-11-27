@@ -5,19 +5,19 @@ import { storeToRefs } from 'pinia';
 import { useQuasar } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuthUserStore } from '../stores/auth';
-import BtnBase from './BtnBase.vue';
-import BtnDarkMode from './BtnDarkMode.vue';
-import BtnFullscreen from './BtnFullscreen.vue';
-import BtnQrScanner from './BtnQrScanner.vue';
-import BtnReturn from './BtnReturn.vue';
-import BtnShare from './BtnShare.vue';
-import BtnSpeak from './BtnSpeak.vue';
-import BtnWakeLock from './BtnWakeLock.vue';
-import DialogShare from './DialogShare.vue';
-import DialogWizBee from './DialogWizBee.vue';
-import SearchHiveApiary from './SearchHiveApiary.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useAuthUserStore } from '@/stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnDarkMode from '@/components/BtnDarkMode.vue';
+import BtnFullscreen from '@/components/BtnFullscreen.vue';
+import BtnQrScanner from '@/components/BtnQrScanner.vue';
+import BtnReturn from '@/components/BtnReturn.vue';
+import BtnShare from '@/components/BtnShare.vue';
+import BtnSpeak from '@/components/BtnSpeak.vue';
+import BtnWakeLock from '@/components/BtnWakeLock.vue';
+import DialogShare from '@/components/DialogShare.vue';
+import DialogWizBee from '@/components/DialogWizBee.vue';
+import SearchHiveApiary from '@/components/SearchHiveApiary.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const localPerf = useLocalStorage(
   'pref-local',

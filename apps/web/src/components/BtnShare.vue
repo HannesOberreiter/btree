@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useNFC } from '../composables/useNFC';
-import DialogShare from './DialogShare.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useNFC } from '@/composables/useNFC';
+import DialogShare from '@/components/DialogShare.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 defineProps({
   showPath: {

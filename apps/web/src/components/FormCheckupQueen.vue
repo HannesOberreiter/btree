@@ -4,9 +4,9 @@ import { isEmpty } from 'lodash-es';
 import { useQuasar } from 'quasar';
 import { computed, ref, toRefs, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formCheckMultipleValues } from '../helpers';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { formCheckMultipleValues } from '@/helpers';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

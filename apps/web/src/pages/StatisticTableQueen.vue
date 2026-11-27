@@ -4,14 +4,14 @@ import { orderBy, round } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useKeyTable } from '../composables/useKey';
-import { useQueensStats } from '../composables/useQuery';
+import TableButtons from '@/components/TableButtons.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useKeyTable } from '@/composables/useKey';
+import { useQueensStats } from '@/composables/useQuery';
 
-import { tableCheckSelected } from '../helpers';
-import { useTableFilterStore } from '../stores/tableFilter';
+import { tableCheckSelected } from '@/helpers';
+import { useTableFilterStore } from '@/stores/tableFilter';
 
 const { t } = useI18n();
 const useDate = useDateFormat();

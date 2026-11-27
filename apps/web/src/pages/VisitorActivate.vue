@@ -3,14 +3,14 @@ import useVuelidate from '@vuelidate/core';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import FormDropdownServer from '../components/FormDropdownServer.vue';
-import FormErrorMax from '../components/FormErrorMax.vue';
-import { useNotification } from '../composables/useNotification';
-import { validationErrors } from '../helpers';
-import { alphaNum, maxLength, requiredField } from '../helpers/i18n-validators';
-import AuthService from '../services/auth.service';
-import { useAuthUserStore } from '../stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import FormDropdownServer from '@/components/FormDropdownServer.vue';
+import FormErrorMax from '@/components/FormErrorMax.vue';
+import { useNotification } from '@/composables/useNotification';
+import { validationErrors } from '@/helpers';
+import { alphaNum, maxLength, requiredField } from '@/helpers/i18n-validators';
+import AuthService from '@/services/auth.service';
+import { useAuthUserStore } from '@/stores/auth';
 
 const prop = defineProps({
   activate: {

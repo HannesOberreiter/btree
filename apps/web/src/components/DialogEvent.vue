@@ -5,15 +5,15 @@ import { convertIdsToNumbers } from '@/helpers';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink, useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import EventInfoRearing from './EventInfoRearing.vue';
-import EventInfoVis from './EventInfoVis.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import EventInfoRearing from '@/components/EventInfoRearing.vue';
+import EventInfoVis from '@/components/EventInfoVis.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   eventInfo: {

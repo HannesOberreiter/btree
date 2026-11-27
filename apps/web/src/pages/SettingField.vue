@@ -5,10 +5,10 @@ import { storeToRefs } from 'pinia';
 import { useInstallPWA } from '@/composables/useInstallPwa';
 import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
 
 const props = defineProps({
   tab: {

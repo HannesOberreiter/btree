@@ -2,10 +2,10 @@
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogForm from './DialogForm.vue';
-import TooltipBase from './TooltipBase.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const emit = defineEmits(['refetch']);
 const { t } = useI18n();

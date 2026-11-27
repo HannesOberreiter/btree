@@ -1,7 +1,7 @@
 import { initMatomo } from '@certible/use-matomo';
 import { defineBoot } from '#q-app';
-import { setBootTracker } from '../composables/useTrackEvent';
-import { useAuthUserStore } from '../stores/auth';
+import { setBootTracker } from '@/composables/useTrackEvent';
+import { useAuthUserStore } from '@/stores/auth';
 
 export default defineBoot(({ app, router, store }) => {
   const storeUser = useAuthUserStore(store);

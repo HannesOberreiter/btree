@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { FormScale } from '../types';
+import type { FormScale } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { devEui } from '../helpers/i18n-validators';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputText from './FormInputText.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { devEui } from '@/helpers/i18n-validators';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputText from '@/components/FormInputText.vue';
 
 const props = defineProps({
   ids: {

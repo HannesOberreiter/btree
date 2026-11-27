@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormQueen } from '../types';
+import type { FormQueen } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { toRefs } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, nextTick, ref, unref, watch } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useQueenSameDay } from '../composables/useQueenSameDay';
-import { useQueensQuery } from '../composables/useQuery';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useQueenSameDay } from '@/composables/useQueenSameDay';
+import { useQueensQuery } from '@/composables/useQuery';
 
-import BtnBase from './BtnBase.vue';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import FormInputUrl from './FormInputUrl.vue';
-import FormQueenMarkcolour from './FormQueenMarkcolour.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormInputUrl from '@/components/FormInputUrl.vue';
+import FormQueenMarkcolour from '@/components/FormQueenMarkcolour.vue';
 
 const props = defineProps({
   ids: {

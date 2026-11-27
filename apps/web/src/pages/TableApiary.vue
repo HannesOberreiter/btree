@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import type { QTableProps } from 'quasar';
-import type { ApiaryListItem } from '../api/types';
+import type { ApiaryListItem } from '@/api/types';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColHivecount from '../components/TableColHivecount.vue';
-import TableColLink from '../components/TableColLink.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColStatus from '../components/TableColStatus.vue';
-import TableColUrl from '../components/TableColUrl.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useKeyTable } from '../composables/useKey';
-import { useApiariesQuery } from '../composables/useQuery';
-import { tableCheckSelected, tableMeta } from '../helpers';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColHivecount from '@/components/TableColHivecount.vue';
+import TableColLink from '@/components/TableColLink.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColStatus from '@/components/TableColStatus.vue';
+import TableColUrl from '@/components/TableColUrl.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useKeyTable } from '@/composables/useKey';
+import { useApiariesQuery } from '@/composables/useQuery';
+import { tableCheckSelected, tableMeta } from '@/helpers';
+import { useTablesStore } from '@/stores/tables';
 
 const useDate = useDateFormat();
 const storeTable = useTablesStore();

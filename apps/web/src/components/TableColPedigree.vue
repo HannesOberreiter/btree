@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { toRef } from 'vue';
-import DialogPedigree from './DialogPedigree.vue';
+import DialogPedigree from '@/components/DialogPedigree.vue';
 
 const props = defineProps({
   parentProps: {

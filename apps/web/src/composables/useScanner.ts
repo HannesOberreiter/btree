@@ -5,7 +5,7 @@ import {
   Html5QrcodeSupportedFormats
 } from 'html5-qrcode';
 import { computed, ref } from 'vue';
-import { useNotification } from '../composables/useNotification';
+import { useNotification } from '@/composables/useNotification';
 
 interface Html5QrCustom extends Html5Qrcode {
   localMediaStream: MediaStream;

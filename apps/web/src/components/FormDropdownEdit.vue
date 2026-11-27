@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
-import { validationErrors } from '../helpers';
-import { requiredField } from '../helpers/i18n-validators';
+import { validationErrors } from '@/helpers';
+import { requiredField } from '@/helpers/i18n-validators';
 
 const props = defineProps({
   modelValue: {

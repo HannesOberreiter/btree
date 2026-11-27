@@ -1,5 +1,5 @@
-import type { TaskStockLine } from './api/types';
-import type { KINDS, KINDS_APIARY, STATUS } from './constants';
+import type { TaskStockLine } from '@/api/types';
+import type { KINDS, KINDS_APIARY, STATUS } from '@/constants';
 
 export type FilterState = (typeof STATUS)[number];
 export type Filter = (typeof KINDS)[number];

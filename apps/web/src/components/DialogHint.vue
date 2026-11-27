@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
 
 defineProps({
   hint: {

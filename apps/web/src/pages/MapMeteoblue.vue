@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useGeolocation, watchOnce } from '@vueuse/core';
 import { computed, ref } from 'vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import { useAuthUserStore } from '../stores/auth';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import { useAuthUserStore } from '@/stores/auth';
 
 const storeUser = useAuthUserStore();
 

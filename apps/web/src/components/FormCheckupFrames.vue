@@ -3,11 +3,11 @@ import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
 import { isEmpty, some } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
-import { formCheckMultipleValues } from '../helpers';
-import { integer, maxValue, minValue } from '../helpers/i18n-validators';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import BtnBase from './BtnBase.vue';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { formCheckMultipleValues } from '@/helpers';
+import { integer, maxValue, minValue } from '@/helpers/i18n-validators';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

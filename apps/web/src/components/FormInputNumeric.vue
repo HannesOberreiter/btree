@@ -4,16 +4,16 @@ import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
 import { isEmpty } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
-import { formCheckMultipleValues, validationErrors } from '../helpers';
+import { formCheckMultipleValues, validationErrors } from '@/helpers';
 import {
   decimal,
   integer,
   maxValue,
   minValue,
   numeric
-} from '../helpers/i18n-validators';
-import BtnBase from './BtnBase.vue';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+} from '@/helpers/i18n-validators';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

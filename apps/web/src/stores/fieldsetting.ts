@@ -2,8 +2,8 @@ import { useStorage } from '@vueuse/core';
 import cloneDeep from 'lodash-es/cloneDeep';
 import defaultsDeep from 'lodash-es/defaultsDeep';
 import { defineStore } from 'pinia';
-import { useApiFetch } from '../composables/useApi';
-import refreshService from '../services/refresh.service';
+import { useApiFetch } from '@/composables/useApi';
+import refreshService from '@/services/refresh.service';
 
 interface Rating {
   brood: boolean;

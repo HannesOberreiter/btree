@@ -3,7 +3,7 @@ import { LControl, LControlLayers, LTileLayer } from '@vue-leaflet/vue-leaflet';
 import { useQuasar } from 'quasar';
 import { ref, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
+import { useApiFetch } from '@/composables/useApi';
 
 const props = defineProps({
   recentCount: {

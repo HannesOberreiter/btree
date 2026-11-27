@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import { useScanner } from '../composables/useScanner';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import QrcodeScanner from './QrcodeScanner.vue';
+import { useScanner } from '@/composables/useScanner';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import QrcodeScanner from '@/components/QrcodeScanner.vue';
 
 defineEmits([...useDialogPluginComponent.emits]);
 

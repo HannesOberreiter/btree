@@ -5,7 +5,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { computed, unref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { useAuthUserStore } from '../stores/auth';
+import { useAuthUserStore } from '@/stores/auth';
 import 'dayjs/locale/de';
 import 'dayjs/locale/en';
 

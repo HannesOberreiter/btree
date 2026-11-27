@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePreferredLanguages } from '@vueuse/core';
 import { ref } from 'vue';
-import { LANGUAGES } from '../constants';
+import { LANGUAGES } from '@/constants';
 
 const languages = usePreferredLanguages();
 const lang = ref(languages.value[0] === 'de' ? LANGUAGES[1] : LANGUAGES[0]);

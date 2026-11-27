@@ -2,9 +2,9 @@
 import { useVModels } from '@vueuse/core';
 import { computed, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from './BtnBase.vue';
-import FormInputText from './FormInputText.vue';
-import TooltipBase from './TooltipBase.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   modelValue: {

@@ -3,13 +3,13 @@ import { map } from 'lodash-es';
 import { useQuasar } from 'quasar';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { usePreventNavigation } from '../composables/usePreventNavgiation';
-import { clearCache } from '../composables/useQuery';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogForm from './DialogForm.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { usePreventNavigation } from '@/composables/usePreventNavgiation';
+import { clearCache } from '@/composables/useQuery';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogForm from '@/components/DialogForm.vue';
 
 const props = defineProps({
   data: {

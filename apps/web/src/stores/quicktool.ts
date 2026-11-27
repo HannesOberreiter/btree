@@ -1,4 +1,4 @@
-import type { Task } from '../types';
+import type { Task } from '@/types';
 import { useStorage } from '@vueuse/core';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 

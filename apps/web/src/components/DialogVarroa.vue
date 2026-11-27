@@ -4,10 +4,10 @@ import { round } from 'lodash-es';
 import { useDialogPluginComponent } from 'quasar';
 import { computed, ref, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useTasksQuery } from '../composables/useQuery';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
+import { useTasksQuery } from '@/composables/useQuery';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
 
 const props = defineProps({
   value: {

@@ -3,9 +3,9 @@
 import type { PayPalNamespace } from '@paypal/paypal-js';
 import { loadScript } from '@paypal/paypal-js';
 import { onMounted, toRefs } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
 
 const props = defineProps({
   donation: {
