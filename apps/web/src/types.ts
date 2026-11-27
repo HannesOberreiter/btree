@@ -1,6 +1,6 @@
 import type { TaskStockLine } from './api/types';
 import type { KINDS, KINDS_APIARY, STATUS } from './constants';
-import type { BreedingSystem } from './helpers/breeding';
+import type { BreedingSystem } from '@/helpers/breeding';
 
 export type FilterState = (typeof STATUS)[number];
 export type Filter = (typeof KINDS)[number];

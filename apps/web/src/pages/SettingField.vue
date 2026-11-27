@@ -8,7 +8,7 @@ import { useRoute, useRouter } from 'vue-router';
 import BtnBase from '../components/BtnBase.vue';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
-import { BREEDING_RATINGS } from '../helpers/breeding';
+import { BREEDING_RATINGS } from '@/helpers/breeding';
 import { useFieldsettingStore } from '../stores/fieldsetting';
 
 const props = defineProps({

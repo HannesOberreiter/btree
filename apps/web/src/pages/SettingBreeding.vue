@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { CompanyPatchResponse, OptionListItem } from '../api/types';
-import type { BreedingSection, BreedingSystem } from '../helpers/breeding';
+import type { CompanyPatchResponse, OptionListItem } from '@/api/types';
+import type { BreedingSection, BreedingSystem } from '@/helpers/breeding';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useOptionsQuery } from '../composables/useQuery';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useOptionsQuery } from '@/composables/useQuery';
 import {
   BREEDING_RATING_MAX,
   BREEDING_RATINGS,
   BREEDING_SECTIONS
-} from '../helpers/breeding';
-import { useAuthUserStore } from '../stores/auth';
-import { useRefreshStore } from '../stores/refresh';
+} from '@/helpers/breeding';
+import { useAuthUserStore } from '@/stores/auth';
+import { useRefreshStore } from '@/stores/refresh';
 
 const api = useApiFetch();
 const notification = useNotification();

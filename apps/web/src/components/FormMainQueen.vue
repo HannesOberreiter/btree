@@ -10,8 +10,8 @@ import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
 import { useQueenSameDay } from '../composables/useQueenSameDay';
 import { useQueensQuery } from '../composables/useQuery';
-import { checkBreedingCode } from '../helpers/breeding';
-import { useAuthUserStore } from '../stores/auth';
+import { checkBreedingCode } from '@/helpers/breeding';
+import { useAuthUserStore } from '@/stores/auth';
 
 import BtnBase from './BtnBase.vue';
 import FormButtons from './FormButtons.vue';

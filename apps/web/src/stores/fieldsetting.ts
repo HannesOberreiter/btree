@@ -3,9 +3,9 @@ import cloneDeep from 'lodash-es/cloneDeep';
 import defaultsDeep from 'lodash-es/defaultsDeep';
 import { defineStore } from 'pinia';
 import { useApiFetch } from '../composables/useApi';
-import { BREEDING_RATING_MAX, BREEDING_RATINGS } from '../helpers/breeding';
+import { BREEDING_RATING_MAX, BREEDING_RATINGS } from '@/helpers/breeding';
 import refreshService from '../services/refresh.service';
-import { useAuthUserStore } from './auth';
+import { useAuthUserStore } from '@/stores/auth';
 
 interface Rating {
   brood: boolean;
