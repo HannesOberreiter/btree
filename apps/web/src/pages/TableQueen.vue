@@ -213,6 +213,23 @@ const pagination = ref({
 });
 useKeyTable(pagination);
 
+// Queens without a hive are only in the virgin table (TableVirgin.vue).
+// A saved filter "no hive" ('empty') would give an empty table, so it is
+// dropped.
+const withHive = { 'queens.hive_id': 'notEmpty' };
+const queenFilters = computed(() => {
+  try {
+    const values = filters?.value ? JSON.parse(filters.value) : [];
+    const own = (Array.isArray(values) ? values : []).filter(
+      (value: Record<string, unknown> | null) =>
+        value?.['queens.hive_id'] !== 'empty'
+    );
+    return JSON.stringify([...own, withHive]);
+  } catch {
+    return JSON.stringify([withHive]);
+  }
+});
+
 const {
   isLoading: isLoadingTable,
   data,
@@ -223,7 +240,7 @@ const {
   offset: computed(() => pagination.value.page - 1),
   limit: computed(() => pagination.value.rowsPerPage),
   q: computed(() => (filter.value ? filter.value : '')),
-  filters: computed(() => (filters?.value ? filters.value : '')),
+  filters: queenFilters,
   deleted,
   modus: null,
   latest: modus,

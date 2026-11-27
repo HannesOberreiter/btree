@@ -215,9 +215,14 @@ export async function listQueens(
             count = count.where('hives_locations.apiary_id', '=', apiaryId);
           }
           const hive = value['queens.hive_id'];
+          // `empty` and `notEmpty` split the queens into the virgin table
+          // and the queen table, so every queen is in exactly one of them.
           if (hive === 'empty') {
             query = query.where('hives_locations.hive_id', 'is', null);
             count = count.where('hives_locations.hive_id', 'is', null);
+          } else if (hive === 'notEmpty') {
+            query = query.where('hives_locations.hive_id', 'is not', null);
+            count = count.where('hives_locations.hive_id', 'is not', null);
           } else if (Number.isFinite(Number(hive))) {
             query = query.where(
               'queen_current_placements.hive_id',

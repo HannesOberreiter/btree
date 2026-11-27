@@ -1,7 +1,8 @@
 import Chance from 'chance';
 import { expect, test } from '../../support/user-helpers';
 
-const chance = new Chance(12_345);
+// Another seed than the virgin table test, so that the names differ.
+const chance = new Chance(54_321);
 
 test.describe('user - Queen Table', () => {
   const form = 'form-queen';
@@ -10,7 +11,7 @@ test.describe('user - Queen Table', () => {
     await page.goto('/table/queen');
   });
 
-  test('create & Edit and Delete', async ({
+  test('a new queen without hive is in the virgin table', async ({
     page,
     dataCy,
     tableEditRow,
@@ -25,7 +26,15 @@ test.describe('user - Queen Table', () => {
     await dataCy('btn-form-save').click();
     await expect(dataCy(form)).not.toBeAttached();
 
+    // Show active and inactive queens: the new queen is in neither.
     await dataCy('btn-table-modus').click();
+    await dataCy('btn-table-modus').click();
+    await expect(page.locator('tbody > tr').first()).toBeVisible();
+    await expect(
+      page.locator('tbody > tr').filter({ hasText: name })
+    ).toHaveCount(0);
+
+    await page.goto('/table/virgin');
     await tableEditRow(form, name);
     await tableDeleteRow(name);
   });
