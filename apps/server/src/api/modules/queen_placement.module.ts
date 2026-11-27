@@ -212,38 +212,6 @@ async function setPeriod(
 }
 
 /**
- * Writes the derived `hive_id` and `move_date` to `queens`. The old columns
- * stay until the cleanup, so that a rollback of the server still works.
- * A queen without placements keeps the stored `move_date`.
- */
-export async function syncQueen(db: Database, queenId: number) {
-  const queen = await db
-    .selectFrom('queens')
-    .select('modus')
-    .where('id', '=', queenId)
-    .executeTakeFirst();
-  if (!queen) return;
-  const rows = await queenPeriods(db, queenId);
-  if (!rows.length) {
-    await db
-      .updateTable('queens')
-      .set({ hive_id: null })
-      .where('id', '=', queenId)
-      .execute();
-    return;
-  }
-  const derived = derivePlacement(queen.modus, rows);
-  await db
-    .updateTable('queens')
-    .set({
-      hive_id: derived.hive_id,
-      move_date: derived.move_date ? asDate(derived.move_date) : null,
-    })
-    .where('id', '=', queenId)
-    .execute();
-}
-
-/**
  * Moves an active queen into a hive on a day, or out of her hive when
  * `hiveId` is null.
  * - The open placement of the queen ends on the day. On the same day as its
@@ -294,7 +262,6 @@ export async function moveQueen(
       .set({ modus: false, modus_date: asDate(day), edit_id: ctx.beeId })
       .where('id', '=', row.queen_id)
       .execute();
-    await syncQueen(db, row.queen_id);
   }
 
   if (open && open.from_date === day) {
@@ -427,7 +394,7 @@ export async function editCurrent(
  * Changes the `move_date` of a queen whose hive stays the same.
  * - Queen in a hive: the start of the current placement.
  * - Active queen moved out of her last hive: the end of that placement.
- * - Queen without placements: `queens.move_date`.
+ * - Queen without placements: no change. Such a queen has no move date.
  */
 async function editDate(
   db: Database,
@@ -441,15 +408,7 @@ async function editDate(
     return;
   }
   const last = (await queenPeriods(db, queenId)).at(-1);
-  if (!last) {
-    await db
-      .updateTable('queens')
-      .set({ move_date: asDate(day) })
-      .where('id', '=', queenId)
-      .execute();
-    return;
-  }
-  if (!last.id) return;
+  if (!last?.id) return;
   await assertFree(db, { ...last, to_date: day }, last.id);
   await setPeriod(db, ctx, last.id, { to_date: day });
 }
@@ -545,7 +504,6 @@ export async function applyQueenWrite(
       );
     }
   }
-  await syncQueen(db, queenId);
 }
 
 interface RelationResponse {
@@ -741,7 +699,6 @@ export function updatePlacements(
       await setPeriod(trx, ctx, row.id, next);
       if (!isOpen(row) && toDate !== row.to_date)
         await moveModusDateWithEnd(trx, ctx, row, toDate);
-      await syncQueen(trx, row.queen_id);
     }
     return rows.length;
   });
@@ -768,8 +725,6 @@ export function deletePlacements(
         rows.map((row) => row.id),
       )
       .execute();
-    for (const queenId of new Set(rows.map((row) => row.queen_id)))
-      await syncQueen(trx, queenId);
     return rows.length;
   });
 }

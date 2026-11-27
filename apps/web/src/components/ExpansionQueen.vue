@@ -118,7 +118,7 @@ async function setModus(id: number, modus: boolean) {
               text-color="black"
               :label="`
                 ${$t('queenMovedate')}:
-                ${useDate.displayFormat(queen.move_date, 'date')}
+                ${queen.move_date ? useDate.displayFormat(queen.move_date, 'date') : ''}
               `"
             />
             <q-chip

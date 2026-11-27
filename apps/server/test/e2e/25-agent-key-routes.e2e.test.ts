@@ -2,10 +2,8 @@ import process from 'node:process';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import {
-  asDate,
-  syncQueen,
-} from '../../src/api/modules/queen_placement.module.js';
+import { asDate } from '../../src/api/modules/queen_placement.module.js';
+import type { BackfillQueen } from '../../src/api/utils/queen_placement.util.js';
 import { buildQueenPlacements } from '../../src/api/utils/queen_placement.util.js';
 import { ROLES } from '../../src/config/constants.config.js';
 import { KyselyServer } from '../../src/servers/kysely.server.js';
@@ -485,6 +483,8 @@ describe('agent key & agent API routes', () => {
     const hiveIds: number[] = [];
     const movedateIds: number[] = [];
     const queenIds: Record<string, number> = {};
+    /** Hive and move date of each queen, for the placements. */
+    const seeded: BackfillQueen[] = [];
 
     async function insertHive(name: string, userId: number, apiary: number) {
       const hive = await db
@@ -515,20 +515,29 @@ describe('agent key & agent API routes', () => {
         moveDate?: string;
       },
     ) {
+      const modusDate = values.modus === false ? '2025-03-01' : null;
       const queen = await db
         .insertInto('queens')
         .values({
           name: `E2E queen ${key}`,
           user_id: values.userId,
-          hive_id: values.hiveId,
           date: new Date(values.date),
-          move_date: new Date(values.moveDate ?? values.date),
           modus: values.modus ?? true,
-          modus_date: values.modus === false ? new Date('2025-03-01') : null,
+          modus_date: modusDate ? new Date(modusDate) : null,
           mark_colour: '#0000ff',
         })
         .executeTakeFirstOrThrow();
       queenIds[key] = Number(queen.insertId);
+      seeded.push({
+        id: queenIds[key],
+        hive_id: values.hiveId,
+        user_id: values.userId,
+        move_date: values.moveDate ?? values.date,
+        created_at: values.date,
+        updated_at: values.date,
+        modus: values.modus ?? true,
+        modus_date: modusDate,
+      });
     }
 
     beforeAll(async () => {
@@ -606,13 +615,8 @@ describe('agent key & agent API routes', () => {
         hiveId: other,
         date: '2024-05-01',
       });
-      // Placements as the migration builds them from the old columns.
-      const queens = await db
-        .selectFrom('queens')
-        .selectAll()
-        .where('id', 'in', Object.values(queenIds))
-        .execute();
-      const { rows } = buildQueenPlacements(queens);
+      // Placements with the rules of the migration.
+      const { rows } = buildQueenPlacements(seeded);
       await db
         .insertInto('queen_placements')
         .values(
@@ -623,7 +627,6 @@ describe('agent key & agent API routes', () => {
           })),
         )
         .execute();
-      for (const id of Object.values(queenIds)) await syncQueen(db, id);
     });
 
     afterAll(async () => {

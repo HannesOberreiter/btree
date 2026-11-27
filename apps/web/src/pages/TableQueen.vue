@@ -91,7 +91,8 @@ const columns = [
     label: t('queenMovedate'),
     align: 'left',
     field: (row: any) => row.move_date,
-    format: (val: string) => useDate.displayFormat(val),
+    // A queen without placement has no move date.
+    format: (val: string | null) => (val ? useDate.displayFormat(val) : ''),
     sortable: true
   },
   {

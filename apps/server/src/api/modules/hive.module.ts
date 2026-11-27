@@ -182,7 +182,7 @@ function queenProjection() {
       'id', queens.id,
       'name', queens.name,
       'date', queens.date,
-      'move_date', queens.move_date,
+      'move_date', queen_current_placements.move_date,
       'mother', queens.mother,
       'mother_id', queens.mother_id,
       'mark_colour', queens.mark_colour,
@@ -192,7 +192,7 @@ function queenProjection() {
       'deleted_at', queens.deleted_at,
       'note', queens.note,
       'url', queens.url,
-      'hive_id', queens.hive_id,
+      'hive_id', queen_current_placements.hive_id,
       'race_id', queens.race_id,
       'mating_id', queens.mating_id,
       'user_id', queens.user_id,
@@ -376,6 +376,11 @@ export async function getHiveDetail(
     .leftJoin('movedates', 'movedates.id', 'hives_locations.move_id')
     .leftJoin('queens_locations', 'queens_locations.hive_id', 'hives.id')
     .leftJoin('queens', 'queens.id', 'queens_locations.queen_id')
+    .leftJoin(
+      'queen_current_placements',
+      'queen_current_placements.queen_id',
+      'queens.id',
+    )
     .leftJoin('queen_races', 'queen_races.id', 'queens.race_id')
     .leftJoin('queen_matings', 'queen_matings.id', 'queens.mating_id')
     .leftJoin('hive_sources', 'hive_sources.id', 'hives.source_id')
@@ -704,13 +709,33 @@ export function updateHivePositions(
 }
 
 async function deleteConnections(db: Database, ids: number[]) {
+  // The current hive of a queen comes from the view
+  // `queen_current_placements`. Select the ids first: MariaDB does not allow
+  // a delete from `queens` with a subquery that reads `queens` through the
+  // view. The subquery on `queen_placements` lets MariaDB use its hive index.
+  const queens = await db
+    .selectFrom('queen_current_placements')
+    .select('queen_id')
+    .where(
+      'queen_id',
+      'in',
+      db
+        .selectFrom('queen_placements')
+        .select('queen_id')
+        .where('hive_id', 'in', ids),
+    )
+    .where('hive_id', 'in', ids)
+    .execute();
+  const queenIds = queens.map((row) => row.queen_id);
   await Promise.all([
     db.deleteFrom('movedates').where('hive_id', 'in', ids).execute(),
     db.deleteFrom('feeds').where('hive_id', 'in', ids).execute(),
     db.deleteFrom('treatments').where('hive_id', 'in', ids).execute(),
     db.deleteFrom('checkups').where('hive_id', 'in', ids).execute(),
     db.deleteFrom('harvests').where('hive_id', 'in', ids).execute(),
-    db.deleteFrom('queens').where('hive_id', 'in', ids).execute(),
+    ...(queenIds.length
+      ? [db.deleteFrom('queens').where('id', 'in', queenIds).execute()]
+      : []),
   ]);
 }
 

@@ -50,7 +50,8 @@ export function isOpen(row: { to_date: Day }) {
 }
 
 /**
- * The values that the API shows as `queens.hive_id` and `queens.move_date`.
+ * The values that the API shows as `hive_id` and `move_date` of a queen. The
+ * view `queen_current_placements` uses the same rules.
  * - Open placement: its hive and start.
  * - No open placement, queen inactive: the last placement.
  * - No open placement, queen active: no hive, `move_date` = end of the last
@@ -104,8 +105,10 @@ export interface BackfillSkip {
 }
 
 /**
- * Builds placements from the old columns `hive_id`, `move_date` and
- * `modus_date`. Each queen gets at most one placement, in her last hive.
+ * Builds placements from the old queen values `hive_id`, `move_date` and
+ * `modus_date`. The migration 20261121120000, the seed and the import of a
+ * company archive of version 1 use it. Each queen gets at most one
+ * placement, in her last hive.
  *
  * Rules:
  * - Start: `move_date`, else `created_at`.

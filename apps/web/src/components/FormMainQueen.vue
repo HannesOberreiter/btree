@@ -211,6 +211,13 @@ async function getEdit(id: unknown[]) {
       if (isCopy.value) {
         response[0].hive_id = null;
       }
+      // A queen without placement has no move date. The form then shows
+      // today, the same as for a new queen.
+      for (const row of response) {
+        if (!row.move_date) {
+          row.move_date = dayjs().format('YYYY-MM-DD');
+        }
+      }
       // Little helper to set current date if user edits one entry and wants to set inactive state, otherwise it would be the creation date
       if (response.length === 1 && response[0]?.modus) {
         response[0].modus_date = dayjs().format('YYYY-MM-DD');

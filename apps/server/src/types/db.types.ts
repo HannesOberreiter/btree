@@ -943,13 +943,11 @@ export interface Promos {
   user_id: Generated<number | null>;
 }
 
-export interface QueenDurations {
-  duration: Generated<number | null>;
+export interface QueenCurrentPlacements {
   hive_id: Generated<number | null>;
-  id: Generated<number>;
-  last_date: Generated<Date>;
   move_date: Generated<Date | null>;
-  user_id: Generated<number | null>;
+  placement_id: Generated<number | null>;
+  queen_id: Generated<number>;
 }
 
 export interface QueenMatings {
@@ -1030,7 +1028,6 @@ export interface Queens {
    * Editor
    */
   edit_id: Generated<number | null>;
-  hive_id: Generated<number | null>;
   id: Generated<number>;
   mark_colour: Generated<string | null>;
   mating_id: Generated<number | null>;
@@ -1045,7 +1042,6 @@ export interface Queens {
   modus_date: Generated<Date | null>;
   mother: Generated<string | null>;
   mother_id: Generated<number | null>;
-  move_date: Generated<Date | null>;
   name: Generated<string | null>;
   note: Generated<string | null>;
   race_id: Generated<number | null>;
@@ -1068,7 +1064,7 @@ export interface QueensLocations {
    * Keep track of when queen was set inactive.
    */
   queen_modus_date: Generated<Date | null>;
-  queen_move_date: Generated<Date | null>;
+  queen_move_date: Date;
   queen_name: Generated<string | null>;
 }
 
@@ -1519,7 +1515,7 @@ export interface DB {
   observations: Observations;
   payments: Payments;
   promos: Promos;
-  queen_durations: QueenDurations;
+  queen_current_placements: QueenCurrentPlacements;
   queen_matings: QueenMatings;
   queen_placements: QueenPlacements;
   queen_races: QueenRaces;
