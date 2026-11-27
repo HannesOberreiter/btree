@@ -118,8 +118,9 @@ function setValues() {
     if (value) {
       editValues(true, key);
     } else if (values.value && !isEmpty(values.value)) {
+      // A checkup without a rating has null. 0 shows the empty stars.
       modelValue.value[key as keyof typeof modelValue.value] =
-        values.value[0][key];
+        values.value[0][key] ?? 0;
     } else {
       modelValue.value[key as keyof typeof modelValue.value] =
         resetValue[key as keyof typeof resetValue];

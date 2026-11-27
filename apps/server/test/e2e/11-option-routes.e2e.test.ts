@@ -384,6 +384,15 @@ describe('harvest_types breeding section', () => {
     expect(await section()).toBeNull();
   });
 
+  it('post - create a type with a section', async () => {
+    const res = await doRequest(agent, 'post', route, null, null, {
+      name: 'breeding section post',
+      breeding_section: 'stock',
+    });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.breeding_section).toBe('stock');
+  });
+
   it('other option tables ignore the section', async () => {
     const created = await doRequest(
       agent,

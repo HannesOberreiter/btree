@@ -304,6 +304,7 @@ async function onChange() {
         :required="isEdit ? false : true"
         label="name"
         name="queen"
+        data-cy="queen-name"
         icon="fas fa-passport"
         class="q-mb-sm"
         :hint="isEdit ? '' : `${$t('lastAdded')}: ${lastNames}`"

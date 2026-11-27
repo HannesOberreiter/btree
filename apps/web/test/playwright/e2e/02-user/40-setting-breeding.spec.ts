@@ -63,7 +63,7 @@ test.describe('user - Setting Breeding', () => {
     ).toHaveAttribute('aria-disabled', 'true');
 
     await page.goto('new/queen');
-    const name = page.locator('[name=queen]');
+    const name = dataCy('queen-name');
     const warning = dataCy('queen-breeding-warning');
     await name.fill('Queen 1');
     await expect(warning).toBeVisible();
@@ -115,6 +115,64 @@ test.describe('user - Setting Breeding', () => {
     await expect(dataCy('notification')).toBeAttached();
   });
 
+  test('edit shows the stars of an unrated breeding rating', async ({
+    page,
+    request,
+    dataCy
+  }) => {
+    const headers = { origin: apiOrigin };
+    const hiveResponse = await request.get(
+      `${backendURL}/api/v1/hive?limit=1`,
+      {
+        headers
+      }
+    );
+    const hives = ((await hiveResponse.json()) as { results: { id: number }[] })
+      .results;
+    expect(hives).toHaveLength(1);
+    const hiveId = hives[0]?.id;
+    // An old or imported checkup has no value in the new rating columns.
+    const note = `Breeding unrated ${Date.now()}`;
+    const created = await request.post(`${backendURL}/api/v1/checkup`, {
+      headers,
+      data: {
+        hive_ids: [hiveId],
+        date: new Date().toISOString().slice(0, 10),
+        interval: 0,
+        repeat: 0,
+        note
+      }
+    });
+    expect(created.ok()).toBe(true);
+    const response = await request.patch(`${backendURL}/api/v1/company`, {
+      headers,
+      data: { breeding_system: 'beebreed' }
+    });
+    expect(response.ok()).toBe(true);
+    await page.addInitScript(() => {
+      const company = JSON.parse(localStorage.getItem('company') ?? '{}');
+      company.breeding_system = 'beebreed';
+      localStorage.setItem('company', JSON.stringify(company));
+      localStorage.setItem(
+        'table-visible-checkup',
+        JSON.stringify(['date', 'hive.name', 'note'])
+      );
+    });
+
+    await page.goto('/table/checkup');
+    const row = page.locator('tbody > tr').filter({ hasText: note });
+    await expect(row).toHaveCount(1);
+    await row.locator('.q-checkbox').click();
+    await dataCy('btn-table-edit').click();
+    await dataCy('checkup-rating').click();
+    await expect(
+      dataCy('checkup-rating-colony_strength').locator(
+        '.q-rating__icon-container'
+      )
+    ).toHaveCount(4);
+    await page.keyboard.press('Escape');
+  });
+
   test('map harvest types to the harvest sections', async ({
     page,
     request,
@@ -129,45 +187,52 @@ test.describe('user - Setting Breeding', () => {
     });
     expect(created.ok()).toBe(true);
     const typeId = (await created.json()).id as number;
-    const response = await request.patch(`${backendURL}/api/v1/company`, {
-      headers,
-      data: { breeding_system: 'beebreed' }
-    });
-    expect(response.ok()).toBe(true);
-
-    await page.goto('setting/breeding');
-    await expect(dataCy('setting-breeding-sections')).toBeVisible();
-
-    const pick = async (section: string) => {
-      const patch = page.waitForResponse(
-        res =>
-          res.request().method() === 'PATCH' &&
-          res.url().includes('/v1/option/harvest_types')
-      );
-      await dataCy(`setting-breeding-section-${section}`).click();
-      await page.getByRole('option', { name: `${name} (kg)` }).click();
-      const res = await patch;
-      expect(res.ok()).toBe(true);
-      expect(res.request().postDataJSON()).toEqual({
-        ids: [typeId],
-        data: { breeding_section: section }
+    // Delete the type also when the test fails.
+    try {
+      const response = await request.patch(`${backendURL}/api/v1/company`, {
+        headers,
+        data: { breeding_system: 'beebreed' }
       });
-      await page.keyboard.press('Escape');
-    };
+      expect(response.ok()).toBe(true);
 
-    await pick('early');
-    await expect(dataCy('setting-breeding-section-early')).toContainText(name);
-    // A type is in one section only, so it leaves the early section.
-    await pick('summer');
-    await expect(dataCy('setting-breeding-section-summer')).toContainText(name);
-    await expect(dataCy('setting-breeding-section-early')).not.toContainText(
-      name
-    );
+      await page.goto('setting/breeding');
+      await expect(dataCy('setting-breeding-sections')).toBeVisible();
 
-    const deleted = await request.patch(`${optionURL}/batchDelete`, {
-      headers,
-      data: { ids: [typeId] }
-    });
-    expect(deleted.ok()).toBe(true);
+      const pick = async (section: string) => {
+        const patch = page.waitForResponse(
+          res =>
+            res.request().method() === 'PATCH' &&
+            res.url().includes('/v1/option/harvest_types')
+        );
+        await dataCy(`setting-breeding-section-${section}`).click();
+        await page.getByRole('option', { name: `${name} (kg)` }).click();
+        const res = await patch;
+        expect(res.ok()).toBe(true);
+        expect(res.request().postDataJSON()).toEqual({
+          ids: [typeId],
+          data: { breeding_section: section }
+        });
+        await page.keyboard.press('Escape');
+      };
+
+      await pick('early');
+      await expect(dataCy('setting-breeding-section-early')).toContainText(
+        name
+      );
+      // A type is in one section only, so it leaves the early section.
+      await pick('summer');
+      await expect(dataCy('setting-breeding-section-summer')).toContainText(
+        name
+      );
+      await expect(dataCy('setting-breeding-section-early')).not.toContainText(
+        name
+      );
+    } finally {
+      const deleted = await request.patch(`${optionURL}/batchDelete`, {
+        headers,
+        data: { ids: [typeId] }
+      });
+      expect(deleted.ok()).toBe(true);
+    }
   });
 });
