@@ -478,6 +478,27 @@ describe('queen routes', () => {
       expect(empty.every((row) => row.hive_id === null)).toBe(true);
     });
 
+    it('notEmpty and empty split all queens into two groups', async () => {
+      const all = (await list({})).map((row) => row.id);
+      const withHive = (
+        await list({
+          filters: JSON.stringify([{ 'queens.hive_id': 'notEmpty' }]),
+        })
+      ).map((row) => row.id);
+      const empty = (
+        await list({
+          filters: JSON.stringify([{ 'queens.hive_id': 'empty' }]),
+        })
+      ).map((row) => row.id);
+      expect(withHive).toContain(inHive);
+      expect(withHive).not.toContain(noHive);
+      expect(withHive.filter((id) => empty.includes(id))).toEqual([]);
+      const order = (a: number, b: number) => a - b;
+      expect([...withHive, ...empty].toSorted(order)).toEqual(
+        all.toSorted(order),
+      );
+    });
+
     it('latest shows the current queen of the hive', async () => {
       const latest = await list({ details: true, latest: true });
       expect(latest.find((row) => row.id === inHive)).toMatchObject({
