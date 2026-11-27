@@ -555,6 +555,7 @@ function onPrint() {
           "
           v-close-popup
           clickable
+          data-cy="btn-table-import"
           @click="onImport"
         >
           <q-item-section avatar>

@@ -121,6 +121,7 @@ function onRejected(rejectedEntries: QRejectedEntry[]) {
             outlined
             accept=".csv"
             label="Upload (.csv)"
+            data-cy="input-upload-csv"
             :multiple="false"
             :filter="checkFileType"
             @update:model-value="onFileUpload"
@@ -139,6 +140,7 @@ function onRejected(rejectedEntries: QRejectedEntry[]) {
             v-if="lines > 0"
             color="primary"
             :loading="isSubmitting"
+            data-cy="btn-upload-csv"
             @click="onUpload"
           >
             {{ $t('upload') }}
