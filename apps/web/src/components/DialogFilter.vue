@@ -117,8 +117,9 @@ const layouts = {
       props: {
         table: 'hive',
         label: 'hive',
-        'allow-empty': 'filterEmpty',
-        'filter-empty': 'noHive'
+        // No "no hive" option: the queen table shows only queens with a
+        // hive. Queens without a hive are in the virgin table.
+        'allow-empty': 'filterEmpty'
       }
     },
     {
