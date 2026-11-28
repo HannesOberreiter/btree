@@ -99,6 +99,22 @@ const columns = [
     sortable: true
   },
   {
+    name: 'colony_strength',
+    label: t('rating.colony_strength'),
+    align: 'right',
+    field: (row: any) => row.colony_strength,
+    format: v => round(v, 1),
+    sortable: true
+  },
+  {
+    name: 'spring_development',
+    label: t('rating.spring_development'),
+    align: 'right',
+    field: (row: any) => row.spring_development,
+    format: v => round(v, 1),
+    sortable: true
+  },
+  {
     name: 'varroa',
     label: t('varroa'),
     align: 'right',

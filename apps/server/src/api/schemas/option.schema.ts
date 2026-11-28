@@ -38,12 +38,22 @@ export const optionListQuerySchema = z.object({
   modus: z.boolean().nullable().optional(),
 });
 
+// Harvest section of the breeding export (BeeBreed TEIL1, TEIL2, TEIL3
+// and VORRAT). Only harvest types have it.
+export const breedingSectionSchema = z.enum([
+  'early',
+  'summer',
+  'late',
+  'stock',
+]);
+
 export const optionValuesSchema = z.object({
   name: z.string().min(1).max(45).trim().optional(),
   modus: z.boolean().optional(),
   favorite: z.boolean().optional(),
   unit: z.string().max(45).nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  breeding_section: breedingSectionSchema.nullable().optional(),
 });
 
 export const patchBodySchema = z.object({
@@ -93,6 +103,7 @@ export const optionResponseSchema = z.object({
   user_id: z.number().nullable(),
   unit: z.string().nullable().optional(),
   note: z.string().nullable().optional(),
+  breeding_section: z.string().nullable().optional(),
   stock: chargeStockResponseSchema.optional(),
 });
 export const optionListResponseSchema = z.array(optionResponseSchema);

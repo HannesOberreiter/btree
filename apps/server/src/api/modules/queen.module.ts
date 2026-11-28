@@ -448,6 +448,12 @@ export async function listQueenStats(
             sql<string | null>`AVG(NULLIF(temper,0))`.as('temper'),
             sql<string | null>`AVG(NULLIF(calm_comb,0))`.as('calm_comb'),
             sql<string | null>`AVG(NULLIF(swarm,0))`.as('swarm'),
+            sql<string | null>`AVG(NULLIF(colony_strength,0))`.as(
+              'colony_strength',
+            ),
+            sql<string | null>`AVG(NULLIF(spring_development,0))`.as(
+              'spring_development',
+            ),
             sql<string | null>`AVG(NULLIF(varroa,0))`.as('varroa'),
             sql<string | null>`AVG(NULLIF(strong,0))`.as('strong'),
           ])

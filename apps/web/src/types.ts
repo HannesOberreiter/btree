@@ -1,5 +1,6 @@
 import type { TaskStockLine } from '@/api/types';
 import type { KINDS, KINDS_APIARY, STATUS } from '@/constants';
+import type { BreedingSystem } from '@/helpers/breeding';
 
 export type FilterState = (typeof STATUS)[number];
 export type Filter = (typeof KINDS)[number];
@@ -10,6 +11,7 @@ export declare interface Company {
   paid: Date;
   rank: number;
   api_active: boolean;
+  breeding_system?: BreedingSystem | null;
 }
 export declare interface User {
   email?: string;
@@ -246,6 +248,8 @@ export declare interface FormQuicktool {
     temper: number;
     calm_comb: number;
     swarm: number;
+    colony_strength: number;
+    spring_development: number;
   };
   checkup_frames: {
     broodframes: number;

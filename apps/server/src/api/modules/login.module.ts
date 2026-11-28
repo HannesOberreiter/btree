@@ -57,6 +57,7 @@ async function fetchUser(db: Database, email: string, beeId = 0) {
       'companies.name',
       'companies.paid',
       'companies.api_active',
+      'companies.breeding_system',
       'company_bee.rank',
     ])
     .where('company_bee.bee_id', '=', user.id)

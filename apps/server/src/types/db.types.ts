@@ -417,6 +417,10 @@ export interface Checkups {
     boolean | number,
     boolean | number
   > | null>;
+  /**
+   * Rating of the colony strength
+   */
+  colony_strength: Generated<Decimal | null>;
   comb: Generated<Decimal | null>;
   created_at: Generated<Date | null>;
   date: Date;
@@ -461,6 +465,10 @@ export interface Checkups {
     boolean | number,
     boolean | number
   > | null>;
+  /**
+   * Rating of the spring development
+   */
+  spring_development: Generated<Decimal | null>;
   strong: Generated<number | null>;
   swarm: Generated<Decimal | null>;
   temper: Generated<Decimal | null>;
@@ -519,6 +527,10 @@ export interface Companies {
    * API Key to Access ICAL and Scale API
    */
   api_key: Generated<string | null>;
+  /**
+   * Breeding system of the breeding mode, null if the mode is off
+   */
+  breeding_system: Generated<string | null>;
   created_at: Generated<Date | null>;
   id: Generated<number>;
   /**
@@ -722,6 +734,10 @@ export interface HarvestsApiaries {
 }
 
 export interface HarvestTypes {
+  /**
+   * Harvest section of the breeding export: early, summer, late or stock
+   */
+  breeding_section: Generated<string | null>;
   created_at: Generated<Date | null>;
   favorite: Generated<ColumnType<
     boolean,

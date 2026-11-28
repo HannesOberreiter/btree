@@ -518,6 +518,11 @@ const routes: RouteRecordRaw[] = [
         path: 'rearing',
         name: 'setting-rearing',
         component: () => import('@/pages/SettingRearing.vue')
+      },
+      {
+        path: 'breeding',
+        name: 'setting-breeding',
+        component: () => import('@/pages/SettingBreeding.vue')
       }
     ]
   },

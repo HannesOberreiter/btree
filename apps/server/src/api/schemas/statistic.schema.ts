@@ -22,6 +22,8 @@ export const statisticOrderFieldSchema = z.enum([
   'temper',
   'calm_comb',
   'swarm',
+  'colony_strength',
+  'spring_development',
   'varroa',
   'strong',
 ]);
@@ -90,6 +92,8 @@ export const taskStatisticResponseSchema = z.object({
   temper: numericResultSchema.optional(),
   calm_comb: numericResultSchema.optional(),
   swarm: numericResultSchema.optional(),
+  colony_strength: numericResultSchema.optional(),
+  spring_development: numericResultSchema.optional(),
   varroa: numericResultSchema.optional(),
   strong: numericResultSchema.optional(),
   hive: hiveResponseSchema.optional(),

@@ -62,7 +62,9 @@ const stateDefault = {
     comb: 0,
     temper: 0,
     calm_comb: 0,
-    swarm: 0
+    swarm: 0,
+    colony_strength: 0,
+    spring_development: 0
   },
   checkup_frames: {
     broodframes: 0,
