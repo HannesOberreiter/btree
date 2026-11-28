@@ -134,7 +134,10 @@ async function onSubmit() {
                       data-cy="setting-field-breeding-locked"
                     >
                       {{ $t('breeding.lockedFields') }}
-                      <router-link :to="{ name: 'setting-breeding' }">
+                      <router-link
+                        class="link"
+                        :to="{ name: 'setting-breeding' }"
+                      >
                         {{ $t('breeding.name') }}
                       </router-link>
                     </div>

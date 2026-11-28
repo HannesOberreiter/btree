@@ -140,6 +140,7 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
         >
           <div class="text-body2 q-pb-sm">
             <a
+              class="link"
               href="https://beebreed.eu"
               target="_blank"
               rel="noopener noreferrer"
