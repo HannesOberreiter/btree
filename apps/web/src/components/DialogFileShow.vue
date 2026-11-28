@@ -2,13 +2,13 @@
 import round from 'lodash-es/round';
 import { useDialogPluginComponent } from 'quasar';
 import { ref, toRef, watch } from 'vue';
-import { useServiceDropbox } from '../composables/useDropbox';
-import { isImage, isVideo } from '../helpers';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import GlobalLoading from './GlobalLoading.vue';
+import { useServiceDropbox } from '@/composables/useDropbox';
+import { isImage, isVideo } from '@/helpers';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
-import TooltipBase from './TooltipBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   value: {

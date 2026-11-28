@@ -417,6 +417,10 @@ export interface Checkups {
     boolean | number,
     boolean | number
   > | null>;
+  /**
+   * Rating of the colony strength
+   */
+  colony_strength: Generated<Decimal | null>;
   comb: Generated<Decimal | null>;
   created_at: Generated<Date | null>;
   date: Date;
@@ -461,6 +465,10 @@ export interface Checkups {
     boolean | number,
     boolean | number
   > | null>;
+  /**
+   * Rating of the spring development
+   */
+  spring_development: Generated<Decimal | null>;
   strong: Generated<number | null>;
   swarm: Generated<Decimal | null>;
   temper: Generated<Decimal | null>;
@@ -519,6 +527,10 @@ export interface Companies {
    * API Key to Access ICAL and Scale API
    */
   api_key: Generated<string | null>;
+  /**
+   * Breeding system of the breeding mode, null if the mode is off
+   */
+  breeding_system: Generated<string | null>;
   created_at: Generated<Date | null>;
   id: Generated<number>;
   /**
@@ -722,6 +734,10 @@ export interface HarvestsApiaries {
 }
 
 export interface HarvestTypes {
+  /**
+   * Harvest section of the breeding export: early, summer, late or stock
+   */
+  breeding_section: Generated<string | null>;
   created_at: Generated<Date | null>;
   favorite: Generated<ColumnType<
     boolean,
@@ -943,13 +959,11 @@ export interface Promos {
   user_id: Generated<number | null>;
 }
 
-export interface QueenDurations {
-  duration: Generated<number | null>;
+export interface QueenCurrentPlacements {
   hive_id: Generated<number | null>;
-  id: Generated<number>;
-  last_date: Generated<Date>;
   move_date: Generated<Date | null>;
-  user_id: Generated<number | null>;
+  placement_id: Generated<number | null>;
+  queen_id: Generated<number>;
 }
 
 export interface QueenMatings {
@@ -1030,7 +1044,6 @@ export interface Queens {
    * Editor
    */
   edit_id: Generated<number | null>;
-  hive_id: Generated<number | null>;
   id: Generated<number>;
   mark_colour: Generated<string | null>;
   mating_id: Generated<number | null>;
@@ -1045,7 +1058,6 @@ export interface Queens {
   modus_date: Generated<Date | null>;
   mother: Generated<string | null>;
   mother_id: Generated<number | null>;
-  move_date: Generated<Date | null>;
   name: Generated<string | null>;
   note: Generated<string | null>;
   race_id: Generated<number | null>;
@@ -1068,7 +1080,7 @@ export interface QueensLocations {
    * Keep track of when queen was set inactive.
    */
   queen_modus_date: Generated<Date | null>;
-  queen_move_date: Generated<Date | null>;
+  queen_move_date: Date;
   queen_name: Generated<string | null>;
 }
 
@@ -1519,7 +1531,7 @@ export interface DB {
   observations: Observations;
   payments: Payments;
   promos: Promos;
-  queen_durations: QueenDurations;
+  queen_current_placements: QueenCurrentPlacements;
   queen_matings: QueenMatings;
   queen_placements: QueenPlacements;
   queen_races: QueenRaces;

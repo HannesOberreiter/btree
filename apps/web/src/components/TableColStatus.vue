@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { clearCache } from '../composables/useQuery';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { clearCache } from '@/composables/useQuery';
 
 const props = defineProps({
   id: {

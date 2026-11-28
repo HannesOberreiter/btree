@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import FormMainApi from '../components/FormMainApi.vue';
-import FormMainCredential from '../components/FormMainCredential.vue';
-import FormMainUser from '../components/FormMainUser.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import ListAgentKeys from '../components/ListAgentKeys.vue';
-import ListFederatedCredentials from '../components/ListFederatedCredentials.vue';
-import ListMcpConnections from '../components/ListMcpConnections.vue';
-import ListSessions from '../components/ListSessions.vue';
-import { useAuthUserStore } from '../stores/auth';
+import FormMainApi from '@/components/FormMainApi.vue';
+import FormMainCredential from '@/components/FormMainCredential.vue';
+import FormMainUser from '@/components/FormMainUser.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import ListAgentKeys from '@/components/ListAgentKeys.vue';
+import ListFederatedCredentials from '@/components/ListFederatedCredentials.vue';
+import ListMcpConnections from '@/components/ListMcpConnections.vue';
+import ListSessions from '@/components/ListSessions.vue';
+import { useAuthUserStore } from '@/stores/auth';
 
 const props = defineProps({
   tab: {

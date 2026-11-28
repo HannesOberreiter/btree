@@ -1,12 +1,12 @@
-import type { Company, User } from '../types';
+import type { Company, User } from '@/types';
 import { usePreferredLanguages, useStorage } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { isEmpty } from 'lodash-es';
 import { defineStore } from 'pinia';
-import { i18n } from '../boot/i18n';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { Router } from '../router';
-import AuthService from '../services/auth.service';
+import { i18n } from '@/boot/i18n';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { Router } from '@/router';
+import AuthService from '@/services/auth.service';
 
 // The paid day itself is still valid.
 function isPaidDayValid(date: dayjs.Dayjs) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { LControlLayers, LTileLayer } from '@vue-leaflet/vue-leaflet';
 import { computed } from 'vue';
-import { useAuthUserStore } from '../stores/auth';
+import { useAuthUserStore } from '@/stores/auth';
 
 const zoomMax = 18;
 const OPENWEATHER_API = import.meta.env.OPENWEATHER_APP_ID ?? '';

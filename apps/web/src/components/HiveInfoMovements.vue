@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, toRef, watch } from 'vue';
-import { useDateFormat } from '../composables/useDate';
-import { useMovementsQuery } from '../composables/useQuery';
-import GlobalLoading from './GlobalLoading.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useMovementsQuery } from '@/composables/useQuery';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   id: {

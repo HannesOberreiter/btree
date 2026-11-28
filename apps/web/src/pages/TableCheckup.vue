@@ -3,20 +3,20 @@ import type { QTableProps } from 'quasar';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColBoolean from '../components/TableColBoolean.vue';
-import TableColLink from '../components/TableColLink.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColStatus from '../components/TableColStatus.vue';
-import TableColUrl from '../components/TableColUrl.vue';
-import TableFilter from '../components/TableFilter.vue';
-import TableHeaderIcon from '../components/TableHeaderIcon.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useKeyTable } from '../composables/useKey';
-import { useTasksQuery } from '../composables/useQuery';
-import { tableCheckSelected, tableMeta } from '../helpers';
-import { useTableFilterStore } from '../stores/tableFilter';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColBoolean from '@/components/TableColBoolean.vue';
+import TableColLink from '@/components/TableColLink.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColStatus from '@/components/TableColStatus.vue';
+import TableColUrl from '@/components/TableColUrl.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import TableHeaderIcon from '@/components/TableHeaderIcon.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useKeyTable } from '@/composables/useKey';
+import { useTasksQuery } from '@/composables/useQuery';
+import { tableCheckSelected, tableMeta } from '@/helpers';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import { useTablesStore } from '@/stores/tables';
 
 const useDate = useDateFormat();
 const { t } = useI18n();
@@ -122,7 +122,8 @@ const columns = [
   },
   /**
     Ratings
-    brood, pollen, comb, temper, calm_comb, swarm
+    brood, pollen, comb, temper, calm_comb, swarm, colony_strength,
+    spring_development
 	 */
   {
     name: 'brood',
@@ -169,6 +170,22 @@ const columns = [
     label: t('rating.swarm'),
     align: 'right',
     field: (row: any) => row.swarm,
+    sortable: true,
+    headerClasses: 'rating'
+  },
+  {
+    name: 'colony_strength',
+    label: t('rating.colony_strength'),
+    align: 'right',
+    field: (row: any) => row.colony_strength,
+    sortable: true,
+    headerClasses: 'rating'
+  },
+  {
+    name: 'spring_development',
+    label: t('rating.spring_development'),
+    align: 'right',
+    field: (row: any) => row.spring_development,
     sortable: true,
     headerClasses: 'rating'
   },

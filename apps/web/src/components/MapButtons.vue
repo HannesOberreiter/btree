@@ -2,8 +2,8 @@
 import { LControl } from '@vue-leaflet/vue-leaflet';
 import { useVModels } from '@vueuse/core';
 import { ref, toRef } from 'vue';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import BtnBase from './BtnBase.vue';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import BtnBase from '@/components/BtnBase.vue';
 
 // AFB is enabled by default
 const props = defineProps({

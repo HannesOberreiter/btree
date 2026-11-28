@@ -3,12 +3,12 @@ import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
 import { isEmpty, round, some } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
-import { formCheckMultipleValues } from '../helpers';
-import { maxValue, minValue, numeric } from '../helpers/i18n-validators';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { formCheckMultipleValues } from '@/helpers';
+import { maxValue, minValue, numeric } from '@/helpers/i18n-validators';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {
@@ -19,7 +19,9 @@ const props = defineProps({
       comb: 0 as number | null,
       temper: 0 as number | null,
       calm_comb: 0 as number | null,
-      swarm: 0 as number | null
+      swarm: 0 as number | null,
+      colony_strength: 0 as number | null,
+      spring_development: 0 as number | null
     }
   },
   reset: {
@@ -44,7 +46,12 @@ const multipleValues = computed(() => {
     comb: formCheckMultipleValues(values.value, 'comb'),
     temper: formCheckMultipleValues(values.value, 'temper'),
     calm_comb: formCheckMultipleValues(values.value, 'calm_comb'),
-    swarm: formCheckMultipleValues(values.value, 'swarm')
+    swarm: formCheckMultipleValues(values.value, 'swarm'),
+    colony_strength: formCheckMultipleValues(values.value, 'colony_strength'),
+    spring_development: formCheckMultipleValues(
+      values.value,
+      'spring_development'
+    )
   };
 });
 const disable = ref({ ...unref(multipleValues.value) });
@@ -82,6 +89,16 @@ const rules = {
     minValue: minValue(0),
     maxValue: maxValue(100),
     numeric
+  },
+  colony_strength: {
+    minValue: minValue(0),
+    maxValue: maxValue(100),
+    numeric
+  },
+  spring_development: {
+    minValue: minValue(0),
+    maxValue: maxValue(100),
+    numeric
   }
 };
 
@@ -101,8 +118,9 @@ function setValues() {
     if (value) {
       editValues(true, key);
     } else if (values.value && !isEmpty(values.value)) {
+      // A checkup without a rating has null. 0 shows the empty stars.
       modelValue.value[key as keyof typeof modelValue.value] =
-        values.value[0][key];
+        values.value[0][key] ?? 0;
     } else {
       modelValue.value[key as keyof typeof modelValue.value] =
         resetValue[key as keyof typeof resetValue];
@@ -110,11 +128,13 @@ function setValues() {
   }
 }
 
+// A disabled field has null, so the save does not send it. An enabled
+// field with null gets 0, so it shows the empty stars.
 function editValues(val: boolean, key: string) {
   disable.value[key as keyof typeof disable.value] = val;
   modelValue.value[key as keyof typeof modelValue.value] = val
     ? null
-    : modelValue.value[key as keyof typeof modelValue.value];
+    : (modelValue.value[key as keyof typeof modelValue.value] ?? 0);
 }
 </script>
 
@@ -124,6 +144,7 @@ function editValues(val: boolean, key: string) {
       v-model="expanded"
       icon="fas fa-star"
       class="full-width"
+      data-cy="checkup-rating"
       :label="$t('rating.name')"
       :class="
         some(modelValue, val => val != null && val > 0) ? 'bg-orange' : ''
@@ -134,10 +155,11 @@ function editValues(val: boolean, key: string) {
           <template v-for="(_value, index) of modelValue" :key="index">
             <div
               v-if="
-                fields.settings.checkup.ratings[index] ||
-                fields.settings.checkup?.rating
+                fields.active.checkup.ratings[index] ||
+                fields.active.checkup?.rating
               "
               class="row q-pb-xs"
+              :data-cy="`checkup-rating-${index}`"
             >
               <div class="col-4">
                 {{ $t(`rating.${index}`) }}
@@ -152,7 +174,7 @@ function editValues(val: boolean, key: string) {
                   color="grey"
                   :disable="disable[index]"
                   size="sm"
-                  :max="fields.settings.checkup.ratings.max"
+                  :max="fields.active.checkup.ratings.max"
                 />
               </div>
               <div class="col-2 col-sm-2">
@@ -162,7 +184,7 @@ function editValues(val: boolean, key: string) {
                     :disabled="
                       (modelValue[index] != null &&
                         modelValue[index] >=
-                          fields.settings.checkup.ratings.max) ||
+                          fields.active.checkup.ratings.max) ||
                       disable[index]
                     "
                     @click="

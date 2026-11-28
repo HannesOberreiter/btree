@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import { useDialogPluginComponent } from 'quasar';
 import { ref, unref } from 'vue';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
 
 defineProps({
   label: {

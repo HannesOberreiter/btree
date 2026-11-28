@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import UploadCsv from './UploadCsv.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import UploadCsv from '@/components/UploadCsv.vue';
 
 defineProps({
   table: {

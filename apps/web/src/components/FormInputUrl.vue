@@ -2,14 +2,14 @@
 import { useVModels } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useNotification } from '../composables/useNotification';
-import { isValidURL } from '../helpers';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import DialogFileSelect from './DialogFileSelect.vue';
-import DialogFileShow from './DialogFileShow.vue';
-import DialogFileUpload from './DialogFileUpload.vue';
-import FormInputText from './FormInputText.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useNotification } from '@/composables/useNotification';
+import { isValidURL } from '@/helpers';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import DialogFileSelect from '@/components/DialogFileSelect.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
+import DialogFileUpload from '@/components/DialogFileUpload.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   modelValue: {

@@ -33,7 +33,8 @@ function getField(field: any, state: any) {
       value = Number.parseInt(value) === 1;
     }
   } else {
-    if (field.type === 'int') {
+    // An absent number column stays empty. Only type_id gets the default type.
+    if (field.name === 'type_id') {
       value = 1;
     } else if (field.type === 'date') {
       value = dayjs().format('YYYY-MM-DD');
@@ -113,31 +114,40 @@ function cleanupCheckup(state: any) {
     },
     {
       name: 'brood',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'pollen',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'comb',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'temper',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'calm_comb',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'swarm',
-      type: 'int'
+      type: 'number'
+    },
+    // Ratings of the breeding mode.
+    {
+      name: 'colony_strength',
+      type: 'number'
+    },
+    {
+      name: 'spring_development',
+      type: 'number'
     },
     {
       name: 'varroa',
-      type: 'int'
+      type: 'number'
     },
     {
       name: 'strong',

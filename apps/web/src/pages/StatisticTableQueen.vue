@@ -4,14 +4,14 @@ import { orderBy, round } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useKeyTable } from '../composables/useKey';
-import { useQueensStats } from '../composables/useQuery';
+import TableButtons from '@/components/TableButtons.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useKeyTable } from '@/composables/useKey';
+import { useQueensStats } from '@/composables/useQuery';
 
-import { tableCheckSelected } from '../helpers';
-import { useTableFilterStore } from '../stores/tableFilter';
+import { tableCheckSelected } from '@/helpers';
+import { useTableFilterStore } from '@/stores/tableFilter';
 
 const { t } = useI18n();
 const useDate = useDateFormat();
@@ -133,6 +133,24 @@ const columns = [
     label: t('rating.swarm'),
     align: 'right',
     field: (row: any) => row.checkup.swarm,
+    format: v => round(v, 1),
+    sortable: false
+  },
+  {
+    type: 'checkup',
+    name: 'colony_strength',
+    label: t('rating.colony_strength'),
+    align: 'right',
+    field: (row: any) => row.checkup.colony_strength,
+    format: v => round(v, 1),
+    sortable: false
+  },
+  {
+    type: 'checkup',
+    name: 'spring_development',
+    label: t('rating.spring_development'),
+    align: 'right',
+    field: (row: any) => row.checkup.spring_development,
     format: v => round(v, 1),
     sortable: false
   },
@@ -319,6 +337,26 @@ function orderLocalData(o: any) {
         </template>
 
         <template #header-cell-swarm="props">
+          <q-th
+            :props="props"
+            :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"
+            @click="orderLocalData(props.col)"
+          >
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #header-cell-colony_strength="props">
+          <q-th
+            :props="props"
+            :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"
+            @click="orderLocalData(props.col)"
+          >
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #header-cell-spring_development="props">
           <q-th
             :props="props"
             :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"

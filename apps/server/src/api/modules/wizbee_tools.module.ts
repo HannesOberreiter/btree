@@ -2895,6 +2895,14 @@ export function createWizBeeTools(
         temper: z.number().optional().describe('Temper rating'),
         calmComb: z.number().optional().describe('Calm on comb rating'),
         swarm: z.number().optional().describe('Swarm tendency rating'),
+        colonyStrength: z
+          .number()
+          .optional()
+          .describe('Colony strength rating'),
+        springDevelopment: z
+          .number()
+          .optional()
+          .describe('Spring development rating'),
         varroa: z.number().optional().describe('Varroa count'),
         strong: z.number().optional().describe('Colony strength'),
         temperature: z.number().optional().describe('Temperature'),
@@ -2908,7 +2916,15 @@ export function createWizBeeTools(
         emptyframes: z.number().optional().describe('Number of empty frames'),
       }),
       execute: async (input) => {
-        const { hiveIds, typeId, cappedBrood, calmComb, ...rest } = input;
+        const {
+          hiveIds,
+          typeId,
+          cappedBrood,
+          calmComb,
+          colonyStrength,
+          springDevelopment,
+          ...rest
+        } = input;
         const result = await createCheckups(
           db,
           { companyId: context.userId, beeId: context.beeId, isLlm: true },
@@ -2918,6 +2934,12 @@ export function createWizBeeTools(
             ...(typeId !== undefined && { type_id: typeId }),
             ...(cappedBrood !== undefined && { capped_brood: cappedBrood }),
             ...(calmComb !== undefined && { calm_comb: calmComb }),
+            ...(colonyStrength !== undefined && {
+              colony_strength: colonyStrength,
+            }),
+            ...(springDevelopment !== undefined && {
+              spring_development: springDevelopment,
+            }),
             repeat: 0,
             interval: 0,
           },
@@ -2963,6 +2985,14 @@ export function createWizBeeTools(
         temper: z.number().optional().describe('Temper rating'),
         calmComb: z.number().optional().describe('Calm on comb rating'),
         swarm: z.number().optional().describe('Swarm tendency rating'),
+        colonyStrength: z
+          .number()
+          .optional()
+          .describe('Colony strength rating'),
+        springDevelopment: z
+          .number()
+          .optional()
+          .describe('Spring development rating'),
         varroa: z.number().optional().describe('Varroa count'),
         strong: z.number().optional().describe('Colony strength'),
         temperature: z.number().optional().describe('Temperature'),
@@ -2976,7 +3006,15 @@ export function createWizBeeTools(
         emptyframes: z.number().optional().describe('Number of empty frames'),
       }),
       execute: async (input) => {
-        const { ids, typeId, cappedBrood, calmComb, ...fields } = input;
+        const {
+          ids,
+          typeId,
+          cappedBrood,
+          calmComb,
+          colonyStrength,
+          springDevelopment,
+          ...fields
+        } = input;
         const updatedCount = await updateCheckups(
           db,
           { companyId: context.userId, beeId: context.beeId, isLlm: true },
@@ -2987,6 +3025,12 @@ export function createWizBeeTools(
               ...(typeId !== undefined && { type_id: typeId }),
               ...(cappedBrood !== undefined && { capped_brood: cappedBrood }),
               ...(calmComb !== undefined && { calm_comb: calmComb }),
+              ...(colonyStrength !== undefined && {
+                colony_strength: colonyStrength,
+              }),
+              ...(springDevelopment !== undefined && {
+                spring_development: springDevelopment,
+              }),
             },
           },
         );
@@ -4168,6 +4212,8 @@ export const wizBeeToolDefinitions = [
       temper: z.number().optional(),
       calmComb: z.number().optional(),
       swarm: z.number().optional(),
+      colonyStrength: z.number().optional(),
+      springDevelopment: z.number().optional(),
       varroa: z.number().optional(),
       strong: z.number().optional(),
       temperature: z.number().optional(),
@@ -4200,6 +4246,8 @@ export const wizBeeToolDefinitions = [
       temper: z.number().optional(),
       calmComb: z.number().optional(),
       swarm: z.number().optional(),
+      colonyStrength: z.number().optional(),
+      springDevelopment: z.number().optional(),
       varroa: z.number().optional(),
       strong: z.number().optional(),
       temperature: z.number().optional(),
@@ -4391,6 +4439,9 @@ export async function executeWizBeeTool(
   const toolFn = tools[toolName];
 
   if (!toolFn || typeof toolFn.execute !== 'function') {
+    Logger.getInstance().log('warn', `Unknown tool: ${toolName}`, {
+      toolName,
+    });
     throw new Error(`Unknown tool: ${toolName}`);
   }
 

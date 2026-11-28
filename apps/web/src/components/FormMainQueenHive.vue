@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { FormQueenHive } from '../types';
+import type { FormQueenHive } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useQueenSameDay } from '../composables/useQueenSameDay';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputDate from './FormInputDate.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useQueenSameDay } from '@/composables/useQueenSameDay';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
 
 const props = defineProps({
   ids: {

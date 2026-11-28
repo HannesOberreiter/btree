@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import FormMainCharge from '../components/FormMainCharge.vue';
+import FormMainCharge from '@/components/FormMainCharge.vue';
 </script>
 
 <template>

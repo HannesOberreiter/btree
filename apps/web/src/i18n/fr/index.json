@@ -106,6 +106,29 @@
   "birth": "Date de naissance",
   "blue": "Bleu",
   "both": "Tous les deux",
+  "breeding": {
+    "adminOnly": "Seul un administrateur de l'entreprise peut modifier le mode élevage.",
+    "beebreed": {
+      "intro": "Avec BeeBreed, le mode élevage fait ceci :",
+      "ratings": "Tous les membres voient les évaluations {ratings} dans le formulaire de contrôle. Ils ne peuvent pas désactiver ces évaluations dans leurs réglages des champs. Leurs propres réglages reviennent quand le mode est désactivé.",
+      "scale": "L'échelle d'évaluation va de 1 (la pire) à {max} (la meilleure).",
+      "queenCode": "Le nom de la reine est le code de reine BeeBreed : pays-association-éleveur-numéro-année de naissance, par exemple DE-44-101-1-2025. Le formulaire de la reine affiche un avertissement pour un nom dans un autre format.",
+      "harvest": "Chaque type de récolte va dans une section de récolte au maximum. Les récoltes des types sans section ne comptent pas. La quantité compte en kg."
+    },
+    "description": "Le mode élevage prépare les données de l'entreprise pour le testage d'un système d'élevage. Seul un administrateur peut le modifier.",
+    "lockedFields": "Le mode élevage de l'entreprise définit certaines de ces entrées :",
+    "name": "Mode élevage",
+    "off": "Désactivé",
+    "section": {
+      "early": "Récolte précoce (TEIL1)",
+      "summer": "Récolte d'été (TEIL2)",
+      "late": "Récolte tardive (TEIL3)",
+      "stock": "Réserves (VORRAT)"
+    },
+    "sections": "Sections de récolte",
+    "warningFormat": "Mode élevage : « {name} » n'est pas un code de reine valide. Exemple : {example}",
+    "warningYear": "Mode élevage : l'année dans « {name} » n'est pas l'année de naissance de la reine."
+  },
   "calculate": "Calculer",
   "calculateVarroa": "Nombre de varroas par jour",
   "calculator": "Calculatrice",
@@ -613,10 +636,12 @@
   "rating": {
     "brood": "Couvain",
     "calm_comb": "Calme sur le cadre",
+    "colony_strength": "Force de la colonie",
     "comb": "Rayon",
     "max": "Valeur maximum",
     "name": "Évaluation",
     "pollen": "Pollen",
+    "spring_development": "Développement printanier",
     "swarm": "Essaim",
     "temper": "Caractère",
     "text": "Note faible à élevée"

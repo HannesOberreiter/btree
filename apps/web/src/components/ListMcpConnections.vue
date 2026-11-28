@@ -9,7 +9,7 @@ import {
 import { copyToClipboard, useQuasar } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from './BtnBase.vue';
+import BtnBase from '@/components/BtnBase.vue';
 
 const { locale, t } = useI18n();
 const $q = useQuasar();

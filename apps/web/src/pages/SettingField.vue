@@ -5,10 +5,11 @@ import { storeToRefs } from 'pinia';
 import { useInstallPWA } from '@/composables/useInstallPwa';
 import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { BREEDING_RATINGS } from '@/helpers/breeding';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
 
 const props = defineProps({
   tab: {
@@ -57,6 +58,22 @@ const localPerf = useLocalStorage(
 
 const isSubmitting = ref(false);
 const isLoading = ref(true);
+
+// Stored settings get new ratings appended after max. Show max last.
+function ratingKeys(ratings: unknown) {
+  const keys = Object.keys(ratings ?? {}).filter(key => key !== 'max');
+  return [...keys, 'max'];
+}
+
+// The breeding mode of the company sets these entries. The personal values
+// stay stored and return when the mode is off.
+function isBreedingLocked(rating: string) {
+  return (
+    storeFields.breedingLocked &&
+    (rating === 'max' ||
+      (BREEDING_RATINGS as readonly string[]).includes(rating))
+  );
+}
 
 onMounted(() => storeFields.reload().then(() => (isLoading.value = false)));
 
@@ -112,7 +129,20 @@ async function onSubmit() {
                   <template v-if="i === 'ratings'">
                     <span class="text-bold">{{ $t('rating.name') }}: </span>
                     <div
-                      v-for="(_value, j) in subsetting"
+                      v-if="storeFields.breedingLocked"
+                      class="q-pl-lg text-caption text-grey-8"
+                      data-cy="setting-field-breeding-locked"
+                    >
+                      {{ $t('breeding.lockedFields') }}
+                      <router-link
+                        class="link"
+                        :to="{ name: 'setting-breeding' }"
+                      >
+                        {{ $t('breeding.name') }}
+                      </router-link>
+                    </div>
+                    <div
+                      v-for="j in ratingKeys(subsetting)"
                       :key="j"
                       class="col-12 q-pl-lg"
                     >
@@ -120,10 +150,22 @@ async function onSubmit() {
                         <div class="row">
                           <div class="col-5 col-lg-3">
                             {{ $t('rating.max') }}:
-                            {{ settings.checkup.ratings.max }}
+                            {{ storeFields.active.checkup.ratings.max }}
                           </div>
                           <div class="col-7 q-pl-md">
                             <q-slider
+                              v-if="isBreedingLocked('max')"
+                              :model-value="
+                                storeFields.active.checkup.ratings.max
+                              "
+                              data-cy="setting-field-rating-max"
+                              :min="0"
+                              :max="10"
+                              :step="1"
+                              disable
+                            />
+                            <q-slider
+                              v-else
                               v-model="settings.checkup.ratings.max"
                               data-cy="setting-field-rating-max"
                               :min="0"
@@ -136,6 +178,13 @@ async function onSubmit() {
                         </div>
                       </div>
                       <q-toggle
+                        v-else-if="isBreedingLocked(j as string)"
+                        :model-value="true"
+                        :label="$t(`rating.${j}`)"
+                        :data-cy="`setting-field-rating-${j}`"
+                        disable
+                      />
+                      <q-toggle
                         v-else
                         v-model="
                           settings[index as keyof typeof settings][
@@ -143,6 +192,7 @@ async function onSubmit() {
                           ][j as keyof typeof subsetting]
                         "
                         :label="$t(`rating.${j}`)"
+                        :data-cy="`setting-field-rating-${j}`"
                         :disable="isSubmitting || isLoading"
                         @update:model-value="onSubmit"
                       />

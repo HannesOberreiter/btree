@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import dayjs from 'dayjs';
 import { useDialogPluginComponent } from 'quasar';
 import { computed, defineAsyncComponent } from 'vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import GlobalLoading from './GlobalLoading.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   title: {
@@ -47,39 +47,49 @@ const props = defineProps({
 });
 defineEmits([...useDialogPluginComponent.emits, 'success']);
 const FormMainApiary = defineAsyncComponent(
-  () => import('./FormMainApiary.vue')
+  () => import('@/components/FormMainApiary.vue')
 );
-const FormMainTodo = defineAsyncComponent(() => import('./FormMainTodo.vue'));
-const FormMainHive = defineAsyncComponent(() => import('./FormMainHive.vue'));
+const FormMainTodo = defineAsyncComponent(
+  () => import('@/components/FormMainTodo.vue')
+);
+const FormMainHive = defineAsyncComponent(
+  () => import('@/components/FormMainHive.vue')
+);
 const FormMainMovement = defineAsyncComponent(
-  () => import('./FormMainMovement.vue')
+  () => import('@/components/FormMainMovement.vue')
 );
-const FormMainTask = defineAsyncComponent(() => import('./FormMainTask.vue'));
-const FormMainQueen = defineAsyncComponent(() => import('./FormMainQueen.vue'));
+const FormMainTask = defineAsyncComponent(
+  () => import('@/components/FormMainTask.vue')
+);
+const FormMainQueen = defineAsyncComponent(
+  () => import('@/components/FormMainQueen.vue')
+);
 const FormMainQueenHive = defineAsyncComponent(
-  () => import('./FormMainQueenHive.vue')
+  () => import('@/components/FormMainQueenHive.vue')
 );
 const FormMainScaleData = defineAsyncComponent(
-  () => import('./FormMainScaleData.vue')
+  () => import('@/components/FormMainScaleData.vue')
 );
 const FormMainOption = defineAsyncComponent(
-  () => import('./FormMainOption.vue')
+  () => import('@/components/FormMainOption.vue')
 );
 const FormMainCharge = defineAsyncComponent(
-  () => import('./FormMainCharge.vue')
+  () => import('@/components/FormMainCharge.vue')
 );
-const FormMainScale = defineAsyncComponent(() => import('./FormMainScale.vue'));
+const FormMainScale = defineAsyncComponent(
+  () => import('@/components/FormMainScale.vue')
+);
 const FormMainQueenPlacement = defineAsyncComponent(
-  () => import('./FormMainQueenPlacement.vue')
+  () => import('@/components/FormMainQueenPlacement.vue')
 );
 const FormMainRearing = defineAsyncComponent(
-  () => import('./FormMainRearing.vue')
+  () => import('@/components/FormMainRearing.vue')
 );
 const FormMainRearingMethod = defineAsyncComponent(
-  () => import('./FormMainRearingMethod.vue')
+  () => import('@/components/FormMainRearingMethod.vue')
 );
 const FormMainRearingDetail = defineAsyncComponent(
-  () => import('./FormMainRearingDetail.vue')
+  () => import('@/components/FormMainRearingDetail.vue')
 );
 
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();

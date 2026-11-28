@@ -3,8 +3,8 @@ import useVuelidate from '@vuelidate/core';
 import { useVModels } from '@vueuse/core';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { validationErrors } from '../helpers';
-import { email, maxLength, requiredField } from '../helpers/i18n-validators';
+import { validationErrors } from '@/helpers';
+import { email, maxLength, requiredField } from '@/helpers/i18n-validators';
 
 const props = defineProps({
   modelValue: {

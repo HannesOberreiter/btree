@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import FormMainTodo from '../components/FormMainTodo.vue';
+import FormMainTodo from '@/components/FormMainTodo.vue';
 </script>
 
 <template>

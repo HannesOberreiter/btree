@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import ListPedigree from './ListPedigree.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import ListPedigree from '@/components/ListPedigree.vue';
 
 defineProps({
   id: {

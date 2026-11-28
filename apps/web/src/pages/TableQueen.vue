@@ -1,6 +1,6 @@
 <script lang="ts">
-import { useKeyTable } from '../composables/useKey';
-import { tableCheckSelected, tableMeta } from '../helpers';
+import { useKeyTable } from '@/composables/useKey';
+import { tableCheckSelected, tableMeta } from '@/helpers';
 </script>
 
 <script setup lang="ts">
@@ -8,17 +8,17 @@ import type { QTableProps } from 'quasar';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColLink from '../components/TableColLink.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColPedigree from '../components/TableColPedigree.vue';
-import TableColStatus from '../components/TableColStatus.vue';
-import TableColUrl from '../components/TableColUrl.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useQueensQuery } from '../composables/useQuery';
-import { useTableFilterStore } from '../stores/tableFilter';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColLink from '@/components/TableColLink.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColPedigree from '@/components/TableColPedigree.vue';
+import TableColStatus from '@/components/TableColStatus.vue';
+import TableColUrl from '@/components/TableColUrl.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useQueensQuery } from '@/composables/useQuery';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import { useTablesStore } from '@/stores/tables';
 
 const useDate = useDateFormat();
 const { t } = useI18n();
@@ -91,7 +91,8 @@ const columns = [
     label: t('queenMovedate'),
     align: 'left',
     field: (row: any) => row.move_date,
-    format: (val: string) => useDate.displayFormat(val),
+    // A queen without placement has no move date.
+    format: (val: string | null) => (val ? useDate.displayFormat(val) : ''),
     sortable: true
   },
   {
@@ -212,6 +213,23 @@ const pagination = ref({
 });
 useKeyTable(pagination);
 
+// Queens without a hive are only in the virgin table (TableVirgin.vue).
+// A saved filter "no hive" ('empty') would give an empty table, so it is
+// dropped.
+const withHive = { 'queens.hive_id': 'notEmpty' };
+const queenFilters = computed(() => {
+  try {
+    const values = filters?.value ? JSON.parse(filters.value) : [];
+    const own = (Array.isArray(values) ? values : []).filter(
+      (value: Record<string, unknown> | null) =>
+        value?.['queens.hive_id'] !== 'empty'
+    );
+    return JSON.stringify([...own, withHive]);
+  } catch {
+    return JSON.stringify([withHive]);
+  }
+});
+
 const {
   isLoading: isLoadingTable,
   data,
@@ -222,7 +240,7 @@ const {
   offset: computed(() => pagination.value.page - 1),
   limit: computed(() => pagination.value.rowsPerPage),
   q: computed(() => (filter.value ? filter.value : '')),
-  filters: computed(() => (filters?.value ? filters.value : '')),
+  filters: queenFilters,
   deleted,
   modus: null,
   latest: modus,

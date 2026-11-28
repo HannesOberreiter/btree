@@ -35,6 +35,8 @@ const orderColumns: Record<StatisticOrderField, string> = {
   temper: 'temper',
   calm_comb: 'calm_comb',
   swarm: 'swarm',
+  colony_strength: 'colony_strength',
+  spring_development: 'spring_development',
   varroa: 'varroa',
   strong: 'strong',
 };
@@ -618,6 +620,12 @@ function ratingSelections() {
     sql<string | null>`AVG(NULLIF(checkup.temper, 0))`.as('temper'),
     sql<string | null>`AVG(NULLIF(checkup.calm_comb, 0))`.as('calm_comb'),
     sql<string | null>`AVG(NULLIF(checkup.swarm, 0))`.as('swarm'),
+    sql<string | null>`AVG(NULLIF(checkup.colony_strength, 0))`.as(
+      'colony_strength',
+    ),
+    sql<string | null>`AVG(NULLIF(checkup.spring_development, 0))`.as(
+      'spring_development',
+    ),
     sql<string | null>`AVG(NULLIF(checkup.varroa, 0))`.as('varroa'),
     sql<string | null>`AVG(NULLIF(checkup.strong, 0))`.as('strong'),
   ];
@@ -664,6 +672,8 @@ export async function listHiveRatingStatistics(
         COALESCE(SUM(checkup.brood), 0) + COALESCE(SUM(checkup.pollen), 0) +
         COALESCE(SUM(checkup.comb), 0) + COALESCE(SUM(checkup.temper), 0) +
         COALESCE(SUM(checkup.calm_comb), 0) + COALESCE(SUM(checkup.swarm), 0) +
+        COALESCE(SUM(checkup.colony_strength), 0) +
+        COALESCE(SUM(checkup.spring_development), 0) +
         COALESCE(SUM(checkup.varroa), 0) + COALESCE(SUM(checkup.strong), 0)
       ) > 0`,
     );

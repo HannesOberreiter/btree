@@ -3,13 +3,13 @@ import { round, truncate } from 'lodash-es';
 import { useQuasar } from 'quasar';
 import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useDateFormat } from '../composables/useDate';
-import { useServiceDropbox } from '../composables/useDropbox';
-import { isImage, isVideo } from '../helpers';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogFileShow from './DialogFileShow.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useServiceDropbox } from '@/composables/useDropbox';
+import { isImage, isVideo } from '@/helpers';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 defineProps({
   select: {

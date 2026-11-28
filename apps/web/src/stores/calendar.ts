@@ -1,6 +1,6 @@
 import { useStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { CALENDAR } from '../constants';
+import { CALENDAR } from '@/constants';
 
 export const useCalendarStore = defineStore('calendar', {
   state: () => ({

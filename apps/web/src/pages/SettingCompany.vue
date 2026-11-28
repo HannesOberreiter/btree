@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import CompanySetting from '../components/CompanySetting.vue';
-import CompanyUser from '../components/CompanyUser.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import { useAuthUserStore } from '../stores/auth';
+import CompanySetting from '@/components/CompanySetting.vue';
+import CompanyUser from '@/components/CompanyUser.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import { useAuthUserStore } from '@/stores/auth';
 
 const prop = defineProps({
   tab: {

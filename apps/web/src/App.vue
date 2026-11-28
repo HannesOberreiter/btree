@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import GlobalPWA from './components/GlobalPWA.vue';
+import GlobalPWA from '@/components/GlobalPWA.vue';
 
 // A deploy prunes the chunks of old versions. When a chunk fails to load,
 // reload to get the current version. At most one reload per minute, so a

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import DialogForm from './DialogForm.vue';
+import DialogForm from '@/components/DialogForm.vue';
 
 const props = defineProps({
   id: {

@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import process from 'node:process';
 
 import type { Archiver } from 'archiver';
 import { parse } from 'csv-parse/sync';
@@ -20,12 +21,27 @@ import {
   toDay,
   validatePlacements,
 } from '../utils/queen_placement.util.js';
-import { asDate, syncQueen } from './queen_placement.module.js';
+import { asDate } from './queen_placement.module.js';
 
 const NEWLINE_QUOTE_REGEX = /(\r\n|[\n\r"])/g;
 const MAX_ARCHIVE_ENTRIES = 64;
 const MAX_ARCHIVE_ENTRY_BYTES = 25 * 1024 * 1024;
 const MAX_ARCHIVE_TOTAL_BYTES = 100 * 1024 * 1024;
+const MAX_FORMAT_BYTES = 64 * 1024;
+
+/** Name of the file in the archive that tells the archive format. */
+const FORMAT_FILE = 'format.json';
+/** Value of `format` in `format.json`. */
+export const ARCHIVE_FORMAT = 'btree-company-export';
+/**
+ * Version of the archive format. Increase it only on a breaking change of
+ * the export or import archive format, and add the matching branch to the
+ * import. An archive without `format.json` has version 1.
+ * - Version 1: `queens.csv` has `hive_id` and `move_date`.
+ *   `queen_placements.csv` is optional.
+ * - Version 2: `queen_placements.csv` is the only source of the placements.
+ */
+export const ARCHIVE_VERSION = 2;
 type CsvRecord = Record<string, string | number | boolean | null | undefined>;
 type TransferKey =
   | 'hives'
@@ -172,6 +188,8 @@ const columns: Record<TransferKey, readonly string[]> = {
     'temperature',
     'calm_comb',
     'swarm',
+    'colony_strength',
+    'spring_development',
     'varroa',
     'strong',
     'eggs',
@@ -284,6 +302,7 @@ const columns: Record<TransferKey, readonly string[]> = {
   harvest_types: [
     'name',
     'unit',
+    'breeding_section',
     'modus',
     'favorite',
     'created_at',
@@ -390,14 +409,12 @@ const columns: Record<TransferKey, readonly string[]> = {
     'mark_colour',
     'mother',
     'date',
-    'move_date',
     'url',
     'note',
     'modus',
     'modus_date',
     'deleted',
     'deleted_at',
-    'hive_id',
     'race_id',
     'mating_id',
     'mother_id',
@@ -546,6 +563,37 @@ function hasWaxPrecision(value: number) {
   return Math.abs(value * 100 - Math.round(value * 100)) <= 0.000_001;
 }
 
+/**
+ * Removes the wax operations that have no lines and no inventory counts,
+ * together with their hive links. Older versions left such operations when
+ * a user deleted the wax lot of a production. Keeps an operation when a
+ * reversal or a wax lot refers to it, so that the validation rejects it.
+ */
+function skipEmptyWaxOperations(data: TransferData) {
+  const used = new Set(
+    [
+      ...data.wax_operation_lines.map((row) => row.operation_id),
+      ...data.wax_inventory_counts.map((row) => row.operation_id),
+      ...data.wax_operations.map((row) => row.reversal_of_id),
+      ...data.wax_lots.map((row) => row.created_by_operation_id),
+    ]
+      .filter((id) => id !== undefined && id !== null)
+      .map(String),
+  );
+  const skipped = new Set(
+    data.wax_operations
+      .map((row) => String(row.id))
+      .filter((id) => !used.has(id)),
+  );
+  if (!skipped.size) return;
+  data.wax_operations = data.wax_operations.filter(
+    (row) => !skipped.has(String(row.id)),
+  );
+  data.wax_operation_hives = data.wax_operation_hives.filter(
+    (row) => !skipped.has(String(row.operation_id)),
+  );
+}
+
 function validateWaxArchive(data: TransferData) {
   const operations = new Map(
     data.wax_operations.map((row) => [String(row.id), row]),
@@ -558,15 +606,19 @@ function validateWaxArchive(data: TransferData) {
     const operationId = String(line.operation_id);
     const quantity = Number(line.quantity_kg);
     if (!operations.has(operationId) || !lots.has(String(line.lot_id)))
-      throw new Error('Wax archive contains an invalid line reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid line reference',
+      );
     if (!['input', 'output'].includes(String(line.direction)))
-      throw new Error('Wax archive contains an invalid line direction');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid line direction',
+      );
     if (
       !Number.isFinite(quantity) ||
       quantity < 0.01 ||
       !hasWaxPrecision(quantity)
     )
-      throw new Error('Wax archive contains an invalid quantity');
+      throw httpErrors.BadRequest('Wax archive contains an invalid quantity');
     const current = linesByOperation.get(operationId) ?? [];
     current.push(line);
     linesByOperation.set(operationId, current);
@@ -581,7 +633,9 @@ function validateWaxArchive(data: TransferData) {
       operation.type !== 'correction' ||
       !lots.has(String(count.lot_id))
     )
-      throw new Error('Wax archive contains an invalid inventory reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid inventory reference',
+      );
     if (
       ![ledgerQuantity, countedQuantity, adjustment].every(Number.isFinite) ||
       ![ledgerQuantity, countedQuantity, Math.abs(adjustment)].every(
@@ -591,11 +645,15 @@ function validateWaxArchive(data: TransferData) {
       countedQuantity < 0 ||
       Math.abs(countedQuantity - ledgerQuantity - adjustment) > 0.000_001
     )
-      throw new Error('Wax archive contains an invalid inventory quantity');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid inventory quantity',
+      );
     const operationId = String(count.operation_id);
     const current = countsByOperation.get(operationId) ?? [];
     if (current.some((row) => String(row.lot_id) === String(count.lot_id)))
-      throw new Error('Wax archive contains a duplicate inventory count');
+      throw httpErrors.BadRequest(
+        'Wax archive contains a duplicate inventory count',
+      );
     current.push(count);
     countsByOperation.set(operationId, current);
   }
@@ -604,7 +662,9 @@ function validateWaxArchive(data: TransferData) {
       !operations.has(String(link.operation_id)) ||
       !data.hives.some((hive) => String(hive.id) === String(link.hive_id))
     )
-      throw new Error('Wax archive contains an invalid hive reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid hive reference',
+      );
   }
   for (const lot of data.wax_lots) {
     if (
@@ -618,7 +678,9 @@ function validateWaxArchive(data: TransferData) {
             String(line.operation_id) === String(lot.created_by_operation_id),
         ))
     )
-      throw new Error('Wax archive contains an invalid lot creator reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid lot creator reference',
+      );
   }
   for (const operation of data.wax_operations) {
     const type = String(operation.type);
@@ -627,13 +689,15 @@ function validateWaxArchive(data: TransferData) {
       Number.isNaN(Date.parse(String(operation.date))) ||
       (type === 'production' && !operation.origin_type_id)
     )
-      throw new Error('Wax archive contains an invalid operation');
+      throw httpErrors.BadRequest('Wax archive contains an invalid operation');
     if (
       operation.reversal_of_id !== undefined &&
       operation.reversal_of_id !== null &&
       !operations.has(String(operation.reversal_of_id))
     )
-      throw new Error('Wax archive contains an invalid reversal reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid reversal reference',
+      );
     const lines = linesByOperation.get(String(operation.id)) ?? [];
     const hasInputs = lines.some((line) => line.direction === 'input');
     const hasOutputs = lines.some((line) => line.direction === 'output');
@@ -648,7 +712,9 @@ function validateWaxArchive(data: TransferData) {
         !hasOutputs &&
         !(countsByOperation.get(String(operation.id))?.length ?? 0))
     )
-      throw new Error('Wax archive contains an invalid operation shape');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid operation shape',
+      );
     const input = lines
       .filter((line) => line.direction === 'input')
       .reduce((sum, line) => sum + Number(line.quantity_kg), 0);
@@ -660,7 +726,7 @@ function validateWaxArchive(data: TransferData) {
       output > input + 0.000_001 &&
       !String(operation.note ?? '').trim()
     )
-      throw new Error('Wax archive mass gain has no explanation');
+      throw httpErrors.BadRequest('Wax archive mass gain has no explanation');
   }
   const balances = new Map<string, number>();
   const sorted = [...data.wax_operations].sort((left, right) => {
@@ -685,57 +751,71 @@ function validateWaxArchive(data: TransferData) {
     const inventoryCounts = countsByOperation.get(operationId) ?? [];
     if (inventoryCounts.length) {
       if (!String(operation.note ?? '').trim())
-        throw new Error('Wax archive inventory has no explanation');
+        throw httpErrors.BadRequest('Wax archive inventory has no explanation');
       const countedLotIds = new Set(
         inventoryCounts.map((count) => String(count.lot_id)),
       );
       if ([...deltas.keys()].some((lotId) => !countedLotIds.has(lotId)))
-        throw new Error('Wax archive inventory has an uncounted adjustment');
+        throw httpErrors.BadRequest(
+          'Wax archive inventory has an uncounted adjustment',
+        );
       for (const count of inventoryCounts) {
         const lotId = String(count.lot_id);
         const lot = lotsById.get(lotId);
         if (!lot)
-          throw new Error('Wax archive contains an invalid inventory lot');
+          throw httpErrors.BadRequest(
+            'Wax archive contains an invalid inventory lot',
+          );
         const creatorId = lot.created_by_operation_id;
         const creatorOrder =
           creatorId === undefined || creatorId === null
             ? undefined
             : operationOrder.get(String(creatorId));
         if (creatorOrder !== undefined && creatorOrder > operationIndex)
-          throw new Error('Wax archive counts a lot before its creation');
+          throw httpErrors.BadRequest(
+            'Wax archive counts a lot before its creation',
+          );
         const ledgerQuantity = Number(count.ledger_quantity_kg);
         const adjustment = Number(count.adjustment_kg);
         if (Math.abs((balances.get(lotId) ?? 0) - ledgerQuantity) > 0.000_001)
-          throw new Error('Wax archive inventory ledger quantity is invalid');
+          throw httpErrors.BadRequest(
+            'Wax archive inventory ledger quantity is invalid',
+          );
         if (Math.abs((deltas.get(lotId) ?? 0) - adjustment) > 0.000_001)
-          throw new Error('Wax archive inventory adjustment is invalid');
+          throw httpErrors.BadRequest(
+            'Wax archive inventory adjustment is invalid',
+          );
       }
     }
     for (const [lotId, delta] of deltas) {
       const balance = (balances.get(lotId) ?? 0) + delta;
       if (balance < -0.000_001)
-        throw new Error('Wax archive contains negative historical stock');
+        throw httpErrors.BadRequest(
+          'Wax archive contains negative historical stock',
+        );
       balances.set(lotId, balance);
     }
   }
 }
 
 /**
- * Inserts the placements of the imported queens. An archive from before the
- * table `queen_placements` gets placements from `queens.hive_id` and
- * `queens.move_date`, with the same rules as the migration. Replaced queens
- * that are still active become inactive, also the same as the migration.
+ * Inserts the placements of the imported queens.
+ * - Version 2: only from `queen_placements.csv`.
+ * - Version 1 with `queen_placements.csv`: from that file.
+ * - Version 1 without it: from `hive_id` and `move_date` of `queens.csv`,
+ *   with the same rules as the migration. Replaced queens that are still
+ *   active become inactive, also the same as the migration.
  */
 async function importQueenPlacements(
   db: Transaction<DB>,
   data: TransferData,
+  version: number,
   companyId: number,
   queens: Record<string, number>,
   hives: Record<string, number>,
-  newQueens: CsvRecord[],
 ) {
   let rows: PlacementPeriod[];
-  if (data.queen_placements.length) {
+  if (version >= 2 || data.queen_placements.length) {
     rows = data.queen_placements
       .map((row) => ({
         queen_id: mapped(queens, row.queen_id),
@@ -748,18 +828,24 @@ async function importQueenPlacements(
           row.queen_id !== null && row.hive_id !== null && !!row.from_date,
       );
   } else {
+    // The raw rows, because the cleaned rows have no `hive_id` and
+    // `move_date`.
     const built = buildQueenPlacements(
-      newQueens.map((row) => ({
-        id: Number(row.id),
-        hive_id: row.hive_id === undefined ? null : Number(row.hive_id),
-        user_id: companyId,
-        move_date: row.move_date,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        modus: row.modus === undefined ? true : row.modus === true,
-        modus_date: row.modus_date,
-        deleted: row.deleted === true,
-      })),
+      data.queens.flatMap((row) => {
+        const id = mapped(queens, row.id);
+        if (id === null) return [];
+        return {
+          id,
+          hive_id: mapped(hives, row.hive_id),
+          user_id: companyId,
+          move_date: row.move_date,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          modus: row.modus === undefined ? true : row.modus === true,
+          modus_date: row.modus_date,
+          deleted: row.deleted === true,
+        };
+      }),
     );
     rows = built.rows;
     for (const { queen_id, modus_date } of built.inactivate)
@@ -781,7 +867,33 @@ async function importQueenPlacements(
     'queen_placements',
     rows.map((row) => ({ ...row, user_id: companyId })),
   );
-  for (const id of Object.values(queens)) await syncQueen(db, id);
+}
+
+/**
+ * Reads the version from `format.json`. Throws 400 for another format or a
+ * version that this server does not know.
+ */
+function parseFormat(text: string) {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw httpErrors.BadRequest('Archive contains an invalid format.json');
+  }
+  const format =
+    typeof value === 'object' && value !== null
+      ? (value as Record<string, unknown>)
+      : {};
+  if (format.format !== ARCHIVE_FORMAT)
+    throw httpErrors.BadRequest('Archive is not a b.tree company export');
+  const version = format.version;
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1)
+    throw httpErrors.BadRequest('Archive contains an invalid format version');
+  if (version > ARCHIVE_VERSION)
+    throw httpErrors.BadRequest(
+      `Archive format version ${version} is newer than this server supports (${ARCHIVE_VERSION})`,
+    );
+  return version;
 }
 
 export async function importCompanyArchive(
@@ -821,6 +933,8 @@ export async function importCompanyArchive(
     queen_races: [],
     todos: [],
   };
+  // An archive without format.json is from before the versions.
+  let version = 1;
   const zip = await yauzl.fromBuffer(upload);
   let entryCount = 0;
   let totalBytes = 0;
@@ -831,6 +945,21 @@ export async function importCompanyArchive(
         throw httpErrors.PayloadTooLarge('Archive contains too many files');
       }
 
+      if (entry.filename === FORMAT_FILE) {
+        if (entry.uncompressedSize > MAX_FORMAT_BYTES)
+          throw httpErrors.PayloadTooLarge('Archive file is too large');
+        const chunks: Buffer[] = [];
+        let entryBytes = 0;
+        for await (const chunk of await entry.openReadStream()) {
+          const buffer = Buffer.from(chunk);
+          entryBytes += buffer.byteLength;
+          if (entryBytes > MAX_FORMAT_BYTES)
+            throw httpErrors.PayloadTooLarge('Archive file is too large');
+          chunks.push(buffer);
+        }
+        version = parseFormat(Buffer.concat(chunks).toString());
+        continue;
+      }
       const key = entry.filename.split('.')[0] as TransferKey;
       if (!transferKeys.includes(key)) continue;
       if (entry.uncompressedSize > MAX_ARCHIVE_ENTRY_BYTES) {
@@ -858,7 +987,8 @@ export async function importCompanyArchive(
     await zip.close();
   }
   if (!data.apiaries.length && !data.hives.length && !data.wax_lots.length)
-    throw new Error('Archive contains no supported company data');
+    throw httpErrors.BadRequest('Archive contains no supported company data');
+  skipEmptyWaxOperations(data);
   validateWaxArchive(data);
 
   const name = `${Date.now()}`;
@@ -1179,7 +1309,6 @@ export async function importCompanyArchive(
     const queenRows = data.queens.map((row) =>
       clean('queens', row, {
         user_id: companyId,
-        hive_id: mapped(hives, row.hive_id),
         race_id: mapped(races, row.race_id),
         mating_id: mapped(matings, row.mating_id),
         mother_id: null,
@@ -1189,10 +1318,10 @@ export async function importCompanyArchive(
     await importQueenPlacements(
       trx,
       data,
+      version,
       companyId,
       idMap(data.queens, queenIds),
       hives,
-      queenRows.map((row, index) => ({ ...row, id: queenIds[index] })),
     );
   });
   return { name };
@@ -1226,6 +1355,16 @@ export async function downloadCompanyData(
     },
     record_delimiter: 'windows',
   };
+  arch.append(
+    JSON.stringify({
+      format: ARCHIVE_FORMAT,
+      version: ARCHIVE_VERSION,
+      // The git SHA of the server, only for debugging.
+      server_version: process.env.SERVICE_VERSION ?? 'unknown',
+      exported_at: new Date().toISOString(),
+    }),
+    { name: FORMAT_FILE },
+  );
   const company = await db
     .selectFrom('companies')
     .selectAll()

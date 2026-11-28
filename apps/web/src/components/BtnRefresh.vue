@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import { clearCache } from '../composables/useQuery';
-import { useRefreshStore } from '../stores/refresh';
+import { clearCache } from '@/composables/useQuery';
+import { useRefreshStore } from '@/stores/refresh';
 
 const storeRefresh = useRefreshStore();
 const $q = useQuasar();

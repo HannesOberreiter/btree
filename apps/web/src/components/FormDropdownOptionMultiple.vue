@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import { useVModels } from '@vueuse/core';
 import { filter } from 'lodash-es';
 import { ref, watch } from 'vue';
@@ -12,8 +12,8 @@ import {
   useQueensQuery,
   useRearingDetailsQuery,
   useScaleQuery
-} from '../composables/useQuery';
-import { deepUnref } from '../helpers/deep-unref';
+} from '@/composables/useQuery';
+import { deepUnref } from '@/helpers/deep-unref';
 
 const props = defineProps({
   modelValue: {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import { useLocalStorage, useVModels } from '@vueuse/core';
 import { filter, isEmpty } from 'lodash-es';
 import { useQuasar } from 'quasar';
@@ -13,12 +13,12 @@ import {
   useQueensQuery,
   useRearingDetailsQuery,
   useScaleQuery
-} from '../composables/useQuery';
-import { OPTIONS } from '../constants';
-import { formCheckMultipleValues } from '../helpers';
-import BtnMultipleValues from './BtnMultipleValues.vue';
-import DialogForm from './DialogForm.vue';
-import TooltipBase from './TooltipBase.vue';
+} from '@/composables/useQuery';
+import { OPTIONS } from '@/constants';
+import { formCheckMultipleValues } from '@/helpers';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   modelValue: {

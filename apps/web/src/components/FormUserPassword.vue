@@ -5,13 +5,13 @@ import { useVModels } from '@vueuse/core';
 import { QInput, useQuasar } from 'quasar';
 import { onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { validationErrors } from '../helpers';
+import { validationErrors } from '@/helpers';
 import {
   maxLength,
   minLength,
   requiredField,
   sameAs
-} from '../helpers/i18n-validators';
+} from '@/helpers/i18n-validators';
 
 const props = defineProps({
   confirm: {

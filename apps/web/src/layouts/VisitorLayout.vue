@@ -3,9 +3,9 @@ import { useMeta } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
-import BtnDarkMode from '../components/BtnDarkMode.vue';
-import SupporterImages from '../components/SupporterImages.vue';
-import { useNews } from '../composables/useNews';
+import BtnDarkMode from '@/components/BtnDarkMode.vue';
+import SupporterImages from '@/components/SupporterImages.vue';
+import { useNews } from '@/composables/useNews';
 
 const isBeta = import.meta.env.BACKEND_URL?.includes('beta') ?? false;
 

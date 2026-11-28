@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { QTableProps } from 'quasar';
-import type { ChargeStockResponse } from '../api/types';
+import type { ChargeStockResponse } from '@/api/types';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useKeyTable } from '../composables/useKey';
-import { useChargeStockQuery } from '../composables/useQuery';
-import { tableCheckSelected } from '../helpers';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useKeyTable } from '@/composables/useKey';
+import { useChargeStockQuery } from '@/composables/useQuery';
+import { tableCheckSelected } from '@/helpers';
+import { useTablesStore } from '@/stores/tables';
 
 const { t } = useI18n();
 

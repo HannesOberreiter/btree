@@ -2,11 +2,11 @@
 import useVuelidate from '@vuelidate/core';
 import { flatten, map } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormInputDate from './FormInputDate.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
 
 // Edit only: the server creates placements with moves and status changes.
 const props = defineProps({

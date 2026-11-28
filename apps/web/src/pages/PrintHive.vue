@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { orderBy } from 'lodash-es';
 import { computed, toRefs, watch } from 'vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useHiveQuery, useHiveTaskQuery } from '../composables/useQuery';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useHiveQuery, useHiveTaskQuery } from '@/composables/useQuery';
 
 const props = defineProps({
   id: {
@@ -144,7 +144,11 @@ const listData = computed(() => {
                       {{ $t('rating.comb') }}: {{ item.comb }},
                       {{ $t('rating.pollen') }}: {{ item.pollen }},
                       {{ $t('rating.swarm') }}: {{ item.swarm }},
-                      {{ $t('rating.temper') }}: {{ item.temper }}
+                      {{ $t('rating.temper') }}: {{ item.temper }},
+                      {{ $t('rating.colony_strength') }}:
+                      {{ item.colony_strength }},
+                      {{ $t('rating.spring_development') }}:
+                      {{ item.spring_development }}
                     </span>
                     <br />
                     <span>

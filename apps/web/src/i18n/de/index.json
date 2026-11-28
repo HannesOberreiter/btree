@@ -106,6 +106,29 @@
   "birth": "Geburtstag",
   "blue": "Blau",
   "both": "Beide",
+  "breeding": {
+    "adminOnly": "Nur ein Admin der Imkerei kann den Zuchtmodus ändern.",
+    "beebreed": {
+      "intro": "Mit BeeBreed macht der Zuchtmodus Folgendes:",
+      "ratings": "Alle Mitglieder sehen die Bewertungen {ratings} im Kontrollformular. Sie können diese Bewertungen in ihren Feldeinstellungen nicht ausschalten. Ihre eigenen Einstellungen gelten wieder, wenn der Modus aus ist.",
+      "scale": "Die Bewertungsskala geht von 1 (schlechteste) bis {max} (beste).",
+      "queenCode": "Der Name der Königin ist der BeeBreed-Königinnen-Code: Land-Landesverband-Züchter-Nummer-Geburtsjahr, zum Beispiel DE-44-101-1-2025. Das Königinnen-Formular zeigt eine Warnung bei einem Namen in einem anderen Format.",
+      "harvest": "Jede Ernteart kommt in höchstens einen Ernteabschnitt. Ernten von Erntearten ohne Abschnitt zählen nicht. Die Menge zählt als kg."
+    },
+    "description": "Der Zuchtmodus bereitet die Daten der Imkerei für die Leistungsprüfung eines Zuchtsystems vor. Nur ein Admin kann ihn ändern.",
+    "lockedFields": "Der Zuchtmodus der Imkerei legt einige dieser Einträge fest:",
+    "name": "Zuchtmodus",
+    "off": "Aus",
+    "section": {
+      "early": "Frühtracht (TEIL1)",
+      "summer": "Sommertracht (TEIL2)",
+      "late": "Spättracht (TEIL3)",
+      "stock": "Vorrat (VORRAT)"
+    },
+    "sections": "Ernteabschnitte",
+    "warningFormat": "Zuchtmodus: „{name}“ ist kein gültiger Königinnen-Code. Beispiel: {example}",
+    "warningYear": "Zuchtmodus: Das Jahr in „{name}“ ist nicht das Geburtsjahr der Königin."
+  },
   "calculate": "Berechnung",
   "calculateVarroa": "Varroazahl pro Tag",
   "calculator": "Rechner",
@@ -613,10 +636,12 @@
   "rating": {
     "brood": "Brut",
     "calm_comb": "Wabensitz",
+    "colony_strength": "Volksstärke",
     "comb": "Wabenbau",
     "max": "Maximalwert",
     "name": "Bewertung",
     "pollen": "Pollen",
+    "spring_development": "Frühjahrsentwicklung",
     "swarm": "Schwarm",
     "temper": "Sanftmut",
     "text": "Bewertung niedrig bis hoch"

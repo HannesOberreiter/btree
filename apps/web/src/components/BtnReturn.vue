@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { useRouterStore } from '../stores/router';
-import BtnBase from './BtnBase.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useRouterStore } from '@/stores/router';
+import BtnBase from '@/components/BtnBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const router = useRouter();
 const storeRouter = useRouterStore();

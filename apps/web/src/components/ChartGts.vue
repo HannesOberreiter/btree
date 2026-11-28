@@ -18,8 +18,8 @@ import { useQuasar } from 'quasar';
 import { computed, toRef } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import GlobalLoading from './GlobalLoading.vue';
+import { useApiFetch } from '@/composables/useApi';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 interface GtsResponse {
   daily: Array<{

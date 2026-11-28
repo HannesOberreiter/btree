@@ -5,13 +5,13 @@ import { useQuasar } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { useKeySpeak } from '../composables/useKey';
-import { useNotification } from '../composables/useNotification';
-import { useApiariesQuery, useHivesQuery } from '../composables/useQuery';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import BtnBase from './BtnBase.vue';
+import { useKeySpeak } from '@/composables/useKey';
+import { useNotification } from '@/composables/useNotification';
+import { useApiariesQuery, useHivesQuery } from '@/composables/useQuery';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import BtnBase from '@/components/BtnBase.vue';
 
-import TooltipBase from './TooltipBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 interface Haystack {
   id?: number;

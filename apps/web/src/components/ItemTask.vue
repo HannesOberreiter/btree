@@ -4,15 +4,15 @@
 import { useQuasar } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogFileShow from './DialogFileShow.vue';
-import DialogForm from './DialogForm.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   task: {
@@ -304,7 +304,9 @@ function showFile(value: string) {
                 task.comb ||
                 task.pollen ||
                 task.swarm ||
-                task.temper
+                task.temper ||
+                task.colony_strength ||
+                task.spring_development
               "
             >
               <b>{{ $t('rating.name') }}: </b>
@@ -325,6 +327,14 @@ function showFile(value: string) {
               </span>
               <span v-if="task.temper">
                 {{ $t('rating.temper') }} ({{ task.temper }})
+              </span>
+              <span v-if="task.colony_strength">
+                {{ $t('rating.colony_strength') }} ({{ task.colony_strength }})
+              </span>
+              <span v-if="task.spring_development">
+                {{ $t('rating.spring_development') }} ({{
+                  task.spring_development
+                }})
               </span>
             </div>
             <div

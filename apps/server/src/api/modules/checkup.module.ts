@@ -45,6 +45,8 @@ const orderColumns = {
   temper: 'checkups.temper',
   calm_comb: 'checkups.calm_comb',
   swarm: 'checkups.swarm',
+  colony_strength: 'checkups.colony_strength',
+  spring_development: 'checkups.spring_development',
   broodframes: 'checkups.broodframes',
   honeyframes: 'checkups.honeyframes',
   foundation: 'checkups.foundation',
@@ -78,6 +80,12 @@ function checkupValues(
     ...(data.temper !== undefined && { temper: data.temper }),
     ...(data.calm_comb !== undefined && { calm_comb: data.calm_comb }),
     ...(data.swarm !== undefined && { swarm: data.swarm }),
+    ...(data.colony_strength !== undefined && {
+      colony_strength: data.colony_strength,
+    }),
+    ...(data.spring_development !== undefined && {
+      spring_development: data.spring_development,
+    }),
     ...(data.varroa !== undefined && { varroa: data.varroa }),
     ...(data.strong !== undefined && { strong: data.strong }),
     ...(data.temperature !== undefined && { temperature: data.temperature }),
@@ -106,6 +114,8 @@ function decimalSelection(
     | 'checkups.temper'
     | 'checkups.calm_comb'
     | 'checkups.swarm'
+    | 'checkups.colony_strength'
+    | 'checkups.spring_development'
     | 'checkups.varroa'
     | 'checkups.temperature'
     | 'checkups.weight',
@@ -116,6 +126,8 @@ function decimalSelection(
     | 'temper'
     | 'calm_comb'
     | 'swarm'
+    | 'colony_strength'
+    | 'spring_development'
     | 'varroa'
     | 'temperature'
     | 'weight',
@@ -138,6 +150,8 @@ function checkupSelections() {
     decimalSelection('checkups.temper', 'temper'),
     decimalSelection('checkups.calm_comb', 'calm_comb'),
     decimalSelection('checkups.swarm', 'swarm'),
+    decimalSelection('checkups.colony_strength', 'colony_strength'),
+    decimalSelection('checkups.spring_development', 'spring_development'),
     decimalSelection('checkups.varroa', 'varroa'),
     'checkups.strong',
     decimalSelection('checkups.temperature', 'temperature'),

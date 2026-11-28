@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { CompanyPatchResponse, CompanyResponse } from '../api/types';
+import type { CompanyPatchResponse, CompanyResponse } from '@/api/types';
 import { findIndex, sortBy } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { clearCache, useInvalidateQueries } from '../composables/useQuery';
-import { useAuthUserStore } from '../stores/auth';
-import { useRefreshStore } from '../stores/refresh';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import ItemCompany from './ItemCompany.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { clearCache, useInvalidateQueries } from '@/composables/useQuery';
+import { useAuthUserStore } from '@/stores/auth';
+import { useRefreshStore } from '@/stores/refresh';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import ItemCompany from '@/components/ItemCompany.vue';
 
 const notification = useNotification();
 const useDate = useDateFormat();

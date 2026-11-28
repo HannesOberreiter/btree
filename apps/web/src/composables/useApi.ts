@@ -1,9 +1,9 @@
 import { useNetwork } from '@vueuse/core';
 import { isString } from 'lodash-es';
 import querystring from 'query-string';
-import { useBackend } from './useBackend';
-import { useLoadingManager } from './useLoadingManager';
-import { useNeedAuth } from './useNeedAuth';
+import { useBackend } from '@/composables/useBackend';
+import { useLoadingManager } from '@/composables/useLoadingManager';
+import { useNeedAuth } from '@/composables/useNeedAuth';
 
 const isDev = import.meta.env.QUASAR_DEV;
 

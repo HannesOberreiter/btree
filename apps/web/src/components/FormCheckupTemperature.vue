@@ -2,10 +2,10 @@
 import { useVModels } from '@vueuse/core';
 import { isEmpty, round } from 'lodash-es';
 import { computed, ref, watch } from 'vue';
-import { useTemperatureQuery } from '../composables/useQuery';
-import { useAuthUserStore } from '../stores/auth';
-import FormInputNumeric from './FormInputNumeric.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useTemperatureQuery } from '@/composables/useQuery';
+import { useAuthUserStore } from '@/stores/auth';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   modelValue: {

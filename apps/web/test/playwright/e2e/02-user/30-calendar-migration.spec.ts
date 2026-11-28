@@ -18,6 +18,29 @@ const rearingSteps = {
   }
 };
 
+function rearingEvents(steps: typeof rearingSteps): CalendarResponse {
+  return Object.values(steps).map(step => ({
+    id: 77,
+    groupId: 'Q77',
+    title: step.detail.job,
+    start: step.date,
+    end: new Date(Date.parse(step.date) + 1000).toISOString(),
+    allDay: false,
+    color: 'pink',
+    textColor: 'black',
+    table: 'rearing',
+    icon: 'fas fa-crown',
+    durationEditable: false,
+    startPosition: 1,
+    currentStep: step,
+    steps,
+    note: 'Migration rearing',
+    larvae: 10,
+    hatch: 8,
+    mated: 7
+  }));
+}
+
 const events: Record<string, CalendarResponse> = {
   todo: [
     {
@@ -51,26 +74,7 @@ const events: Record<string, CalendarResponse> = {
       done: false
     }
   ],
-  rearing: Object.values(rearingSteps).map(step => ({
-    id: 77,
-    groupId: 'Q77',
-    title: step.detail.job,
-    start: step.date,
-    end: new Date(Date.parse(step.date) + 1000).toISOString(),
-    allDay: false,
-    color: 'pink',
-    textColor: 'black',
-    table: 'rearing',
-    icon: 'fas fa-crown',
-    durationEditable: false,
-    startPosition: 1,
-    currentStep: step,
-    steps: rearingSteps,
-    note: 'Migration rearing',
-    larvae: 10,
-    hatch: 8,
-    mated: 7
-  })),
+  rearing: rearingEvents(rearingSteps),
   scale_data: [
     {
       id: 3,
@@ -123,6 +127,27 @@ const test = base.extend({
       const mutation = path.match(
         /\/v1\/(todo|checkup|rearing)\/(batchDelete|status)$/
       );
+      if (
+        route.request().method() === 'PATCH' &&
+        path.endsWith('/v1/rearing/date')
+      ) {
+        // The server derives every step date from the rearing start date,
+        // so the whole group shifts by the same delta.
+        const { start } = route.request().postDataJSON() as { start: string };
+        const delta = Date.parse(start) - Date.parse(rearingSteps[0]!.date);
+        const shiftedSteps = Object.fromEntries(
+          Object.entries(rearingSteps).map(([key, step]) => [
+            key,
+            {
+              ...step,
+              date: new Date(Date.parse(step.date) + delta).toISOString()
+            }
+          ])
+        ) as typeof rearingSteps;
+        state.rearing = rearingEvents(shiftedSteps);
+        await route.fulfill({ json: 1 });
+        return;
+      }
       if (route.request().method() === 'PATCH' && mutation) {
         const sourceName = mutation[1]!;
         const { ids, status } = route.request().postDataJSON() as {
@@ -455,6 +480,9 @@ test('dragging a later rearing step moves its group without enabling resize', as
     throw new Error('Calendar event geometry is unavailable');
   }
   const request = page.waitForRequest(r => r.url().includes('/rearing/date'));
+  const refetch = page.waitForResponse(
+    r => r.url().includes('/calendar/rearing') && r.request().method() === 'GET'
+  );
   const x = eventBox.x + 10;
   const y = eventBox.y + eventBox.height / 2;
   await page.mouse.move(x, y);
@@ -466,6 +494,9 @@ test('dragging a later rearing step moves its group without enabling resize', as
     end: '2026-09-19',
     ids: ['77']
   });
+  // The app refetches the rearing source after the PATCH; assert the moved
+  // positions only once that refetch has rendered.
+  await refetch;
   await expect(
     calendar
       .locator('[role="gridcell"][data-date="2026-09-18"]')

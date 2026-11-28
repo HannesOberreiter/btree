@@ -2,12 +2,12 @@
 import useVuelidate from '@vuelidate/core';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import FormDropdownServer from '../components/FormDropdownServer.vue';
-import FormErrorMax from '../components/FormErrorMax.vue';
-import FormInputEmail from '../components/FormInputEmail.vue';
-import { useNotification } from '../composables/useNotification';
-import AuthService from '../services/auth.service';
+import BtnBase from '@/components/BtnBase.vue';
+import FormDropdownServer from '@/components/FormDropdownServer.vue';
+import FormErrorMax from '@/components/FormErrorMax.vue';
+import FormInputEmail from '@/components/FormInputEmail.vue';
+import { useNotification } from '@/composables/useNotification';
+import AuthService from '@/services/auth.service';
 
 const notification = useNotification();
 const { t } = useI18n();

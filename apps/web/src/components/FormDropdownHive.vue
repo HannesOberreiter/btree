@@ -15,12 +15,12 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { useNotification } from '../composables/useNotification';
-import { useApiariesQuery, useHivesQuery } from '../composables/useQuery';
-import { validationErrors } from '../helpers';
-import { requiredField } from '../helpers/i18n-validators';
-import { useScanningStore } from '../stores/scanning';
-import TooltipBase from './TooltipBase.vue';
+import { useNotification } from '@/composables/useNotification';
+import { useApiariesQuery, useHivesQuery } from '@/composables/useQuery';
+import { validationErrors } from '@/helpers';
+import { requiredField } from '@/helpers/i18n-validators';
+import { useScanningStore } from '@/stores/scanning';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   modelValue: {

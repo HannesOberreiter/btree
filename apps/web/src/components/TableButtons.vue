@@ -5,22 +5,22 @@ import { exportFile, useQuasar } from 'quasar';
 import { computed, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { clearCache } from '../composables/useQuery';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { useAuthUserStore } from '../stores/auth';
-import { useTableFilterStore } from '../stores/tableFilter';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogFilter from './DialogFilter.vue';
-import DialogForm from './DialogForm.vue';
-import DialogPrintHive from './DialogPrintHive.vue';
-import DialogPrintQr from './DialogPrintQr.vue';
-import DialogUpload from './DialogUpload.vue';
-import TableButtonScale from './TableButtonScale.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { clearCache } from '@/composables/useQuery';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { useAuthUserStore } from '@/stores/auth';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFilter from '@/components/DialogFilter.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import DialogPrintHive from '@/components/DialogPrintHive.vue';
+import DialogPrintQr from '@/components/DialogPrintQr.vue';
+import DialogUpload from '@/components/DialogUpload.vue';
+import TableButtonScale from '@/components/TableButtonScale.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   selected: {
@@ -555,6 +555,7 @@ function onPrint() {
           "
           v-close-popup
           clickable
+          data-cy="btn-table-import"
           @click="onImport"
         >
           <q-item-section avatar>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { MenuSection } from './MainDrawer.vue';
+import type { MenuSection } from '@/components/MainDrawer.vue';
 import { useQuasar } from 'quasar';
 
 defineProps({

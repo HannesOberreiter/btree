@@ -164,7 +164,7 @@ export default async function routes(
     request: FastifyRequest,
   ) {
     if (!wizBeeToolDefinitions.some((toolDef) => toolDef.name === toolName)) {
-      throw httpErrors.NotFound('Unknown tool');
+      throw httpErrors.NotFound(`Unknown tool: ${toolName}`);
     }
 
     const user = request.session?.user;

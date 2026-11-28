@@ -13,14 +13,14 @@ import round from 'lodash-es/round';
 import { computed, nextTick, ref, unref, watch } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import BtnBaseGroup from '../components/BtnBaseGroup.vue';
-import FormDropdownOption from '../components/FormDropdownOption.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import TooltipBase from '../components/TooltipBase.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
-import { useScaleDataQuery } from '../composables/useQuery';
-import { deepUnref } from '../helpers/deep-unref';
+import { useScaleDataQuery } from '@/composables/useQuery';
+import { deepUnref } from '@/helpers/deep-unref';
 
 use([
   CanvasRenderer,

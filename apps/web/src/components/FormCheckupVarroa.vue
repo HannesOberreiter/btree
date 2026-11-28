@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useVModels } from '@vueuse/core';
 import { useQuasar } from 'quasar';
-import DialogVarroa from './DialogVarroa.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
+import DialogVarroa from '@/components/DialogVarroa.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
 
 const props = defineProps({
   modelValue: {

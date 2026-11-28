@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useVModels } from '@vueuse/core';
-import FormInputText from './FormInputText.vue';
+import FormInputText from '@/components/FormInputText.vue';
 
 const props = defineProps({
   modelValue: {

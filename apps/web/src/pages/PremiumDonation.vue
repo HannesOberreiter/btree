@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import type {
-  CompanyPaidResponse,
-  CompanyPaymentsResponse
-} from '../api/types';
+import type { CompanyPaidResponse, CompanyPaymentsResponse } from '@/api/types';
 import dayjs from 'dayjs';
 import { useQuasar } from 'quasar';
 import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import PaymentMollie from '../components/PaymentMollie.vue';
-import PaymentPaypal from '../components/PaymentPaypal.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
-import { useRefreshStore } from '../stores/refresh';
+import BtnBase from '@/components/BtnBase.vue';
+import PaymentMollie from '@/components/PaymentMollie.vue';
+import PaymentPaypal from '@/components/PaymentPaypal.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
+import { useRefreshStore } from '@/stores/refresh';
 
 const storeRefresh = useRefreshStore();
 const useDate = useDateFormat();

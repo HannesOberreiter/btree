@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { StatisticTaskKind } from '../api/types';
+import type { StatisticTaskKind } from '@/api/types';
 import type { PropType } from 'vue';
 import { useQuasar } from 'quasar';
 import { computed, ref, toRef, unref } from 'vue';
-import BtnBase from '../components/BtnBase.vue';
-import BtnBaseGroup from '../components/BtnBaseGroup.vue';
-import DialogFilter from '../components/DialogFilter.vue';
-import StatisticTaskApiary from '../components/StatisticTaskApiary.vue';
-import StatisticTaskType from '../components/StatisticTaskType.vue';
-import StatisticTaskYear from '../components/StatisticTaskYear.vue';
-import TooltipBase from '../components/TooltipBase.vue';
-import { useTableFilterStore } from '../stores/tableFilter';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFilter from '@/components/DialogFilter.vue';
+import StatisticTaskApiary from '@/components/StatisticTaskApiary.vue';
+import StatisticTaskType from '@/components/StatisticTaskType.vue';
+import StatisticTaskYear from '@/components/StatisticTaskYear.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
+import { useTableFilterStore } from '@/stores/tableFilter';
 
 const props = defineProps({
   kind: {

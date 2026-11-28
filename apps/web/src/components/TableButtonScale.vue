@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import DialogForm from './DialogForm.vue';
-import DialogSelectOption from './DialogSelectOption.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import DialogForm from '@/components/DialogForm.vue';
+import DialogSelectOption from '@/components/DialogSelectOption.vue';
 
 const emit = defineEmits(['change']);
 const $q = useQuasar();

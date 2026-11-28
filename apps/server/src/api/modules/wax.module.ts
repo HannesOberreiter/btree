@@ -877,8 +877,66 @@ export async function deleteWaxLot(
       .where('lot_id', '=', lotId)
       .execute();
     await trx.deleteFrom('wax_lots').where('id', '=', lotId).execute();
+    if (lot.created_by_operation_id)
+      await deleteEmptyWaxOperation(
+        trx,
+        companyId,
+        lot.created_by_operation_id,
+      );
     return true;
   });
+}
+
+/**
+ * Deletes a wax operation that has no lines. Keeps the operation when an
+ * inventory count, a reversal or a wax lot refers to it.
+ */
+async function deleteEmptyWaxOperation(
+  trx: Transaction<DB>,
+  companyId: number,
+  operationId: number,
+) {
+  const operation = await trx
+    .selectFrom('wax_operations')
+    .select('id')
+    .where('id', '=', operationId)
+    .where('user_id', '=', companyId)
+    .forUpdate()
+    .executeTakeFirst();
+  if (!operation) return;
+  const [line, createdLot, reversal, inventoryCount] = await Promise.all([
+    trx
+      .selectFrom('wax_operation_lines')
+      .select('id')
+      .where('operation_id', '=', operationId)
+      .executeTakeFirst(),
+    trx
+      .selectFrom('wax_lots')
+      .select('id')
+      .where('created_by_operation_id', '=', operationId)
+      .where('user_id', '=', companyId)
+      .executeTakeFirst(),
+    trx
+      .selectFrom('wax_operations')
+      .select('id')
+      .where('reversal_of_id', '=', operationId)
+      .where('user_id', '=', companyId)
+      .executeTakeFirst(),
+    trx
+      .selectFrom('wax_inventory_counts')
+      .select('id')
+      .where('operation_id', '=', operationId)
+      .executeTakeFirst(),
+  ]);
+  if (line || createdLot || reversal || inventoryCount) return;
+  await trx
+    .deleteFrom('wax_operation_hives')
+    .where('operation_id', '=', operationId)
+    .execute();
+  await trx
+    .deleteFrom('wax_operations')
+    .where('id', '=', operationId)
+    .execute();
 }
 
 export async function deleteWaxOperation(

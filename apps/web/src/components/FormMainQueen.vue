@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import type { FormQueen } from '../types';
+import type { FormQueen } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { toRefs } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, nextTick, ref, unref, watch } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useQueenSameDay } from '../composables/useQueenSameDay';
-import { useQueensQuery } from '../composables/useQuery';
+import { useI18n } from 'vue-i18n';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useQueenSameDay } from '@/composables/useQueenSameDay';
+import { useQueensQuery } from '@/composables/useQuery';
+import { checkBreedingCode } from '@/helpers/breeding';
+import { useAuthUserStore } from '@/stores/auth';
 
-import BtnBase from './BtnBase.vue';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import FormInputUrl from './FormInputUrl.vue';
-import FormQueenMarkcolour from './FormQueenMarkcolour.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormInputUrl from '@/components/FormInputUrl.vue';
+import FormQueenMarkcolour from '@/components/FormQueenMarkcolour.vue';
 
 const props = defineProps({
   ids: {
@@ -54,6 +57,8 @@ const stateDefault = {
 };
 
 const notification = useNotification();
+const { t } = useI18n();
+const storeUser = useAuthUserStore();
 const showInterval = ref(false);
 const api = useApiFetch();
 const forceInterval = ref(false);
@@ -180,6 +185,33 @@ const sampleName = computed(() => {
   return hintText;
 });
 
+// The breeding mode warns when a name is not a valid code of the breeding
+// system. It does not block saving: a company can also keep queens outside
+// the breeding programme.
+const breedingWarning = computed(() => {
+  const system = storeUser.company.breeding_system;
+  if (!system || !state.value.name) {
+    return '';
+  }
+  const names =
+    !isEdit.value && state.value.repeat > 0
+      ? Array.from(
+          { length: state.value.repeat },
+          (_, i) => `${state.value.name}${state.value.start + i}`
+        )
+      : [state.value.name];
+  for (const name of names) {
+    const problem = checkBreedingCode(system, name, state.value.date);
+    if (problem === 'format') {
+      return t('breeding.warningFormat', { name, example: 'DE-44-101-1-2025' });
+    }
+    if (problem === 'year') {
+      return t('breeding.warningYear', { name });
+    }
+  }
+  return '';
+});
+
 const rules = {};
 const v = useVuelidate(rules, state, { $autoDirty: true });
 
@@ -210,6 +242,13 @@ async function getEdit(id: unknown[]) {
       }
       if (isCopy.value) {
         response[0].hive_id = null;
+      }
+      // A queen without placement has no move date. The form then shows
+      // today, the same as for a new queen.
+      for (const row of response) {
+        if (!row.move_date) {
+          row.move_date = dayjs().format('YYYY-MM-DD');
+        }
       }
       // Little helper to set current date if user edits one entry and wants to set inactive state, otherwise it would be the creation date
       if (response.length === 1 && response[0]?.modus) {
@@ -265,6 +304,7 @@ async function onChange() {
         :required="isEdit ? false : true"
         label="name"
         name="queen"
+        data-cy="queen-name"
         icon="fas fa-passport"
         class="q-mb-sm"
         :hint="isEdit ? '' : `${$t('lastAdded')}: ${lastNames}`"
@@ -281,6 +321,17 @@ async function onChange() {
         />
       </div>
     </div>
+    <q-banner
+      v-if="breedingWarning"
+      dense
+      class="bg-warning text-dark rounded-borders q-mb-sm"
+      data-cy="queen-breeding-warning"
+    >
+      <template #avatar>
+        <q-icon name="fas fa-triangle-exclamation" size="xs" />
+      </template>
+      {{ breedingWarning }}
+    </q-banner>
 
     <div v-if="(showInterval || forceInterval) && !isEdit" class="col-12">
       <div class="row">

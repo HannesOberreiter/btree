@@ -2,8 +2,8 @@
 import { useColorMode } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { computed, watch } from 'vue';
-import BtnBase from './BtnBase.vue';
-import TooltipBase from './TooltipBase.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const $q = useQuasar();
 const darkMode = useColorMode({

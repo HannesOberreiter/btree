@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import useVuelidate from '@vuelidate/core';
 import { reactive, ref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
-import BtnBase from './BtnBase.vue';
-import FormInputEmail from './FormInputEmail.vue';
-import FormUserPassword from './FormUserPassword.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import FormInputEmail from '@/components/FormInputEmail.vue';
+import FormUserPassword from '@/components/FormUserPassword.vue';
 
 const notification = useNotification();
 const storeUser = useAuthUserStore();

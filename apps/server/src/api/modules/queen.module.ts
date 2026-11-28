@@ -15,7 +15,6 @@ import {
   hiveTwiceError,
   lockRows,
   moveQueen,
-  syncQueen,
 } from './queen_placement.module.js';
 
 const queenBaseOrderFields: Record<string, string> = {
@@ -23,7 +22,7 @@ const queenBaseOrderFields: Record<string, string> = {
   name: 'queens.name',
   date: 'queens.date',
   mark_colour: 'queens.mark_colour',
-  move_date: 'queens.move_date',
+  move_date: 'queen_current_placements.move_date',
   mother: 'queens.mother',
   modus: 'queens.modus',
   modus_date: 'queens.modus_date',
@@ -91,11 +90,32 @@ function optionProjection(
     alias,
   );
 }
-function selectQueens(db: Database, companyId: number, details: boolean) {
-  let query = db
+/**
+ * Queens with the derived `hive_id` and `move_date` from the view
+ * `queen_current_placements`, and the location of that hive.
+ */
+function fromQueens(db: Database) {
+  return db
     .selectFrom('queens')
-    .leftJoin('hives_locations', 'hives_locations.hive_id', 'queens.hive_id')
+    .leftJoin(
+      'queen_current_placements',
+      'queen_current_placements.queen_id',
+      'queens.id',
+    )
+    .leftJoin(
+      'hives_locations',
+      'hives_locations.hive_id',
+      'queen_current_placements.hive_id',
+    );
+}
+const placementColumns = [
+  'queen_current_placements.hive_id',
+  'queen_current_placements.move_date',
+] as const;
+function selectQueens(db: Database, companyId: number, details: boolean) {
+  let query = fromQueens(db)
     .selectAll('queens')
+    .select(placementColumns)
     .select(hiveLocationProjection())
     .where('queens.user_id', '=', companyId);
   if (details)
@@ -146,9 +166,7 @@ export async function listQueens(
     '=',
     input.deleted === true,
   );
-  let count = db
-    .selectFrom('queens')
-    .leftJoin('hives_locations', 'hives_locations.hive_id', 'queens.hive_id')
+  let count = fromQueens(db)
     .select(db.fn.countAll<number>().as('total'))
     .where('queens.user_id', '=', companyId)
     .where('queens.deleted', '=', input.deleted === true);
@@ -197,12 +215,25 @@ export async function listQueens(
             count = count.where('hives_locations.apiary_id', '=', apiaryId);
           }
           const hive = value['queens.hive_id'];
+          // `empty` and `notEmpty` split the queens into the virgin table
+          // and the queen table, so every queen is in exactly one of them.
           if (hive === 'empty') {
             query = query.where('hives_locations.hive_id', 'is', null);
             count = count.where('hives_locations.hive_id', 'is', null);
+          } else if (hive === 'notEmpty') {
+            query = query.where('hives_locations.hive_id', 'is not', null);
+            count = count.where('hives_locations.hive_id', 'is not', null);
           } else if (Number.isFinite(Number(hive))) {
-            query = query.where('queens.hive_id', '=', Number(hive));
-            count = count.where('queens.hive_id', '=', Number(hive));
+            query = query.where(
+              'queen_current_placements.hive_id',
+              '=',
+              Number(hive),
+            );
+            count = count.where(
+              'queen_current_placements.hive_id',
+              '=',
+              Number(hive),
+            );
           }
         }
       }
@@ -277,6 +308,11 @@ function statsPlacements(db: Database, companyId: number) {
     .selectFrom('queen_placements')
     .innerJoin('queens', 'queens.id', 'queen_placements.queen_id')
     .leftJoin(
+      'queen_current_placements',
+      'queen_current_placements.queen_id',
+      'queens.id',
+    )
+    .leftJoin(
       'hives_locations',
       'hives_locations.hive_id',
       'queen_placements.hive_id',
@@ -315,7 +351,7 @@ export async function listQueenStats(
     ),
     sql<
       Record<string, unknown>
-    >`JSON_OBJECT('id', queens.id, 'name', queens.name, 'date', queens.date, 'move_date', queens.move_date, 'hive_id', queens.hive_id)`.as(
+    >`JSON_OBJECT('id', queens.id, 'name', queens.name, 'date', queens.date, 'move_date', queen_current_placements.move_date, 'hive_id', queen_current_placements.hive_id)`.as(
       'queen',
     ),
     hiveLocationProjection(),
@@ -412,6 +448,12 @@ export async function listQueenStats(
             sql<string | null>`AVG(NULLIF(temper,0))`.as('temper'),
             sql<string | null>`AVG(NULLIF(calm_comb,0))`.as('calm_comb'),
             sql<string | null>`AVG(NULLIF(swarm,0))`.as('swarm'),
+            sql<string | null>`AVG(NULLIF(colony_strength,0))`.as(
+              'colony_strength',
+            ),
+            sql<string | null>`AVG(NULLIF(spring_development,0))`.as(
+              'spring_development',
+            ),
             sql<string | null>`AVG(NULLIF(varroa,0))`.as('varroa'),
             sql<string | null>`AVG(NULLIF(strong,0))`.as('strong'),
           ])
@@ -498,8 +540,6 @@ export async function createQueens(
           ...queenValues({ ...body, date: undefined, hive_id: undefined }),
           // Old clients can send no birth date, the queen then gets today.
           date: body.date ? new Date(body.date) : new Date(),
-          // Kept for a queen without placement; else syncQueen writes it.
-          ...(body.move_date && { move_date: new Date(body.move_date) }),
           name:
             repeat > 1 ? `${body.name}${(body.start ?? 0) + index}` : body.name,
           user_id: companyId,
@@ -528,7 +568,6 @@ export async function createQueens(
           movedInto,
           today(),
         );
-      else await syncQueen(trx, id);
     }
     return ids;
   });
@@ -625,9 +664,15 @@ export async function updateQueenStatus(
 export function getQueensByIds(db: Database, companyId: number, ids: number[]) {
   return db
     .selectFrom('queens')
-    .selectAll()
-    .where('user_id', '=', companyId)
-    .where('id', 'in', ids)
+    .leftJoin(
+      'queen_current_placements',
+      'queen_current_placements.queen_id',
+      'queens.id',
+    )
+    .selectAll('queens')
+    .select(placementColumns)
+    .where('queens.user_id', '=', companyId)
+    .where('queens.id', 'in', ids)
     .execute();
 }
 export async function deleteQueens(

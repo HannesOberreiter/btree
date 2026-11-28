@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import DialogFileShow from './DialogFileShow.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
 
 defineProps({
   value: {

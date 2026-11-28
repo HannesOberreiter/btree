@@ -1,8 +1,8 @@
 import type { VueQueryPluginOptions } from '@tanstack/vue-query';
 import { QueryCache, VueQueryPlugin } from '@tanstack/vue-query';
 import { defineBoot } from '#q-app';
-import { useNotification } from '../composables/useNotification';
-import { i18n } from './i18n';
+import { useNotification } from '@/composables/useNotification';
+import { i18n } from '@/boot/i18n';
 
 export const queryCache = new QueryCache({
   onError: error => {

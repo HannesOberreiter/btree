@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { computed } from 'vue';
-import { useTrackEvent } from './useTrackEvent';
+import { useTrackEvent } from '@/composables/useTrackEvent';
 
 declare interface Pagination {
   sortBy: string;

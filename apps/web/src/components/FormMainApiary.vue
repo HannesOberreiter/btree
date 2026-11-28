@@ -3,16 +3,16 @@ import useVuelidate from '@vuelidate/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { requiredField } from '../helpers/i18n-validators';
-import BtnBase from './BtnBase.vue';
-import FromButtons from './FormButtons.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import FormInputUrl from './FormInputUrl.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { requiredField } from '@/helpers/i18n-validators';
+import BtnBase from '@/components/BtnBase.vue';
+import FromButtons from '@/components/FormButtons.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormInputUrl from '@/components/FormInputUrl.vue';
 
 const props = defineProps({
   ids: {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { StatisticTaskKind } from '../api/types';
+import type { StatisticTaskKind } from '@/api/types';
 import type { PropType } from 'vue';
 import { BarChart } from 'echarts/charts';
 import {
@@ -16,10 +16,10 @@ import { storeToRefs } from 'pinia';
 import { computed, nextTick, ref, watch } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import { useStatisticApiary } from '../composables/useQuery';
-import { deepUnref } from '../helpers/deep-unref';
-import { useTableFilterStore } from '../stores/tableFilter';
-import GlobalLoading from './GlobalLoading.vue';
+import { useStatisticApiary } from '@/composables/useQuery';
+import { deepUnref } from '@/helpers/deep-unref';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   kind: {

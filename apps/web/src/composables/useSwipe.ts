@@ -4,8 +4,8 @@ import type { QNotifyUpdateOptions } from 'quasar';
 import type { Ref } from 'vue';
 import { useSwipe } from '@vueuse/core';
 import { computed } from 'vue';
-import { useNotification } from './useNotification';
-import { useTrackEvent } from './useTrackEvent';
+import { useNotification } from '@/composables/useNotification';
+import { useTrackEvent } from '@/composables/useTrackEvent';
 
 interface CalendarSwipeTarget {
   getApi: () => CalendarApi;

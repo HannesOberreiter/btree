@@ -11,21 +11,21 @@ import L from 'leaflet';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import BtnBaseGroup from '../components/BtnBaseGroup.vue';
-import DialogForm from '../components/DialogForm.vue';
-import MapButtons from '../components/MapButtons.vue';
-import MapOverlay from '../components/MapOverlay.vue';
-import { useApiFetch } from '../composables/useApi';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import MapButtons from '@/components/MapButtons.vue';
+import MapOverlay from '@/components/MapOverlay.vue';
+import { useApiFetch } from '@/composables/useApi';
 
-import { useNotification } from '../composables/useNotification';
+import { useNotification } from '@/composables/useNotification';
 import {
   useAfbQuery,
   useApiariesQuery,
   useInvalidateQueries
-} from '../composables/useQuery';
+} from '@/composables/useQuery';
 
-import { useAuthUserStore } from '../stores/auth';
+import { useAuthUserStore } from '@/stores/auth';
 import 'leaflet/dist/leaflet.css';
 
 const icon = new L.Icon.Default() as any;

@@ -5,9 +5,9 @@ import dayjs from 'dayjs';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import BtnBase from '../components/BtnBase.vue';
-import BtnDateAutoClose from '../components/BtnDateAutoClose.vue';
-import { useDateFormat } from '../composables/useDate';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnDateAutoClose from '@/components/BtnDateAutoClose.vue';
+import { useDateFormat } from '@/composables/useDate';
 
 const props = defineProps({
   modelValue: {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { toRef } from 'vue';
-import { useDateFormat } from '../composables/useDate';
-import { useQueenPedigree } from '../composables/useQuery';
-import DialogForm from './DialogForm.vue';
-import GlobalLoading from './GlobalLoading.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useQueenPedigree } from '@/composables/useQuery';
+import DialogForm from '@/components/DialogForm.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   id: {

@@ -4,8 +4,8 @@ import { useVModels } from '@vueuse/core';
 import { isEmpty } from 'lodash-es';
 import { useQuasar } from 'quasar';
 import { computed, ref, toRefs, unref, watch } from 'vue';
-import { formCheckMultipleValues } from '../helpers';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { formCheckMultipleValues } from '@/helpers';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import BeekeepingNews from './BeekeepingNews.vue';
+import BeekeepingNews from '@/pages/BeekeepingNews.vue';
 </script>
 
 <template>

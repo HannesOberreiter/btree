@@ -2,9 +2,9 @@
 import { useIntervalFn, useOnline } from '@vueuse/core';
 import round from 'lodash-es/round';
 import { computed, ref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useBackend } from '../composables/useBackend';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useBackend } from '@/composables/useBackend';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const api = useApiFetch();
 const time = ref<number>(0);
