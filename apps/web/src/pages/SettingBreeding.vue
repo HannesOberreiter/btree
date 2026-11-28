@@ -119,7 +119,7 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
           <q-banner
             v-if="!storeUser.isAdmin"
             dense
-            class="bg-grey-3 q-mb-sm"
+            class="bg-info text-white rounded-borders q-mb-sm"
             data-cy="setting-breeding-admin-only"
           >
             {{ $t('breeding.adminOnly') }}

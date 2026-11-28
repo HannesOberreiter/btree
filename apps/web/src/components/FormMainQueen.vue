@@ -321,14 +321,17 @@ async function onChange() {
         />
       </div>
     </div>
-    <div
+    <q-banner
       v-if="breedingWarning"
-      class="q-mb-sm text-caption text-warning"
+      dense
+      class="bg-warning text-dark rounded-borders q-mb-sm"
       data-cy="queen-breeding-warning"
     >
-      <q-icon name="fas fa-triangle-exclamation" />
+      <template #avatar>
+        <q-icon name="fas fa-triangle-exclamation" size="xs" />
+      </template>
       {{ breedingWarning }}
-    </div>
+    </q-banner>
 
     <div v-if="(showInterval || forceInterval) && !isEdit" class="col-12">
       <div class="row">
