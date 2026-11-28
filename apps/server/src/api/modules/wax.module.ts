@@ -914,11 +914,13 @@ async function deleteEmptyWaxOperation(
       .selectFrom('wax_lots')
       .select('id')
       .where('created_by_operation_id', '=', operationId)
+      .where('user_id', '=', companyId)
       .executeTakeFirst(),
     trx
       .selectFrom('wax_operations')
       .select('id')
       .where('reversal_of_id', '=', operationId)
+      .where('user_id', '=', companyId)
       .executeTakeFirst(),
     trx
       .selectFrom('wax_inventory_counts')
