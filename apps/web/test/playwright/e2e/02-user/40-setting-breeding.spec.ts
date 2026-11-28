@@ -22,6 +22,8 @@ test.describe('user - Setting Breeding', () => {
   }) => {
     await page.goto('setting/breeding');
     await expect(dataCy('page-setting-breeding')).toBeAttached();
+    // The BeeBreed rules show only when BeeBreed is selected.
+    await expect(dataCy('setting-breeding-beebreed')).not.toBeAttached();
 
     const patch = page.waitForResponse(
       response =>
@@ -39,6 +41,7 @@ test.describe('user - Setting Breeding', () => {
     await expect(
       dataCy('setting-breeding-system').getByRole('radio', { name: 'BeeBreed' })
     ).toHaveAttribute('aria-checked', 'true');
+    await expect(dataCy('setting-breeding-beebreed')).toBeVisible();
 
     await page.goto('setting/field');
     await expect(dataCy('setting-field-breeding-locked')).toBeVisible();

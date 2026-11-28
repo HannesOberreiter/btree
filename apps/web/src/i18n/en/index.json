@@ -108,12 +108,17 @@
   "both": "Both",
   "breeding": {
     "adminOnly": "Only an admin of the company can change the breeding mode.",
+    "beebreed": {
+      "intro": "With BeeBreed, the breeding mode does this:",
+      "ratings": "All members see the ratings {ratings} in the checkup form. They cannot switch these ratings off in their field settings. Their own settings return when the mode is off.",
+      "scale": "The rating scale is 1 (worst) to {max} (best).",
+      "queenCode": "The queen name is the BeeBreed queen code: country-association-breeder-number-birth year, for example DE-44-101-1-2025. The queen form shows a warning for a name in a different format.",
+      "harvest": "Each harvest type goes into one harvest section at most. Harvests of types without a section do not count. The amount counts as kg."
+    },
     "description": "The breeding mode prepares the data of the company for the performance test of a breeding system. Only an admin can change it.",
     "lockedFields": "The breeding mode of the company sets some of these entries:",
     "name": "Breeding mode",
-    "nameCheck": "The queen name must be the queen code of the breeding system. For BeeBreed: country-association-breeder-number-birth year, for example DE-44-101-1-2025. The queen form shows a warning for a name in a different format.",
     "off": "Off",
-    "overrides": "When the mode is on, the field settings of all members show the ratings {ratings}, and the maximum rating is {max}. The members cannot change these entries. Their own settings return when the mode is off.",
     "section": {
       "early": "Early harvest (TEIL1)",
       "summer": "Summer harvest (TEIL2)",
@@ -121,7 +126,6 @@
       "stock": "Stores (VORRAT)"
     },
     "sections": "Harvest sections",
-    "sectionsHint": "Map each harvest type to a section of the performance test. A harvest type is in one section at most. Harvests of types without a section do not count. The amount counts as kg.",
     "warningFormat": "Breeding mode: \"{name}\" is not a valid queen code. Example: {example}",
     "warningYear": "Breeding mode: the year in \"{name}\" is not the birth year of the queen."
   },

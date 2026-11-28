@@ -116,15 +116,6 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
         </div>
         <q-card-section class="q-pa-xs">
           <p>{{ $t('breeding.description') }}</p>
-          <p>
-            {{
-              $t('breeding.overrides', {
-                ratings: ratingNames,
-                max: BREEDING_RATING_MAX
-              })
-            }}
-          </p>
-          <p>{{ $t('breeding.nameCheck') }}</p>
           <q-banner
             v-if="!storeUser.isAdmin"
             dense
@@ -143,14 +134,31 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
           />
         </q-card-section>
         <q-card-section
-          v-if="company.breeding_system"
+          v-if="company.breeding_system === 'beebreed'"
+          class="q-pa-xs"
+          data-cy="setting-breeding-beebreed"
+        >
+          <div class="text-body2 q-pb-sm">BeeBreed</div>
+          <p class="q-mb-xs">{{ $t('breeding.beebreed.intro') }}</p>
+          <ul class="q-mt-none">
+            <li>
+              {{ $t('breeding.beebreed.ratings', { ratings: ratingNames }) }}
+            </li>
+            <li>
+              {{ $t('breeding.beebreed.scale', { max: BREEDING_RATING_MAX }) }}
+            </li>
+            <li>{{ $t('breeding.beebreed.queenCode') }}</li>
+            <li>{{ $t('breeding.beebreed.harvest') }}</li>
+          </ul>
+        </q-card-section>
+        <q-card-section
+          v-if="company.breeding_system === 'beebreed'"
           class="q-pa-xs"
           data-cy="setting-breeding-sections"
         >
           <div class="text-body2 q-pb-sm">
             {{ $t('breeding.sections') }}
           </div>
-          <p>{{ $t('breeding.sectionsHint') }}</p>
           <!-- QSelect puts data-cy on its inner input, so a wrapper has it. -->
           <div
             v-for="section in BREEDING_SECTIONS"

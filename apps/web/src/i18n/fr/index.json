@@ -108,12 +108,17 @@
   "both": "Tous les deux",
   "breeding": {
     "adminOnly": "Seul un administrateur de l'entreprise peut modifier le mode élevage.",
+    "beebreed": {
+      "intro": "Avec BeeBreed, le mode élevage fait ceci :",
+      "ratings": "Tous les membres voient les évaluations {ratings} dans le formulaire de contrôle. Ils ne peuvent pas désactiver ces évaluations dans leurs réglages des champs. Leurs propres réglages reviennent quand le mode est désactivé.",
+      "scale": "L'échelle d'évaluation va de 1 (la pire) à {max} (la meilleure).",
+      "queenCode": "Le nom de la reine est le code de reine BeeBreed : pays-association-éleveur-numéro-année de naissance, par exemple DE-44-101-1-2025. Le formulaire de la reine affiche un avertissement pour un nom dans un autre format.",
+      "harvest": "Chaque type de récolte va dans une section de récolte au maximum. Les récoltes des types sans section ne comptent pas. La quantité compte en kg."
+    },
     "description": "Le mode élevage prépare les données de l'entreprise pour le testage d'un système d'élevage. Seul un administrateur peut le modifier.",
     "lockedFields": "Le mode élevage de l'entreprise définit certaines de ces entrées :",
     "name": "Mode élevage",
-    "nameCheck": "Le nom de la reine doit être le code de la reine du système d'élevage. Pour BeeBreed : pays-association-éleveur-numéro-année de naissance, par exemple DE-44-101-1-2025. Le formulaire de la reine affiche un avertissement pour un nom dans un autre format.",
     "off": "Désactivé",
-    "overrides": "Quand le mode est activé, les réglages des champs de tous les membres affichent les évaluations {ratings}, et l'évaluation maximale est {max}. Les membres ne peuvent pas modifier ces entrées. Leurs propres réglages reviennent quand le mode est désactivé.",
     "section": {
       "early": "Récolte précoce (TEIL1)",
       "summer": "Récolte d'été (TEIL2)",
@@ -121,7 +126,6 @@
       "stock": "Réserves (VORRAT)"
     },
     "sections": "Sections de récolte",
-    "sectionsHint": "Attribuez chaque type de récolte à une section du test de performance. Un type de récolte est dans une section au maximum. Les récoltes des types sans section ne comptent pas. La quantité compte en kg.",
     "warningFormat": "Mode élevage : « {name} » n'est pas un code de reine valide. Exemple : {example}",
     "warningYear": "Mode élevage : l'année dans « {name} » n'est pas l'année de naissance de la reine."
   },
