@@ -138,7 +138,15 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
           class="q-pa-xs"
           data-cy="setting-breeding-beebreed"
         >
-          <div class="text-body2 q-pb-sm">BeeBreed</div>
+          <div class="text-body2 q-pb-sm">
+            <a
+              href="https://beebreed.eu"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cy="setting-breeding-beebreed-link"
+              >BeeBreed</a
+            >
+          </div>
           <p class="q-mb-xs">{{ $t('breeding.beebreed.intro') }}</p>
           <ul class="q-mt-none">
             <li>

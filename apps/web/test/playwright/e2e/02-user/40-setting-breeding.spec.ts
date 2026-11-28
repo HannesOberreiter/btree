@@ -42,6 +42,10 @@ test.describe('user - Setting Breeding', () => {
       dataCy('setting-breeding-system').getByRole('radio', { name: 'BeeBreed' })
     ).toHaveAttribute('aria-checked', 'true');
     await expect(dataCy('setting-breeding-beebreed')).toBeVisible();
+    await expect(dataCy('setting-breeding-beebreed-link')).toHaveAttribute(
+      'href',
+      'https://beebreed.eu'
+    );
 
     await page.goto('setting/field');
     await expect(dataCy('setting-field-breeding-locked')).toBeVisible();
