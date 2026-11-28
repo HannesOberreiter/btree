@@ -144,8 +144,10 @@ async function onSectionChange(section: BreedingSection, value: number[]) {
               target="_blank"
               rel="noopener noreferrer"
               data-cy="setting-breeding-beebreed-link"
-              >BeeBreed</a
             >
+              BeeBreed
+              <q-icon name="fas fa-arrow-up-right-from-square" size="xs" />
+            </a>
           </div>
           <p class="q-mb-xs">{{ $t('breeding.beebreed.intro') }}</p>
           <ul class="q-mt-none">
