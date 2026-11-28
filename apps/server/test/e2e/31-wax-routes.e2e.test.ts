@@ -1,5 +1,14 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { PassThrough } from 'node:stream';
+import { buffer } from 'node:stream/consumers';
 
+import { ZipArchive } from 'archiver';
+import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
+import { beforeAll, describe, expect, it } from 'vitest';
+import yauzl from 'yauzl-promise';
+
+import { downloadCompanyData } from '../../src/api/modules/company_transfer.module.js';
+import { KyselyServer } from '../../src/servers/kysely.server.js';
 import type { TestAgent } from '../utils.js';
 import {
   createAgent,
@@ -727,6 +736,202 @@ describe('wax routes', () => {
       null,
       {},
     );
-    expect(deletedProduction.statusCode).toBe(200);
+    expect(deletedProduction.statusCode).toBe(404);
+  });
+
+  it('deletes the production when its last wax lot is deleted', async () => {
+    const db = KyselyServer.getInstance().db;
+    const production = await doRequest(
+      agent,
+      'post',
+      `${route}/operations`,
+      null,
+      null,
+      {
+        date: operationDate,
+        type: 'production',
+        origin_type_id: originTypeId,
+        hive_ids: [hiveId],
+        inputs: [],
+        outputs: [
+          { product_id: productId, quantity_kg: 1 },
+          { product_id: productId, quantity_kg: 2 },
+        ],
+      },
+    );
+    expect(production.statusCode).toBe(200);
+    const operationId: number = production.body.id;
+    const [firstLotId, secondLotId] = production.body.lines.map(
+      (line: { lot_id: number }) => line.lot_id,
+    );
+    const operation = () =>
+      db
+        .selectFrom('wax_operations')
+        .select('id')
+        .where('id', '=', operationId)
+        .executeTakeFirst();
+
+    const deletedFirst = await doRequest(
+      agent,
+      'delete',
+      `${route}/lots/${firstLotId}`,
+      null,
+      null,
+      {},
+    );
+    expect(deletedFirst.statusCode).toBe(200);
+    expect(await operation()).toEqual({ id: operationId });
+
+    const deletedSecond = await doRequest(
+      agent,
+      'delete',
+      `${route}/lots/${secondLotId}`,
+      null,
+      null,
+      {},
+    );
+    expect(deletedSecond.statusCode).toBe(200);
+    expect(await operation()).toBeUndefined();
+    expect(
+      await db
+        .selectFrom('wax_operation_hives')
+        .select('id')
+        .where('operation_id', '=', operationId)
+        .execute(),
+    ).toEqual([]);
+  });
+
+  describe('company import', () => {
+    const db = KyselyServer.getInstance().db;
+    let source: Map<string, Buffer>;
+
+    async function zip(files: Map<string, Buffer | string>) {
+      const archive = new ZipArchive();
+      const output = new PassThrough();
+      archive.pipe(output);
+      const contents = buffer(output);
+      for (const [name, data] of files) archive.append(data, { name });
+      await archive.finalize();
+      return contents;
+    }
+    function rows(
+      name: string,
+      files: Map<string, Buffer | string> = source,
+    ): Record<string, string>[] {
+      return parse(files.get(name) as Buffer | string, { columns: true });
+    }
+    function csv(records: Record<string, string>[]) {
+      return stringify(records, {
+        header: true,
+        columns: Object.keys(records[0]),
+        record_delimiter: 'windows',
+      });
+    }
+    async function upload(files: Map<string, Buffer | string>) {
+      const form = new FormData();
+      form.append('upload', new Blob([await zip(files)]), 'company.zip');
+      return agent.request('POST', '/api/v1/company/import', form);
+    }
+    /**
+     * The source archive with an added production that has no lines and
+     * one hive link.
+     */
+    function withEmptyProduction() {
+      const operations = rows('wax_operations.csv');
+      const links = rows('wax_operation_hives.csv');
+      const production = operations.find((row) => row.type === 'production')!;
+      const emptyId = String(
+        Math.max(...operations.map((row) => Number(row.id))) + 1,
+      );
+      const files = new Map<string, Buffer | string>(source);
+      files.set(
+        'wax_operations.csv',
+        csv([...operations, { ...production, id: emptyId }]),
+      );
+      files.set(
+        'wax_operation_hives.csv',
+        csv([
+          ...links,
+          {
+            ...links[0],
+            id: String(Math.max(...links.map((row) => Number(row.id))) + 1),
+            operation_id: emptyId,
+          },
+        ]),
+      );
+      return { files, emptyId };
+    }
+
+    beforeAll(async () => {
+      const hive = await db
+        .selectFrom('hives')
+        .select('user_id')
+        .where('id', '=', hiveId)
+        .executeTakeFirstOrThrow();
+      const archive = new ZipArchive();
+      const output = new PassThrough();
+      archive.pipe(output);
+      const contents = buffer(output);
+      await downloadCompanyData(db, archive, hive.user_id as number);
+      await archive.finalize();
+      source = new Map();
+      const reader = await yauzl.fromBuffer(await contents);
+      for await (const entry of reader)
+        source.set(entry.filename, await buffer(await entry.openReadStream()));
+      await reader.close();
+    });
+
+    it('skips a production without lines', async () => {
+      const { files } = withEmptyProduction();
+      const response = await upload(files);
+      expect(response.statusCode).toBe(200);
+      const company = await db
+        .selectFrom('companies')
+        .select('id')
+        .where('name', '=', response.body.name)
+        .executeTakeFirstOrThrow();
+      const operations = await db
+        .selectFrom('wax_operations')
+        .select('id')
+        .where('user_id', '=', company.id)
+        .execute();
+      expect(operations).toHaveLength(rows('wax_operations.csv').length);
+      const links = await db
+        .selectFrom('wax_operation_hives')
+        .innerJoin(
+          'wax_operations',
+          'wax_operations.id',
+          'wax_operation_hives.operation_id',
+        )
+        .select('wax_operation_hives.id')
+        .where('wax_operations.user_id', '=', company.id)
+        .execute();
+      expect(links).toHaveLength(rows('wax_operation_hives.csv').length);
+    });
+
+    it('rejects a production without lines that a reversal refers to with 400', async () => {
+      const { files, emptyId } = withEmptyProduction();
+      const operations = rows('wax_operations.csv', files);
+      const reversal = operations.find((row) => row.reversal_of_id)!;
+      reversal.reversal_of_id = emptyId;
+      files.set('wax_operations.csv', csv(operations));
+      const response = await upload(files);
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe(
+        'Wax archive contains an invalid operation shape',
+      );
+    });
+
+    it('rejects a production without lines that a wax lot refers to with 400', async () => {
+      const { files, emptyId } = withEmptyProduction();
+      const lots = rows('wax_lots.csv');
+      lots[0].created_by_operation_id = emptyId;
+      files.set('wax_lots.csv', csv(lots));
+      const response = await upload(files);
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe(
+        'Wax archive contains an invalid lot creator reference',
+      );
+    });
   });
 });

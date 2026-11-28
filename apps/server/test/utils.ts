@@ -64,8 +64,11 @@ export class TestAgent {
       url = `${url}?${params.toString()}`;
     }
 
+    // fetch sets the multipart Content-Type with the boundary of a FormData
+    // body.
+    const isForm = body instanceof FormData;
     const reqHeaders: Record<string, string> = {
-      'Content-Type': process.env.CONTENT_TYPE!,
+      ...(!isForm && { 'Content-Type': process.env.CONTENT_TYPE! }),
       Accept: process.env.CONTENT_TYPE!,
       Origin: process.env.ORIGIN!,
     };
@@ -79,8 +82,9 @@ export class TestAgent {
       method: method.toUpperCase(),
       headers: reqHeaders,
       redirect,
-      body:
-        body !== null && body !== undefined && method.toUpperCase() !== 'GET'
+      body: isForm
+        ? body
+        : body !== null && body !== undefined && method.toUpperCase() !== 'GET'
           ? JSON.stringify(body)
           : undefined,
     });

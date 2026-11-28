@@ -563,6 +563,37 @@ function hasWaxPrecision(value: number) {
   return Math.abs(value * 100 - Math.round(value * 100)) <= 0.000_001;
 }
 
+/**
+ * Removes the wax operations that have no lines and no inventory counts,
+ * together with their hive links. Older versions left such operations when
+ * a user deleted the wax lot of a production. Keeps an operation when a
+ * reversal or a wax lot refers to it, so that the validation rejects it.
+ */
+function skipEmptyWaxOperations(data: TransferData) {
+  const used = new Set(
+    [
+      ...data.wax_operation_lines.map((row) => row.operation_id),
+      ...data.wax_inventory_counts.map((row) => row.operation_id),
+      ...data.wax_operations.map((row) => row.reversal_of_id),
+      ...data.wax_lots.map((row) => row.created_by_operation_id),
+    ]
+      .filter((id) => id !== undefined && id !== null)
+      .map(String),
+  );
+  const skipped = new Set(
+    data.wax_operations
+      .map((row) => String(row.id))
+      .filter((id) => !used.has(id)),
+  );
+  if (!skipped.size) return;
+  data.wax_operations = data.wax_operations.filter(
+    (row) => !skipped.has(String(row.id)),
+  );
+  data.wax_operation_hives = data.wax_operation_hives.filter(
+    (row) => !skipped.has(String(row.operation_id)),
+  );
+}
+
 function validateWaxArchive(data: TransferData) {
   const operations = new Map(
     data.wax_operations.map((row) => [String(row.id), row]),
@@ -575,15 +606,19 @@ function validateWaxArchive(data: TransferData) {
     const operationId = String(line.operation_id);
     const quantity = Number(line.quantity_kg);
     if (!operations.has(operationId) || !lots.has(String(line.lot_id)))
-      throw new Error('Wax archive contains an invalid line reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid line reference',
+      );
     if (!['input', 'output'].includes(String(line.direction)))
-      throw new Error('Wax archive contains an invalid line direction');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid line direction',
+      );
     if (
       !Number.isFinite(quantity) ||
       quantity < 0.01 ||
       !hasWaxPrecision(quantity)
     )
-      throw new Error('Wax archive contains an invalid quantity');
+      throw httpErrors.BadRequest('Wax archive contains an invalid quantity');
     const current = linesByOperation.get(operationId) ?? [];
     current.push(line);
     linesByOperation.set(operationId, current);
@@ -598,7 +633,9 @@ function validateWaxArchive(data: TransferData) {
       operation.type !== 'correction' ||
       !lots.has(String(count.lot_id))
     )
-      throw new Error('Wax archive contains an invalid inventory reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid inventory reference',
+      );
     if (
       ![ledgerQuantity, countedQuantity, adjustment].every(Number.isFinite) ||
       ![ledgerQuantity, countedQuantity, Math.abs(adjustment)].every(
@@ -608,11 +645,15 @@ function validateWaxArchive(data: TransferData) {
       countedQuantity < 0 ||
       Math.abs(countedQuantity - ledgerQuantity - adjustment) > 0.000_001
     )
-      throw new Error('Wax archive contains an invalid inventory quantity');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid inventory quantity',
+      );
     const operationId = String(count.operation_id);
     const current = countsByOperation.get(operationId) ?? [];
     if (current.some((row) => String(row.lot_id) === String(count.lot_id)))
-      throw new Error('Wax archive contains a duplicate inventory count');
+      throw httpErrors.BadRequest(
+        'Wax archive contains a duplicate inventory count',
+      );
     current.push(count);
     countsByOperation.set(operationId, current);
   }
@@ -621,7 +662,9 @@ function validateWaxArchive(data: TransferData) {
       !operations.has(String(link.operation_id)) ||
       !data.hives.some((hive) => String(hive.id) === String(link.hive_id))
     )
-      throw new Error('Wax archive contains an invalid hive reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid hive reference',
+      );
   }
   for (const lot of data.wax_lots) {
     if (
@@ -635,7 +678,9 @@ function validateWaxArchive(data: TransferData) {
             String(line.operation_id) === String(lot.created_by_operation_id),
         ))
     )
-      throw new Error('Wax archive contains an invalid lot creator reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid lot creator reference',
+      );
   }
   for (const operation of data.wax_operations) {
     const type = String(operation.type);
@@ -644,13 +689,15 @@ function validateWaxArchive(data: TransferData) {
       Number.isNaN(Date.parse(String(operation.date))) ||
       (type === 'production' && !operation.origin_type_id)
     )
-      throw new Error('Wax archive contains an invalid operation');
+      throw httpErrors.BadRequest('Wax archive contains an invalid operation');
     if (
       operation.reversal_of_id !== undefined &&
       operation.reversal_of_id !== null &&
       !operations.has(String(operation.reversal_of_id))
     )
-      throw new Error('Wax archive contains an invalid reversal reference');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid reversal reference',
+      );
     const lines = linesByOperation.get(String(operation.id)) ?? [];
     const hasInputs = lines.some((line) => line.direction === 'input');
     const hasOutputs = lines.some((line) => line.direction === 'output');
@@ -665,7 +712,9 @@ function validateWaxArchive(data: TransferData) {
         !hasOutputs &&
         !(countsByOperation.get(String(operation.id))?.length ?? 0))
     )
-      throw new Error('Wax archive contains an invalid operation shape');
+      throw httpErrors.BadRequest(
+        'Wax archive contains an invalid operation shape',
+      );
     const input = lines
       .filter((line) => line.direction === 'input')
       .reduce((sum, line) => sum + Number(line.quantity_kg), 0);
@@ -677,7 +726,7 @@ function validateWaxArchive(data: TransferData) {
       output > input + 0.000_001 &&
       !String(operation.note ?? '').trim()
     )
-      throw new Error('Wax archive mass gain has no explanation');
+      throw httpErrors.BadRequest('Wax archive mass gain has no explanation');
   }
   const balances = new Map<string, number>();
   const sorted = [...data.wax_operations].sort((left, right) => {
@@ -702,36 +751,48 @@ function validateWaxArchive(data: TransferData) {
     const inventoryCounts = countsByOperation.get(operationId) ?? [];
     if (inventoryCounts.length) {
       if (!String(operation.note ?? '').trim())
-        throw new Error('Wax archive inventory has no explanation');
+        throw httpErrors.BadRequest('Wax archive inventory has no explanation');
       const countedLotIds = new Set(
         inventoryCounts.map((count) => String(count.lot_id)),
       );
       if ([...deltas.keys()].some((lotId) => !countedLotIds.has(lotId)))
-        throw new Error('Wax archive inventory has an uncounted adjustment');
+        throw httpErrors.BadRequest(
+          'Wax archive inventory has an uncounted adjustment',
+        );
       for (const count of inventoryCounts) {
         const lotId = String(count.lot_id);
         const lot = lotsById.get(lotId);
         if (!lot)
-          throw new Error('Wax archive contains an invalid inventory lot');
+          throw httpErrors.BadRequest(
+            'Wax archive contains an invalid inventory lot',
+          );
         const creatorId = lot.created_by_operation_id;
         const creatorOrder =
           creatorId === undefined || creatorId === null
             ? undefined
             : operationOrder.get(String(creatorId));
         if (creatorOrder !== undefined && creatorOrder > operationIndex)
-          throw new Error('Wax archive counts a lot before its creation');
+          throw httpErrors.BadRequest(
+            'Wax archive counts a lot before its creation',
+          );
         const ledgerQuantity = Number(count.ledger_quantity_kg);
         const adjustment = Number(count.adjustment_kg);
         if (Math.abs((balances.get(lotId) ?? 0) - ledgerQuantity) > 0.000_001)
-          throw new Error('Wax archive inventory ledger quantity is invalid');
+          throw httpErrors.BadRequest(
+            'Wax archive inventory ledger quantity is invalid',
+          );
         if (Math.abs((deltas.get(lotId) ?? 0) - adjustment) > 0.000_001)
-          throw new Error('Wax archive inventory adjustment is invalid');
+          throw httpErrors.BadRequest(
+            'Wax archive inventory adjustment is invalid',
+          );
       }
     }
     for (const [lotId, delta] of deltas) {
       const balance = (balances.get(lotId) ?? 0) + delta;
       if (balance < -0.000_001)
-        throw new Error('Wax archive contains negative historical stock');
+        throw httpErrors.BadRequest(
+          'Wax archive contains negative historical stock',
+        );
       balances.set(lotId, balance);
     }
   }
@@ -926,7 +987,8 @@ export async function importCompanyArchive(
     await zip.close();
   }
   if (!data.apiaries.length && !data.hives.length && !data.wax_lots.length)
-    throw new Error('Archive contains no supported company data');
+    throw httpErrors.BadRequest('Archive contains no supported company data');
+  skipEmptyWaxOperations(data);
   validateWaxArchive(data);
 
   const name = `${Date.now()}`;
