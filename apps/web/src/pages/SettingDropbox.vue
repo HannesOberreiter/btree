@@ -2,13 +2,13 @@
 import { LoadingBar, useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import BtnBaseGroup from '../components/BtnBaseGroup.vue';
-import DialogFileUpload from '../components/DialogFileUpload.vue';
-import FilesDropbox from '../components/FilesDropbox.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import { useServiceDropbox } from '../composables/useDropbox';
-import { useNotification } from '../composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFileUpload from '@/components/DialogFileUpload.vue';
+import FilesDropbox from '@/components/FilesDropbox.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import { useServiceDropbox } from '@/composables/useDropbox';
+import { useNotification } from '@/composables/useNotification';
 
 const router = useRouter();
 const $q = useQuasar();

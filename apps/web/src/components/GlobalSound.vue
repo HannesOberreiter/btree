@@ -2,10 +2,10 @@
 import { useNetwork, useVibrate } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
-import ErrorSound from '../assets/audio/error.mp3';
-import SuccessSound from '../assets/audio/success.mp3';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
+import ErrorSound from '@/assets/audio/error.mp3';
+import SuccessSound from '@/assets/audio/success.mp3';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
 
 const { vibrate, isSupported: isVibrationSupported } = useVibrate({
   pattern: [100]

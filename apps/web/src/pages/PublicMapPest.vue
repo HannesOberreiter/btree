@@ -2,7 +2,7 @@
 import { useMeta } from 'quasar';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import MapPest from '../components/MapPest.vue';
+import MapPest from '@/components/MapPest.vue';
 
 const iframeRef = ref<HTMLIFrameElement | null>(null);
 const router = useRouter();

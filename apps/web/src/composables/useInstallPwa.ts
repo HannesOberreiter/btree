@@ -1,7 +1,7 @@
 import type { PWAInstallElement } from '@khmyznikov/pwa-install';
 import { ref } from 'vue';
-import { useNotification } from './useNotification';
-import { useTrackEvent } from './useTrackEvent';
+import { useNotification } from '@/composables/useNotification';
+import { useTrackEvent } from '@/composables/useTrackEvent';
 
 /**
  * Composables for handling PWA installation.

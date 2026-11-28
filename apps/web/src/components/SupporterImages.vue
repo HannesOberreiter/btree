@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ImageTouchad from '../assets/supporter/touchad.png';
-import ImageWB from '../assets/supporter/wiener-bezirksimkerei.png';
+import ImageTouchad from '@/assets/supporter/touchad.png';
+import ImageWB from '@/assets/supporter/wiener-bezirksimkerei.png';
 
 const SUPPORTERS = [
   {

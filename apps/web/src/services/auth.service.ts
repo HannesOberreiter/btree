@@ -4,10 +4,10 @@ import type {
   AuthLogoutResponse,
   AuthRegisterResponse,
   AuthResetRequestResponse
-} from '../api/types';
-import type { RegisterUser, User } from '../types';
+} from '@/api/types';
+import type { RegisterUser, User } from '@/types';
 import { find } from 'lodash-es';
-import { useApiFetch } from '../composables/useApi';
+import { useApiFetch } from '@/composables/useApi';
 
 class AuthService {
   async checkLogin() {

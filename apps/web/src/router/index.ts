@@ -5,11 +5,11 @@ import {
   createWebHashHistory,
   createWebHistory
 } from 'vue-router';
-import { useLoadingManager } from '../composables/useLoadingManager';
-import { useAuthUserStore } from '../stores/auth';
-import { useRefreshStore } from '../stores/refresh';
-import { useRouterStore } from '../stores/router';
-import routes from './routes';
+import { useLoadingManager } from '@/composables/useLoadingManager';
+import { useAuthUserStore } from '@/stores/auth';
+import { useRefreshStore } from '@/stores/refresh';
+import { useRouterStore } from '@/stores/router';
+import routes from '@/router/routes';
 
 /*
  * If not building with SSR mode, you can

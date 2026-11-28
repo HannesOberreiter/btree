@@ -11,7 +11,7 @@ import type {
   FormScale,
   FormScaleData,
   FormTodo
-} from '../types';
+} from '@/types';
 import dayjs from 'dayjs';
 import { includes, isNil, isUndefined, omitBy } from 'lodash-es';
 import { unref } from 'vue';

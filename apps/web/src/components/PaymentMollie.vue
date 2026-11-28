@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { toRefs } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import BtnBase from './BtnBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
 
 const props = defineProps({
   donation: {

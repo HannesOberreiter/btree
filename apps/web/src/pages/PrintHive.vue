@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { orderBy } from 'lodash-es';
 import { computed, toRefs, watch } from 'vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useHiveQuery, useHiveTaskQuery } from '../composables/useQuery';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useHiveQuery, useHiveTaskQuery } from '@/composables/useQuery';
 
 const props = defineProps({
   id: {

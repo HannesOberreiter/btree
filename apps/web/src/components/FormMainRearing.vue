@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { FormRearing } from '../types';
+import type { FormRearing } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownRearing from './FormDropdownRearing.vue';
-import FormDropdownSymbol from './FormDropdownSymbol.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownRearing from '@/components/FormDropdownRearing.vue';
+import FormDropdownSymbol from '@/components/FormDropdownSymbol.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
 
 const props = defineProps({
   ids: {

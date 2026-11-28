@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import QRCode from 'qrcode';
 import { ref, toRef, watch } from 'vue';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { deepUnref } from '../helpers/deep-unref';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { deepUnref } from '@/helpers/deep-unref';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   selected: {

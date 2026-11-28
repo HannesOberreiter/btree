@@ -1,5 +1,5 @@
 import type { EventApi, EventInput } from '@fullcalendar/vue3';
-import type { CalendarResponse } from '../api/types';
+import type { CalendarResponse } from '@/api/types';
 import dayjs from 'dayjs';
 
 export function toCalendarEvent(event: CalendarResponse[number]): EventInput {

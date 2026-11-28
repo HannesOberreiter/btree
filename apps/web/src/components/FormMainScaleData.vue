@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { FormScaleData } from '../types';
+import type { FormScaleData } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { formCheckMultipleValues } from '../helpers';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { formCheckMultipleValues } from '@/helpers';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
 
 const props = defineProps({
   ids: {

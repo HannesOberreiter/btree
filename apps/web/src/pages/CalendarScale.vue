@@ -13,12 +13,12 @@ import { useLocalStorage } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useKeyCalendar } from '../composables/useKey';
-import { useNotification } from '../composables/useNotification';
-import { useCalendarQuery } from '../composables/useQuery';
-import { useSwipeCalendar } from '../composables/useSwipe';
-import { toCalendarEvent } from '../helpers/calendar';
-import { useAuthUserStore } from '../stores/auth';
+import { useKeyCalendar } from '@/composables/useKey';
+import { useNotification } from '@/composables/useNotification';
+import { useCalendarQuery } from '@/composables/useQuery';
+import { useSwipeCalendar } from '@/composables/useSwipe';
+import { toCalendarEvent } from '@/helpers/calendar';
+import { useAuthUserStore } from '@/stores/auth';
 
 const useQuery = useCalendarQuery();
 const { t } = useI18n();

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { StatisticKind, StatisticResponse } from '../api/types';
+import type { StatisticKind, StatisticResponse } from '@/api/types';
 import type { PropType } from 'vue';
 import { groupBy, round, sortBy } from 'lodash-es';
 import { computed, ref, toRef, watch } from 'vue';
-import { useStatisticTable } from '../composables/useQuery';
-import GlobalLoading from './GlobalLoading.vue';
+import { useStatisticTable } from '@/composables/useQuery';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   id: {

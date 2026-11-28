@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { Filter, FilterState } from '../types';
-import { KINDS, STATUS } from '../constants';
-import { generateArrayOfYears } from '../helpers';
+import type { Filter, FilterState } from '@/types';
+import { KINDS, STATUS } from '@/constants';
+import { generateArrayOfYears } from '@/helpers';
 </script>
 
 <script setup lang="ts">
@@ -9,20 +9,20 @@ import dayjs from 'dayjs';
 import { useMeta, useQuasar } from 'quasar';
 import { computed, ref, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import BtnDropdownTask from '../components/BtnDropdownTask.vue';
-import BtnPreviousNext from '../components/BtnPreviousNext.vue';
-import DialogForm from '../components/DialogForm.vue';
-import ExpansionHive from '../components/ExpansionHive.vue';
-import ExpansionQueen from '../components/ExpansionQueen.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import HiveInfoMovements from '../components/HiveInfoMovements.vue';
-import HiveInfoQueens from '../components/HiveInfoQueens.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnDropdownTask from '@/components/BtnDropdownTask.vue';
+import BtnPreviousNext from '@/components/BtnPreviousNext.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import ExpansionHive from '@/components/ExpansionHive.vue';
+import ExpansionQueen from '@/components/ExpansionQueen.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import HiveInfoMovements from '@/components/HiveInfoMovements.vue';
+import HiveInfoQueens from '@/components/HiveInfoQueens.vue';
 
-import HiveInfoTask from '../components/HiveInfoTask.vue';
-import ListTasks from '../components/ListTasks.vue';
-import { useHiveQuery } from '../composables/useQuery';
-import { useTrackEvent } from '../composables/useTrackEvent';
+import HiveInfoTask from '@/components/HiveInfoTask.vue';
+import ListTasks from '@/components/ListTasks.vue';
+import { useHiveQuery } from '@/composables/useQuery';
+import { useTrackEvent } from '@/composables/useTrackEvent';
 
 const props = defineProps({
   id: {

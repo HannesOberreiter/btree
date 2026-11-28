@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useFullscreen } from '@vueuse/core';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import BtnBase from './BtnBase.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import BtnBase from '@/components/BtnBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const { isSupported, isFullscreen, toggle } = useFullscreen();
 const { track } = useTrackEvent();

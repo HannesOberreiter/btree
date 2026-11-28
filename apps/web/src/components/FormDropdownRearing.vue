@@ -4,10 +4,10 @@ import { useVModels } from '@vueuse/core';
 import { filter, isEmpty, map } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useDateFormat } from '../composables/useDate';
-import { useRearingTypesQuery } from '../composables/useQuery';
-import { formCheckMultipleValues } from '../helpers';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useRearingTypesQuery } from '@/composables/useQuery';
+import { formCheckMultipleValues } from '@/helpers';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   modelValue: {

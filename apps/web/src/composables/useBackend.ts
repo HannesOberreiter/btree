@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 import { computed } from 'vue';
-import { API_SERVER } from '../constants';
+import { API_SERVER } from '@/constants';
 
 type Server = 'eu' | 'us';
 

@@ -4,14 +4,14 @@ import map from 'lodash-es/map';
 import { useQuasar } from 'quasar';
 import { ref, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { usePreventNavigation } from '../composables/usePreventNavgiation';
-import { sleep } from '../helpers';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogSelectOption from './DialogSelectOption.vue';
-import helperDayAndHour from './HelperDayAndHour.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { usePreventNavigation } from '@/composables/usePreventNavgiation';
+import { sleep } from '@/helpers';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogSelectOption from '@/components/DialogSelectOption.vue';
+import helperDayAndHour from '@/components/HelperDayAndHour.vue';
 
 const props = defineProps({
   methodSteps: {

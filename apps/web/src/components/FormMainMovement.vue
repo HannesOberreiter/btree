@@ -3,14 +3,14 @@ import useVuelidate from '@vuelidate/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputDate from './FormInputDate.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
 
 const props = defineProps({
   ids: {

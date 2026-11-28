@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useBackend } from '../composables/useBackend';
+import { useBackend } from '@/composables/useBackend';
 
 const props = defineProps({
   form: { type: String, default: 'visitor' },

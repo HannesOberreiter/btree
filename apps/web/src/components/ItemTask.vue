@@ -4,15 +4,15 @@
 import { useQuasar } from 'quasar';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogFileShow from './DialogFileShow.vue';
-import DialogForm from './DialogForm.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   task: {

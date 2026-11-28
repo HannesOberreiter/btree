@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, toRef, watch } from 'vue';
-import { useHivesQuery } from '../composables/useQuery';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { deepUnref } from '../helpers/deep-unref';
-import PrintHive from '../pages/PrintHive.vue';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
+import { useHivesQuery } from '@/composables/useQuery';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { deepUnref } from '@/helpers/deep-unref';
+import PrintHive from '@/pages/PrintHive.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
 
 const props = defineProps({
   selected: {

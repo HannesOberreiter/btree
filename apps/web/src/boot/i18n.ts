@@ -1,9 +1,9 @@
 import { createI18n } from 'vue-i18n';
 import { defineBoot } from '#q-app';
 // using single import of json and not message auto import as it broke my vite HSMR and resulted in full page reloads
-import { languages } from '../i18n';
+import { languages } from '@/i18n';
 
-import { useAuthUserStore } from '../stores/auth';
+import { useAuthUserStore } from '@/stores/auth';
 
 const i18n = createI18n({
   legacy: false, // you must set `false`, to use Composition API

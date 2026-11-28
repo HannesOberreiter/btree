@@ -8,14 +8,14 @@ import {
   RouterView,
   useRouter
 } from 'vue-router';
-import BtnBase from '../components/BtnBase.vue';
-import MainDrawer from '../components/MainDrawer.vue';
-import MainFooter from '../components/MainFooter.vue';
-import MainNavbar from '../components/MainNavbar.vue';
-import { usePreventNavigation } from '../composables/usePreventNavgiation';
-import { useQuasarLang } from '../composables/useQuasarLang';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { useAuthUserStore } from '../stores/auth';
+import BtnBase from '@/components/BtnBase.vue';
+import MainDrawer from '@/components/MainDrawer.vue';
+import MainFooter from '@/components/MainFooter.vue';
+import MainNavbar from '@/components/MainNavbar.vue';
+import { usePreventNavigation } from '@/composables/usePreventNavgiation';
+import { useQuasarLang } from '@/composables/useQuasarLang';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { useAuthUserStore } from '@/stores/auth';
 
 const usePrevent = usePreventNavigation();
 const leftDrawerOpen = ref(false);

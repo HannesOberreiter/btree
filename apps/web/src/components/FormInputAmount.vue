@@ -3,7 +3,7 @@ import type { PropType } from 'vue';
 import { useVModels } from '@vueuse/core';
 import { isEmpty, round } from 'lodash-es';
 import { watch } from 'vue';
-import FormInputNumeric from './FormInputNumeric.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
 
 const props = defineProps({
   modelValue: {

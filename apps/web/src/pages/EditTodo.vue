@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import FormMainTodo from '../components/FormMainTodo.vue';
+import FormMainTodo from '@/components/FormMainTodo.vue';
 
 defineProps({
   ids: {

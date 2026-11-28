@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { WaxLotListResponse, WaxLotResponse } from '../api/types';
+import type { WaxLotListResponse, WaxLotResponse } from '@/api/types';
 import dayjs from 'dayjs';
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import FormDropdownHive from './FormDropdownHive.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
 
 interface OptionRow {
   id: number;

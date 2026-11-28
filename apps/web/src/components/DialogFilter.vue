@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
 import { computed, reactive, watch } from 'vue';
-import { useTableFilterStore } from '../stores/tableFilter';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import FormDropdownType from './FormDropdownOption.vue';
-import FormDropdownOptionMultiple from './FormDropdownOptionMultiple.vue';
-import FormDropdownYear from './FormDropdownYear.vue';
-import FormInputDateRange from './FormInputDateRange.vue';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import FormDropdownType from '@/components/FormDropdownOption.vue';
+import FormDropdownOptionMultiple from '@/components/FormDropdownOptionMultiple.vue';
+import FormDropdownYear from '@/components/FormDropdownYear.vue';
+import FormInputDateRange from '@/components/FormInputDateRange.vue';
 
 const props = defineProps({
   form: {

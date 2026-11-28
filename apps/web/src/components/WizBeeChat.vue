@@ -3,10 +3,10 @@ import { marked } from 'marked';
 import { useQuasar } from 'quasar';
 import { nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useNotification } from '../composables/useNotification';
-import { useVoiceRecording } from '../composables/useVoiceRecording';
-import { useWizBee } from '../composables/useWizBee';
-import { useAuthUserStore } from '../stores/auth';
+import { useNotification } from '@/composables/useNotification';
+import { useVoiceRecording } from '@/composables/useVoiceRecording';
+import { useWizBee } from '@/composables/useWizBee';
+import { useAuthUserStore } from '@/stores/auth';
 
 const props = defineProps<{
   /** Show example question chips */

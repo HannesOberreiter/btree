@@ -5,12 +5,12 @@ import { useVModels } from '@vueuse/core';
 import { isEmpty } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useDateFormat } from '../composables/useDate';
-import { formCheckMultipleValues, validationErrors } from '../helpers';
+import { useDateFormat } from '@/composables/useDate';
+import { formCheckMultipleValues, validationErrors } from '@/helpers';
 
-import { requiredField } from '../helpers/i18n-validators';
-import BtnBase from './BtnBase.vue';
-import BtnMultipleValues from './BtnMultipleValues.vue';
+import { requiredField } from '@/helpers/i18n-validators';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
 
 const props = defineProps({
   label: {

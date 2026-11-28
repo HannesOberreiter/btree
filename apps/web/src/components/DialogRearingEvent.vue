@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
 import { computed } from 'vue';
-import { useRearingEventQuery } from '../composables/useQuery';
-import BtnBase from './BtnBase.vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import EventInfoRearing from './EventInfoRearing.vue';
-import GlobalLoading from './GlobalLoading.vue';
+import { useRearingEventQuery } from '@/composables/useQuery';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import EventInfoRearing from '@/components/EventInfoRearing.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
 
 const props = defineProps({
   id: {

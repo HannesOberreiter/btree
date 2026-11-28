@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import type { QTableProps } from 'quasar';
-import type { ChargeResponse, ChargeSourceResponse } from '../api/types';
+import type { ChargeResponse, ChargeSourceResponse } from '@/api/types';
 import { round } from 'lodash-es';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableColUrl from '../components/TableColUrl.vue';
-import TableFilter from '../components/TableFilter.vue';
-import TableThSum from '../components/TableThSum.vue';
-import { useDateFormat } from '../composables/useDate';
-import { useKeyTable } from '../composables/useKey';
-import { useChargeQuery } from '../composables/useQuery';
-import { tableCheckSelected, tableMeta } from '../helpers';
-import { useTableFilterStore } from '../stores/tableFilter';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableColUrl from '@/components/TableColUrl.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import TableThSum from '@/components/TableThSum.vue';
+import { useDateFormat } from '@/composables/useDate';
+import { useKeyTable } from '@/composables/useKey';
+import { useChargeQuery } from '@/composables/useQuery';
+import { tableCheckSelected, tableMeta } from '@/helpers';
+import { useTableFilterStore } from '@/stores/tableFilter';
+import { useTablesStore } from '@/stores/tables';
 
 const useDate = useDateFormat();
 const { t } = useI18n();

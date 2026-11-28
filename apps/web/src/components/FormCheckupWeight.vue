@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { useVModels } from '@vueuse/core';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputTime from './FormInputTime.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputTime from '@/components/FormInputTime.vue';
 
 const props = defineProps({
   modelValue: {

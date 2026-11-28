@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Option } from '../types';
+import type { Option } from '@/types';
 import { useQuasar } from 'quasar';
 import { computed, ref, toRefs, unref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useFormCleanup } from '../composables/useFormCleanup';
-import { useNotification } from '../composables/useNotification';
-import { useInvalidateQueries } from '../composables/useQuery';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useFormCleanup } from '@/composables/useFormCleanup';
+import { useNotification } from '@/composables/useNotification';
+import { useInvalidateQueries } from '@/composables/useQuery';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
 
 const props = defineProps({
   state: {

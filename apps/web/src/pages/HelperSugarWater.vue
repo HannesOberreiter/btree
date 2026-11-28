@@ -4,13 +4,13 @@
 import round from 'lodash-es/round';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import BtnBaseGroup from '../components/BtnBaseGroup.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
 import {
   SUGAR_THEORETICAL,
   SUGAR_WATER,
   solutionPerSugar
-} from '../helpers/sugarWater';
+} from '@/helpers/sugarWater';
 
 const practical = [
   1.0, 1.9, 2.9, 3.8, 4.8, 5.8, 6.7, 7.7, 8.6, 9.6, 10.6, 11.5, 12.5, 13.4,

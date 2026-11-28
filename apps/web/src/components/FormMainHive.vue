@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type { FormHive } from '../types';
+import type { FormHive } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { toRefs } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { useHivesQuery } from '../composables/useQuery';
-import BtnBase from './BtnBase.vue';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputCheckbox from './FormInputCheckbox.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { useHivesQuery } from '@/composables/useQuery';
+import BtnBase from '@/components/BtnBase.vue';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputCheckbox from '@/components/FormInputCheckbox.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   ids: {

@@ -3,10 +3,10 @@ import type { QRejectedEntry } from 'quasar';
 import { parse } from 'csv-parse/browser/esm/sync';
 import { computed, ref, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useCsvCleanup } from '../composables/useCsvCleanup';
-import { useNotification } from '../composables/useNotification';
-import BtnBase from './BtnBase.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useCsvCleanup } from '@/composables/useCsvCleanup';
+import { useNotification } from '@/composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
 
 const props = defineProps({
   table: {

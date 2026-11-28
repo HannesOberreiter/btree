@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuthUserStore } from '../stores/auth';
-import { useApiFetch } from './useApi';
+import { useAuthUserStore } from '@/stores/auth';
+import { useApiFetch } from '@/composables/useApi';
 
 export interface MonthlyUsage {
   totalInputTokens: number;

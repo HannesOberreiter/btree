@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import type { ChargeResponse } from '../api/types';
-import type { FormCharge } from '../types';
+import type { ChargeResponse } from '@/api/types';
+import type { FormCharge } from '@/types';
 import useVuelidate from '@vuelidate/core';
 import { toRefs } from '@vueuse/core';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, ref, unref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useFieldsettingStore } from '../stores/fieldsetting';
-import FormButtons from './FormButtons.vue';
-import FormDropdownEdit from './FormDropdownEdit.vue';
-import FormDropdownOption from './FormDropdownOption.vue';
-import FormInputCheckboxString from './FormInputCheckboxString.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNote from './FormInputNote.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
-import FormInputText from './FormInputText.vue';
-import FormInputUrl from './FormInputUrl.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useFieldsettingStore } from '@/stores/fieldsetting';
+import FormButtons from '@/components/FormButtons.vue';
+import FormDropdownEdit from '@/components/FormDropdownEdit.vue';
+import FormDropdownOption from '@/components/FormDropdownOption.vue';
+import FormInputCheckboxString from '@/components/FormInputCheckboxString.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNote from '@/components/FormInputNote.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
+import FormInputText from '@/components/FormInputText.vue';
+import FormInputUrl from '@/components/FormInputUrl.vue';
 
 const props = defineProps({
   ids: {

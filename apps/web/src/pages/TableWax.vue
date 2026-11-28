@@ -4,17 +4,17 @@ import type {
   WaxLotResponse,
   WaxOperationListResponse,
   WaxOperationResponse
-} from '../api/types';
+} from '@/api/types';
 import type { QTableProps } from 'quasar';
 import { exportFile, useQuasar } from 'quasar';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import WaxOperationDialog from '../components/WaxOperationDialog.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import { useAuthUserStore } from '../stores/auth';
-import { useTablesStore } from '../stores/tables';
+import WaxOperationDialog from '@/components/WaxOperationDialog.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import { useAuthUserStore } from '@/stores/auth';
+import { useTablesStore } from '@/stores/tables';
 import BtnBase from '@/components/BtnBase.vue';
 
 const api = useApiFetch();

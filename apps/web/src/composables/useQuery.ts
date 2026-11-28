@@ -15,8 +15,8 @@ import type {
   StatisticPaginatedResponse,
   StatisticTaskKind,
   TodoPaginatedResponse
-} from '../api/types';
-import type { Option, Task } from '../types';
+} from '@/api/types';
+import type { Option, Task } from '@/types';
 import {
   keepPreviousData,
   QueryClient,
@@ -26,8 +26,8 @@ import {
 import dayjs from 'dayjs';
 import { map, round } from 'lodash-es';
 import { unref } from 'vue';
-import { queryCache } from '../boot/vue-query';
-import { useApiFetch } from './useApi';
+import { queryCache } from '@/boot/vue-query';
+import { useApiFetch } from '@/composables/useApi';
 
 export function useCalendarQuery() {
   const client = new QueryClient({

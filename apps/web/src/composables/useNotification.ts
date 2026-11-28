@@ -2,7 +2,7 @@ import type { ComposerTranslation } from 'vue-i18n';
 import { Notify } from 'quasar';
 import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { sleep } from '../helpers';
+import { sleep } from '@/helpers';
 
 type Type = 'positive' | 'negative' | 'warning' | 'info' | 'ongoing';
 

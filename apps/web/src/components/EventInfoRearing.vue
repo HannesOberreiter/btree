@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDateFormat } from '../composables/useDate';
+import { useDateFormat } from '@/composables/useDate';
 
 defineProps({
   eventInfo: {

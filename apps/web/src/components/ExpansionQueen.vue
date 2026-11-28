@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { computed, ref, toRef } from 'vue';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
-import DialogForm from './DialogForm.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
+import DialogForm from '@/components/DialogForm.vue';
 
 const props = defineProps({
   data: {

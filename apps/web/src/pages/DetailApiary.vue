@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { FilterApiary, FilterState } from '../types';
-import { KINDS_APIARY, STATUS } from '../constants';
-import { generateArrayOfYears } from '../helpers';
+import type { FilterApiary, FilterState } from '@/types';
+import { KINDS_APIARY, STATUS } from '@/constants';
+import { generateArrayOfYears } from '@/helpers';
 </script>
 
 <script setup lang="ts">
@@ -10,16 +10,16 @@ import ApiaryWeather from '@/components/ApiaryWeather.vue';
 import ChartGts from '@/components/ChartGts.vue';
 import { computed, ref, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BtnBase from '../components/BtnBase.vue';
-import BtnDropdownTask from '../components/BtnDropdownTask.vue';
-import BtnPreviousNext from '../components/BtnPreviousNext.vue';
-import ExpansionApiary from '../components/ExpansionApiary.vue';
-import GlobalLoading from '../components/GlobalLoading.vue';
-import ListHives from '../components/ListHives.vue';
-import ListTasks from '../components/ListTasks.vue';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnDropdownTask from '@/components/BtnDropdownTask.vue';
+import BtnPreviousNext from '@/components/BtnPreviousNext.vue';
+import ExpansionApiary from '@/components/ExpansionApiary.vue';
+import GlobalLoading from '@/components/GlobalLoading.vue';
+import ListHives from '@/components/ListHives.vue';
+import ListTasks from '@/components/ListTasks.vue';
 
-import TooltipBase from '../components/TooltipBase.vue';
-import { useApiaryQuery } from '../composables/useQuery';
+import TooltipBase from '@/components/TooltipBase.vue';
+import { useApiaryQuery } from '@/composables/useQuery';
 
 const props = defineProps({
   id: {

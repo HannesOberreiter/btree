@@ -2,10 +2,10 @@
 import { findIndex } from 'lodash-es';
 import { computed, toRef } from 'vue';
 import { useRouter } from 'vue-router';
-import { useKeyNavDetail } from '../composables/useKey';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import BtnBase from './BtnBase.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useKeyNavDetail } from '@/composables/useKey';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import BtnBase from '@/components/BtnBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   data: {

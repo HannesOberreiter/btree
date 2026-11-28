@@ -2,11 +2,11 @@
 import { useQuasar } from 'quasar';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useDateFormat } from '../composables/useDate';
-import BtnBase from './BtnBase.vue';
-import DialogFileShow from './DialogFileShow.vue';
-import DialogForm from './DialogForm.vue';
-import TooltipBase from './TooltipBase.vue';
+import { useDateFormat } from '@/composables/useDate';
+import BtnBase from '@/components/BtnBase.vue';
+import DialogFileShow from '@/components/DialogFileShow.vue';
+import DialogForm from '@/components/DialogForm.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 const props = defineProps({
   data: {

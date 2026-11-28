@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TooltipBase from './TooltipBase.vue';
+import TooltipBase from '@/components/TooltipBase.vue';
 
 defineProps({
   hivecount: {

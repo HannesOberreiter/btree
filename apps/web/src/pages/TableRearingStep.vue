@@ -3,13 +3,13 @@ import type { QTableProps } from 'quasar';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import TableButtons from '../components/TableButtons.vue';
-import TableColNote from '../components/TableColNote.vue';
-import TableFilter from '../components/TableFilter.vue';
-import { useKeyTable } from '../composables/useKey';
-import { useRearingDetailsQuery } from '../composables/useQuery';
-import { tableCheckSelected } from '../helpers';
-import { useTablesStore } from '../stores/tables';
+import TableButtons from '@/components/TableButtons.vue';
+import TableColNote from '@/components/TableColNote.vue';
+import TableFilter from '@/components/TableFilter.vue';
+import { useKeyTable } from '@/composables/useKey';
+import { useRearingDetailsQuery } from '@/composables/useQuery';
+import { tableCheckSelected } from '@/helpers';
+import { useTablesStore } from '@/stores/tables';
 
 const { t } = useI18n();
 

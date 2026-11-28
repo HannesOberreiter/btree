@@ -1,7 +1,7 @@
-import de from './de/index.json';
-import en from './en/index.json';
-import fr from './fr/index.json';
-import it from './it/index.json';
+import de from '@/i18n/de/index.json';
+import en from '@/i18n/en/index.json';
+import fr from '@/i18n/fr/index.json';
+import it from '@/i18n/it/index.json';
 
 export const languages = {
   en,

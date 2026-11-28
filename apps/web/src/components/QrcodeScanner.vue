@@ -2,12 +2,12 @@
 import { storeToRefs } from 'pinia';
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useNotification } from '../composables/useNotification';
-import { useScanner } from '../composables/useScanner';
-import { useTrackEvent } from '../composables/useTrackEvent';
-import { useScanningStore } from '../stores/scanning';
-import BtnBase from './BtnBase.vue';
-import BtnBaseGroup from './BtnBaseGroup.vue';
+import { useNotification } from '@/composables/useNotification';
+import { useScanner } from '@/composables/useScanner';
+import { useTrackEvent } from '@/composables/useTrackEvent';
+import { useScanningStore } from '@/stores/scanning';
+import BtnBase from '@/components/BtnBase.vue';
+import BtnBaseGroup from '@/components/BtnBaseGroup.vue';
 
 const router = useRouter();
 const notification = useNotification();

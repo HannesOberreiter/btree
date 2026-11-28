@@ -11,8 +11,8 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { onMounted, ref } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
 
 use([
   CanvasRenderer,

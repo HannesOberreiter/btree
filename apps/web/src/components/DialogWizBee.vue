@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import BtnCloseDialog from './BtnCloseDialog.vue';
-import WizBeeChat from './WizBeeChat.vue';
+import BtnCloseDialog from '@/components/BtnCloseDialog.vue';
+import WizBeeChat from '@/components/WizBeeChat.vue';
 
 const viewportStyle = ref<Record<string, string>>({});
 

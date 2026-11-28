@@ -4,10 +4,10 @@ import { useVModels } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { isEmpty } from 'lodash-es';
 import { computed, ref, toRefs, unref, watch } from 'vue';
-import { formCheckMultipleValues } from '../helpers';
-import BtnMultipleValues from './BtnMultipleValues.vue';
-import FormInputDate from './FormInputDate.vue';
-import FormInputNumeric from './FormInputNumeric.vue';
+import { formCheckMultipleValues } from '@/helpers';
+import BtnMultipleValues from '@/components/BtnMultipleValues.vue';
+import FormInputDate from '@/components/FormInputDate.vue';
+import FormInputNumeric from '@/components/FormInputNumeric.vue';
 
 const props = defineProps({
   startValue: {

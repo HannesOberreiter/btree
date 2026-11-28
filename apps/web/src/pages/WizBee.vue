@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WizBeeChat from '../components/WizBeeChat.vue';
+import WizBeeChat from '@/components/WizBeeChat.vue';
 </script>
 
 <template>

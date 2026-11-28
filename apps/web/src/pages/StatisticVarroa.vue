@@ -17,11 +17,11 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { computed, ref } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import FormDropdownHive from '../components/FormDropdownHive.vue';
-import FormInputDates from '../components/FormInputDates.vue';
-import { useApiFetch } from '../composables/useApi';
-import { useNotification } from '../composables/useNotification';
-import { deepUnref } from '../helpers/deep-unref';
+import FormDropdownHive from '@/components/FormDropdownHive.vue';
+import FormInputDates from '@/components/FormInputDates.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useNotification } from '@/composables/useNotification';
+import { deepUnref } from '@/helpers/deep-unref';
 
 use([
   CanvasRenderer,

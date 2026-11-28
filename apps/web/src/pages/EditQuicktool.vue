@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Task } from '../types';
+import type { Task } from '@/types';
 import { find } from 'lodash-es';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import FormMainTask from '../components/FormMainTask.vue';
+import FormMainTask from '@/components/FormMainTask.vue';
 
 const props = defineProps({
   task: {

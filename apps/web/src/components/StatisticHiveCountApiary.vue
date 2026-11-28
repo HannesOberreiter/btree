@@ -11,10 +11,10 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { onMounted, ref, watch } from 'vue';
 import VChart from 'vue-echarts';
 import { useI18n } from 'vue-i18n';
-import { useApiFetch } from '../composables/useApi';
-import { useDateFormat } from '../composables/useDate';
-import { useNotification } from '../composables/useNotification';
-import FormInputDate from './FormInputDate.vue';
+import { useApiFetch } from '@/composables/useApi';
+import { useDateFormat } from '@/composables/useDate';
+import { useNotification } from '@/composables/useNotification';
+import FormInputDate from '@/components/FormInputDate.vue';
 
 use([
   CanvasRenderer,

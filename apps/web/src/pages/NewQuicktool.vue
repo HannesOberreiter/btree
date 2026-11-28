@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import type { Task } from '../types';
+import type { Task } from '@/types';
 import { find } from 'lodash-es';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import FormMainTask from '../components/FormMainTask.vue';
-import { useQuicktoolStore } from '../stores/quicktool';
+import FormMainTask from '@/components/FormMainTask.vue';
+import { useQuicktoolStore } from '@/stores/quicktool';
 
 const props = defineProps({
   task: {
