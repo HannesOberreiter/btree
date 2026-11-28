@@ -5,10 +5,13 @@ import { toRefs } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { flatten, map, merge } from 'lodash-es';
 import { computed, nextTick, ref, unref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useApiFetch } from '../composables/useApi';
 import { useNotification } from '../composables/useNotification';
 import { useQueenSameDay } from '../composables/useQueenSameDay';
 import { useQueensQuery } from '../composables/useQuery';
+import { checkBreedingCode } from '@/helpers/breeding';
+import { useAuthUserStore } from '@/stores/auth';
 
 import BtnBase from './BtnBase.vue';
 import FormButtons from './FormButtons.vue';
@@ -54,6 +57,8 @@ const stateDefault = {
 };
 
 const notification = useNotification();
+const { t } = useI18n();
+const storeUser = useAuthUserStore();
 const showInterval = ref(false);
 const api = useApiFetch();
 const forceInterval = ref(false);
@@ -180,6 +185,33 @@ const sampleName = computed(() => {
   return hintText;
 });
 
+// The breeding mode warns when a name is not a valid code of the breeding
+// system. It does not block saving: a company can also keep queens outside
+// the breeding programme.
+const breedingWarning = computed(() => {
+  const system = storeUser.company.breeding_system;
+  if (!system || !state.value.name) {
+    return '';
+  }
+  const names =
+    !isEdit.value && state.value.repeat > 0
+      ? Array.from(
+          { length: state.value.repeat },
+          (_, i) => `${state.value.name}${state.value.start + i}`
+        )
+      : [state.value.name];
+  for (const name of names) {
+    const problem = checkBreedingCode(system, name, state.value.date);
+    if (problem === 'format') {
+      return t('breeding.warningFormat', { name, example: 'DE-44-101-1-2025' });
+    }
+    if (problem === 'year') {
+      return t('breeding.warningYear', { name });
+    }
+  }
+  return '';
+});
+
 const rules = {};
 const v = useVuelidate(rules, state, { $autoDirty: true });
 
@@ -272,6 +304,7 @@ async function onChange() {
         :required="isEdit ? false : true"
         label="name"
         name="queen"
+        data-cy="queen-name"
         icon="fas fa-passport"
         class="q-mb-sm"
         :hint="isEdit ? '' : `${$t('lastAdded')}: ${lastNames}`"
@@ -288,6 +321,17 @@ async function onChange() {
         />
       </div>
     </div>
+    <q-banner
+      v-if="breedingWarning"
+      dense
+      class="bg-warning text-dark rounded-borders q-mb-sm"
+      data-cy="queen-breeding-warning"
+    >
+      <template #avatar>
+        <q-icon name="fas fa-triangle-exclamation" size="xs" />
+      </template>
+      {{ breedingWarning }}
+    </q-banner>
 
     <div v-if="(showInterval || forceInterval) && !isEdit" class="col-12">
       <div class="row">

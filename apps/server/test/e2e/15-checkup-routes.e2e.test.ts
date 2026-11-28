@@ -100,6 +100,24 @@ describe('checkup routes', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBe(1);
     });
+
+    it('patch 200 - stores the breeding ratings', async () => {
+      const res = await doRequest(agent, 'patch', route, null, accessToken, {
+        ids: [insertId],
+        data: { colony_strength: 3.5, spring_development: 2.4 },
+      });
+      expect(res.statusCode).toEqual(200);
+      const get = await doRequest(
+        agent,
+        'post',
+        `${route}/batchGet`,
+        null,
+        accessToken,
+        { ids: [insertId] },
+      );
+      expect(get.body[0].colony_strength).toBe(3.5);
+      expect(get.body[0].spring_development).toBe(2.4);
+    });
   });
 
   describe('/api/v1/checkup/batchGet', () => {

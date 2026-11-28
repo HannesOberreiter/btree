@@ -204,6 +204,37 @@ describe('company routes', () => {
       }
     });
 
+    it('patch - switch the breeding mode on and off', async () => {
+      const invalid = await doRequest(agent, 'patch', route, null, null, {
+        breeding_system: 'beedata',
+      });
+      expect(invalid.statusCode).toEqual(400);
+
+      const on = await doRequest(agent, 'patch', route, null, null, {
+        breeding_system: 'beebreed',
+      });
+      expect(on.statusCode).toEqual(200);
+      expect(on.body.breeding_system).toBe('beebreed');
+      const user = await doQueryRequest(agent, '/api/v1/user', null, null, {});
+      expect(user.statusCode).toEqual(200);
+      const active = user.body.company.find(
+        (row: { id: number }) => row.id === on.body.id,
+      );
+      expect(active.breeding_system).toBe('beebreed');
+
+      // A patch without the field keeps the mode.
+      const name = await doRequest(agent, 'patch', route, null, null, {
+        name: patchCompanyName,
+      });
+      expect(name.body.breeding_system).toBe('beebreed');
+
+      const off = await doRequest(agent, 'patch', route, null, null, {
+        breeding_system: null,
+      });
+      expect(off.statusCode).toEqual(200);
+      expect(off.body.breeding_system).toBeNull();
+    });
+
     it('post 200 - success', async () => {
       const res = await doRequest(agent, 'post', route, null, accessToken, {
         name: newCompanyName + new Date().toISOString(),

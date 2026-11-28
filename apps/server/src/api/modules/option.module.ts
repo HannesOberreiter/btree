@@ -47,6 +47,12 @@ function unitValues(table: OptionTable, input: OptionValues) {
     : {};
 }
 
+function breedingValues(table: OptionTable, input: OptionValues) {
+  return table === 'harvest_types' && input.breeding_section !== undefined
+    ? { breeding_section: input.breeding_section }
+    : {};
+}
+
 function commonValues(input: OptionValues) {
   return {
     ...(input.name !== undefined && { name: input.name }),
@@ -92,6 +98,14 @@ function listCommonOptions(
   return applyListOptions(query, input);
 }
 
+type ChargeStock = {
+  sum: string | number | null;
+  sum_in: string | number | null;
+  sum_out: string | number | null;
+  type_id: number | null;
+  user_id: number | null;
+};
+
 function listChargeTypes(
   db: Database,
   companyId: number,
@@ -102,7 +116,7 @@ function listChargeTypes(
     .leftJoin('charge_stocks', 'charge_stocks.type_id', 'charge_types.id')
     .selectAll('charge_types')
     .select(
-      sql<Record<string, string | number | null> | null>`
+      sql<ChargeStock | null>`
         CASE WHEN charge_stocks.type_id IS NOT NULL THEN JSON_OBJECT(
           'sum', charge_stocks.sum,
           'sum_in', charge_stocks.sum_in,
@@ -158,7 +172,11 @@ export async function updateOptions(
   ) {
     const result = await db
       .updateTable(table)
-      .set({ ...commonValues(input), ...unitValues(table, input) })
+      .set({
+        ...commonValues(input),
+        ...unitValues(table, input),
+        ...breedingValues(table, input),
+      })
       .where('id', 'in', ids)
       .where('user_id', '=', companyId)
       .executeTakeFirst();
@@ -235,6 +253,7 @@ export async function createOption(
       .values({
         ...commonValues(input),
         ...unitValues(table, input),
+        ...breedingValues(table, input),
         name: input.name,
         user_id: companyId,
       })

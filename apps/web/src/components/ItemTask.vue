@@ -304,7 +304,9 @@ function showFile(value: string) {
                 task.comb ||
                 task.pollen ||
                 task.swarm ||
-                task.temper
+                task.temper ||
+                task.colony_strength ||
+                task.spring_development
               "
             >
               <b>{{ $t('rating.name') }}: </b>
@@ -325,6 +327,14 @@ function showFile(value: string) {
               </span>
               <span v-if="task.temper">
                 {{ $t('rating.temper') }} ({{ task.temper }})
+              </span>
+              <span v-if="task.colony_strength">
+                {{ $t('rating.colony_strength') }} ({{ task.colony_strength }})
+              </span>
+              <span v-if="task.spring_development">
+                {{ $t('rating.spring_development') }} ({{
+                  task.spring_development
+                }})
               </span>
             </div>
             <div

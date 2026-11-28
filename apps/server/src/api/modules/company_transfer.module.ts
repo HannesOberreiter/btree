@@ -188,6 +188,8 @@ const columns: Record<TransferKey, readonly string[]> = {
     'temperature',
     'calm_comb',
     'swarm',
+    'colony_strength',
+    'spring_development',
     'varroa',
     'strong',
     'eggs',
@@ -300,6 +302,7 @@ const columns: Record<TransferKey, readonly string[]> = {
   harvest_types: [
     'name',
     'unit',
+    'breeding_section',
     'modus',
     'favorite',
     'created_at',

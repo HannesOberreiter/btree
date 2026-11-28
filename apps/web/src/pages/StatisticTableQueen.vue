@@ -138,6 +138,24 @@ const columns = [
   },
   {
     type: 'checkup',
+    name: 'colony_strength',
+    label: t('rating.colony_strength'),
+    align: 'right',
+    field: (row: any) => row.checkup.colony_strength,
+    format: v => round(v, 1),
+    sortable: false
+  },
+  {
+    type: 'checkup',
+    name: 'spring_development',
+    label: t('rating.spring_development'),
+    align: 'right',
+    field: (row: any) => row.checkup.spring_development,
+    format: v => round(v, 1),
+    sortable: false
+  },
+  {
+    type: 'checkup',
     name: 'varroa',
     label: t('varroa'),
     align: 'right',
@@ -319,6 +337,26 @@ function orderLocalData(o: any) {
         </template>
 
         <template #header-cell-swarm="props">
+          <q-th
+            :props="props"
+            :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"
+            @click="orderLocalData(props.col)"
+          >
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #header-cell-colony_strength="props">
+          <q-th
+            :props="props"
+            :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"
+            @click="orderLocalData(props.col)"
+          >
+            {{ props.col.label }}
+          </q-th>
+        </template>
+
+        <template #header-cell-spring_development="props">
           <q-th
             :props="props"
             :class="orderLocalName === props.col.name ? 'text-amber-10' : ''"

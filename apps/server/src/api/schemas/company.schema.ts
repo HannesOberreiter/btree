@@ -2,10 +2,14 @@ import { z } from 'zod';
 
 import { jsonDateSchema } from './common.schema.js';
 
+// Breeding systems of the breeding mode. Null means the mode is off.
+export const breedingSystemSchema = z.enum(['beebreed']);
+
 export const companyResponseSchema = z.looseObject({
   id: z.number(),
   name: z.string(),
   paid: jsonDateSchema.nullable().optional(),
+  breeding_system: breedingSystemSchema.nullable().optional(),
   api_active: z.boolean().optional(),
   api_key: z.string().nullable().optional(),
   created_at: jsonDateSchema.nullable().optional(),
@@ -31,6 +35,7 @@ export const companyPatchSchema = z.looseObject({
   password: z.string().optional(),
   api_active: z.boolean().optional(),
   api_change: z.boolean().optional(),
+  breeding_system: breedingSystemSchema.nullable().optional(),
 });
 
 export const companyCreateSchema = z.object({

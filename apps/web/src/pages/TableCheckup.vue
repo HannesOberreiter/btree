@@ -122,7 +122,8 @@ const columns = [
   },
   /**
     Ratings
-    brood, pollen, comb, temper, calm_comb, swarm
+    brood, pollen, comb, temper, calm_comb, swarm, colony_strength,
+    spring_development
 	 */
   {
     name: 'brood',
@@ -169,6 +170,22 @@ const columns = [
     label: t('rating.swarm'),
     align: 'right',
     field: (row: any) => row.swarm,
+    sortable: true,
+    headerClasses: 'rating'
+  },
+  {
+    name: 'colony_strength',
+    label: t('rating.colony_strength'),
+    align: 'right',
+    field: (row: any) => row.colony_strength,
+    sortable: true,
+    headerClasses: 'rating'
+  },
+  {
+    name: 'spring_development',
+    label: t('rating.spring_development'),
+    align: 'right',
+    field: (row: any) => row.spring_development,
     sortable: true,
     headerClasses: 'rating'
   },

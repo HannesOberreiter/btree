@@ -339,6 +339,8 @@ describe('statistic routes', () => {
         // brood stays NULL for all checkups of this hive and year
         brood: null,
         calm_comb: 1,
+        colony_strength: 2,
+        spring_development: 3,
         comb: 1,
         pollen: 1,
         strong: 1,
@@ -362,6 +364,8 @@ describe('statistic routes', () => {
       const row = result.results.find((r) => r.hive_id === hiveId);
       expect(row).toBeTruthy();
       expect(row?.brood).toBeNull();
+      expect(Number(row?.colony_strength)).toBe(2);
+      expect(Number(row?.spring_development)).toBe(3);
     } finally {
       await db.deleteFrom('checkups').where('hive_id', '=', hiveId).execute();
       await db.deleteFrom('hives').where('id', '=', hiveId).execute();

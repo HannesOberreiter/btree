@@ -144,7 +144,11 @@ const listData = computed(() => {
                       {{ $t('rating.comb') }}: {{ item.comb }},
                       {{ $t('rating.pollen') }}: {{ item.pollen }},
                       {{ $t('rating.swarm') }}: {{ item.swarm }},
-                      {{ $t('rating.temper') }}: {{ item.temper }}
+                      {{ $t('rating.temper') }}: {{ item.temper }},
+                      {{ $t('rating.colony_strength') }}:
+                      {{ item.colony_strength }},
+                      {{ $t('rating.spring_development') }}:
+                      {{ item.spring_development }}
                     </span>
                     <br />
                     <span>
